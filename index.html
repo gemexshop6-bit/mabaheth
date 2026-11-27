@@ -145,12 +145,15 @@ function vmk(id){
  pc.onconnectionstatechange=()=>{if(pc.connectionState==='failed'||pc.connectionState==='closed')vclose(id)};
  return o;
 }
+async function voff(id){vclose(id);const o=vmk(id);const off=await o.pc.createOffer();await o.pc.setLocalDescription(off);send({t:'rtc',to:id,d:{s:o.pc.localDescription}})}
 async function vmsg(m){
  if(m.t==='vleave'){vclose(m.from);return}
  if(!vOn)return;
  try{
- if(m.t==='vjoin'){vclose(m.from);const o=vmk(m.from);const off=await o.pc.createOffer();await o.pc.setLocalDescription(off);send({t:'rtc',to:m.from,d:{s:o.pc.localDescription}});return}
- const o=vmk(m.from),d=m.d;
+ if(m.t==='vjoin'){vclose(m.from);send({t:'rtc',to:m.from,d:{h:1}});if(S.you<m.from)await voff(m.from);return}
+ const d=m.d;
+ if(d.h){if(S.you<m.from)await voff(m.from);return}
+ const o=vmk(m.from);
  if(d.s){
   if(d.s.type==='offer'&&o.pc.signalingState!=='stable'){vclose(m.from);return vmsg(m)}
   await o.pc.setRemoteDescription(d.s);
