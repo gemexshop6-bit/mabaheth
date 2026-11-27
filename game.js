@@ -14,7 +14,7 @@ function conn(first) {
   ws.onmessage = e => {
     const m = JSON.parse(e.data);
     if (m.t === 'hello') { cfg = m.cfg; try { localStorage.mbSess = JSON.stringify({ code: m.code, token: m.token }) } catch (e) { } }
-    else if (m.t === 'state') { S = m; render() }
+    else if (m.t === 'state') { S = m; S._t = Date.now(); render() }
     else if (m.t === 'toast') toast(m.text);
     else if (m.t === 'err') { toast(m.e); if (!S) { try { localStorage.removeItem('mbSess') } catch (e) { } home() } }
     else if (m.t === 'rtc' || m.t === 'vjoin' || m.t === 'vleave') vmsg(m);
@@ -24,7 +24,7 @@ function conn(first) {
 const send = o => ws && ws.readyState === 1 && ws.send(JSON.stringify(o));
 function toast(t) { const e = $('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => e.style.display = 'none', 3800) }
 function nm() { let v = ($('nm').value || '').trim(); if (!v) v = 'محقق ' + Math.floor(10 + Math.random() * 90); myname = v; try { localStorage.mbName = v } catch (e) { } return v }
-function mk() { const n = nm(); try { localStorage.removeItem('mbSess') } catch (e) { }; conn(() => send({ t: 'create', name: n })) }
+function mk(mode) { const n = nm(); try { localStorage.removeItem('mbSess') } catch (e) { }; conn(() => send({ t: 'create', name: n, mode: mode || 'co' })) }
 function jn(c) { const n = nm(); c = c || ($('cd').value || '').trim(); if (!c) return toast('اكتب كود الغرفة'); try { localStorage.removeItem('mbSess') } catch (e) { }; conn(() => send({ t: 'join', code: c, name: n })) }
 function leaveRoom() {
   if (!confirm('تخرج من الروم وترجع للصفحة الرئيسية؟')) return;
@@ -47,8 +47,10 @@ function home() {
   S = null;
   A.innerHTML = `<div class="scr"><div class="wrap"><h1>المباحث</h1><p class="m" style="text-align:center">لعبة تحقيق جماعية. اتحقق مع صحابك واستجوب المشتبه فيهم واقبض على القاتل.</p>
   <div class="card"><input class="t" id="nm" placeholder="اسمك" maxlength="20" value="${esc(myname)}">
-  <button class="btn" onclick="mk()">افتح غرفة جديدة</button></div>
-  <button class="btn ghost" onclick="helpOpen()">📖 إزاي تلعب؟ (القوانين والشرح)</button>
+  <h3 style="margin:6px 0 0">اختار نوع اللعبة</h3><button class="btn" onclick="mk()">🕵️ قضية جماعية <small style="font-weight:400">(فريق 1-4 يحلوا قضية سوا)</small></button>
+  <button class="btn red" onclick="mk('who')">🎭 مين المجرم؟ <small style="font-weight:400">(3 لاعبين: 2 مباحث ومجرم متخفي)</small></button></div>
+  <button class="btn ghost" onclick="helpOpen()">📖 إزاي تلعب: قضية جماعية</button>
+  <button class="btn ghost" onclick="helpOpen('who')">📖 إزاي تلعب: مين المجرم؟</button>
   <div class="card"><h3>ادخل غرفة</h3><input class="t" id="cd" placeholder="كود الغرفة (٤ أرقام)" inputmode="numeric" maxlength="4" style="text-align:center;letter-spacing:6px">
   <button class="btn" onclick="jn()">ادخل</button><div id="rl"></div></div></div></div>`;
   fetch('/rooms').then(r => r.json()).then(l => { const e = $('rl'); if (e && l.length) e.innerHTML = '<p class="m">غرف مفتوحة:</p>' + l.map(x => `<button class="btn ghost" onclick="jn('${esc(x.code)}')">غرفة ${esc(x.code)} - ${esc(x.host || '')} (${x.n}/4)</button>`).join('') }).catch(() => { });
@@ -78,6 +80,7 @@ const isMine = k => myRoles().includes(k);
 
 function render() {
   if (!S) return;
+  if (S.mode === 'who') { whoRender(); return }
   if (S.phase === 'lobby') { lobby(); return }
   if (S.phase === 'over') { over(); return }
   if (dragging) return;
@@ -326,8 +329,8 @@ const HELP=[
 ['🏆 الكسب والخسارة','لو المتهم هو القاتل: كسبتوا وبتاخدوا رتبة من نقيب لحد لواء حسب الأدلة الأساسية اللي لقيتوها والخيوط الصح على اللوحة وعدد الغلطات. لو غلط: المتهم البريء بيخرج من القسم والباقي بيبقوا أحرص. غلطتين والقضية بتفشل. فاتأكدوا قبل ما تتهموا.'],
 ['💡 نصايح','اتكلموا مع بعض وقولوا كل دليل جديد. استجوبوا الكل أكتر من مرة بعد كل دليل جديد. مش كل مشتبه فيه بيكدب في كل حاجة، ومش كل دليل مهم. ولف الموبايل عرض، وادوس ⛶ ملء الشاشة.']
 ];
-function helpOpen(){ if($('helpm'))return; const d=document.createElement('div'); d.id='helpm'; d.className='modal'; d.onclick=e=>{if(e.target===d)helpClose()};
- d.innerHTML='<div class="box" style="max-width:640px;max-height:92%"><div style="display:flex;align-items:center"><h3 style="margin:0;flex:1;color:var(--gold)">📖 إزاي تلعب</h3><button class="ib" onclick="helpClose()">✕ إغلاق</button></div><div class="m" style="margin:4px 0 8px">قوانين اللعبة وشرح خطوة بخطوة</div>'+HELP.map(h=>'<div class="card"><b style="color:var(--gold)">'+h[0]+'</b><div style="margin-top:3px">'+h[1]+'</div></div>').join('')+'<button class="btn" onclick="helpClose()">فهمت، يلا نلعب</button></div>'; document.body.appendChild(d); }
+function helpOpen(mode){ if($('helpm'))return; const HH=mode==='who'?HELPW:HELP; const d=document.createElement('div'); d.id='helpm'; d.className='modal'; d.onclick=e=>{if(e.target===d)helpClose()};
+ d.innerHTML='<div class="box" style="max-width:640px;max-height:92%"><div style="display:flex;align-items:center"><h3 style="margin:0;flex:1;color:var(--gold)">📖 إزاي تلعب'+(mode==='who'?' · مين المجرم؟':'')+'</h3><button class="ib" onclick="helpClose()">✕ إغلاق</button></div><div class="m" style="margin:4px 0 8px">قوانين اللعبة وشرح خطوة بخطوة</div>'+HH.map(h=>'<div class="card"><b style="color:var(--gold)">'+h[0]+'</b><div style="margin-top:3px">'+h[1]+'</div></div>').join('')+'<button class="btn" onclick="helpClose()">فهمت، يلا نلعب</button></div>'; document.body.appendChild(d); }
 function helpClose(){const d=$('helpm'); if(d)d.remove()}
 home();
 let _ses = null; try { _ses = JSON.parse(localStorage.mbSess || 'null') } catch (e) { }
