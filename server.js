@@ -30,7 +30,7 @@ const BOTC = [];
 function send(ws, m) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(m)) }
 const yes = (it, q) => q.a.split('').some(ch => (it.f || '').includes(ch));
 function newRoom() {
-  return { code: mkcode(), phase: 'lobby', players: {}, host: null, chat: [], log: [], cat: 'singers', dur: 300, seats: [], turn: 0, round: 0, pend: null, bp: {}, br: {}, vote: null, game: 'who', rh: [], sp: null, spies: 1, clueT: 30, voteT: 60 }
+  return { code: mkcode(), phase: 'lobby', players: {}, host: null, chat: [], log: [], cat: 'singers', dur: 300, seats: [], turn: 0, round: 0, pend: null, bp: {}, br: {}, vote: null, game: 'who', rh: [], sp: null, du: null, dcat: 'mixed', dT: 180, spies: 1, clueT: 30, voteT: 60 }
 }
 function sys(room, text) { room.chat.push({ s: 1, text }); if (room.chat.length > 120) room.chat.shift() }
 function lg(room, text, k) { room.logn = (room.logn || 0) + 1; room.log.push({ text, k: k || '' }); if (room.log.length > 80) room.log.shift() }
@@ -44,6 +44,8 @@ function state(room, p) {
     ln: room.logn || 0, chat: room.chat.slice(-60), log: room.log.slice(-40), q: cat.q.map((x, i) => ({ i, t: x.t }))
   };
   if (room.game === 'spy' && room.sp && room.phase[0] === 's') o.sp = spyView(room, p);
+  if (room.game === 'duel' && room.du && room.phase[0] === 'd') { o.du = duelView(room, p); o.dcat = room.dcat }
+  o.dcat = room.dcat; o.dT = room.dT;
   if (room.phase !== 'lobby') {
     o.seats = room.seats.map(sd => {
       const it = itemOf(room, sd), me = sd.id === p.id, show = !me || sd.done || res;
@@ -164,6 +166,7 @@ setInterval(() => {
         else if (!pl.ws) nextTurn(room);
         else if (Math.floor(now / 1000) !== room.lastB) { room.lastB = Math.floor(now / 1000); bcast(room) }
       } else if (room.phase[0] === 's') { spyTick(room, now)
+      } else if (room.phase[0] === 'd') { duelTick(room, now)
       } else if (room.phase === 'break' && Math.floor(now / 1000) !== room.lastB) { room.lastB = Math.floor(now / 1000) }
     } catch (e) { console.error(e) }
   }
@@ -335,6 +338,129 @@ function spyMsg(room, p, m) {
     const k = m.k | 0; if (k >= 0 && k < sp.opts.length) spyGuess(room, k);
   }
 }
+// ================= المبارزة =================
+const DB = (() => { const b = JSON.parse(read('bank.json').toString()), L = []; for (const k of Object.keys(b)) for (const [q, a] of b[k]) L.push({ c: k, q, a }); return { L, cats: [['mixed', 'منوّع (كله)', '🎲'], ['egypt', 'مصر ومعالمها', '🏛️'], ['food', 'أكل مصري', '🍲'], ['art', 'فن ومسلسلات ومشاهير', '🎬'], ['sport', 'رياضة', '⚽'], ['hist', 'تاريخ وجغرافيا', '🌍'], ['riddle', 'ألغاز وتخمين', '🧩'], ['funny', 'هزار ومواقف مضحكة', '😂'], ['whatif', 'إيه اللي هيحصل لو', '🤔'], ['games', 'ألعاب فيديو وإنترنت', '🎮'], ['unexp', 'حاجات مش متوقعة', '😲'], ['icon', 'أسئلة أيقونية', '🏆']].map(x => ({ id: x[0], name: x[1], emoji: x[2], n: x[0] === 'mixed' ? L.length : L.filter(y => y.c === x[0]).length })) } })();
+function dealQ(room) {
+  const du = room.du, pool = []; DB.L.forEach((x, i) => { if ((room.dcat === 'mixed' || x.c === room.dcat) && !du.used.has(i)) pool.push(i) });
+  if (!pool.length) { du.used.clear(); lg(room, '♻️ خلصت أسئلة المجال، بنعيد', 'sys'); DB.L.forEach((x, i) => { if (room.dcat === 'mixed' || x.c === room.dcat) pool.push(i) }) }
+  const i = pick(pool); du.used.add(i); return DB.L[i];
+}
+function startDuel(room) {
+  cleanBots(room, 2);
+  const ids = Object.keys(room.players);
+  room.game = 'duel'; room.round++; room.seats = []; room.pend = null; room.bp = {}; room.bs = {}; room.log = [];
+  for (const p of Object.values(room.players)) p.ready = false;
+  const used = room.dused || (room.dused = new Set());
+  room.du = { alive: ids.slice(), rounds: [], r: -1, pairs: [], pi: -1, cur: null, res: null, champ: null, used, hadBye: {}, skt: {}, tEnd: 0, off: {} };
+  lg(room, '⚔️ بدأت بطولة المبارزة!', 'win'); duelRound(room);
+}
+function duelRound(room) {
+  const du = room.du, al = shuf(du.alive); let bye = null;
+  if (al.length % 2) { const c = al.filter(x => !du.hadBye[x]); bye = (c.length ? c : al)[Math.floor(Math.random() * (c.length || al.length))]; du.hadBye[bye] = 1; al.splice(al.indexOf(bye), 1) }
+  const pairs = []; for (let i = 0; i < al.length; i += 2) pairs.push({ a: al[i], b: al[i + 1], w: null });
+  if (bye) pairs.push({ a: bye, b: null, w: bye, bye: true, done: true });
+  du.r++; du.pairs = pairs; du.rounds.push(pairs); du.pi = -1; du.cur = null;
+  if (bye) lg(room, '🎫 ' + room.players[bye].name + ' عدّى بالـ bye', 'sys');
+  room.phase = 'dwait'; du.tEnd = T() + 6000; bcast(room);
+}
+const dnm = (room, id) => room.players[id] ? room.players[id].name : '؟';
+function duelNext(room) {
+  const du = room.du;
+  while (true) {
+    du.pi++;
+    if (du.pi >= du.pairs.length) { // round done
+      const w = du.pairs.map(p => p.w).filter(x => x && room.players[x]);
+      du.alive = w;
+      if (w.length <= 1) return duelChamp(room, w[0] || null);
+      return duelRound(room);
+    }
+    const pr = du.pairs[du.pi]; if (pr.done) continue;
+    const ga = room.players[pr.a] && du.alive.includes(pr.a), gb = room.players[pr.b] && du.alive.includes(pr.b);
+    if (!ga || !gb) { pr.w = ga ? pr.a : gb ? pr.b : null; pr.done = true; pr.ff = 1; continue }
+    return duelBegin(room, pr);
+  }
+}
+function duelBegin(room, pr) {
+  const du = room.du;
+  du.cur = { a: pr.a, b: pr.b, half: 1, asker: pr.a, ans: pr.b, sc: { [pr.a]: 0, [pr.b]: 0 }, sk: { [pr.a]: 0, [pr.b]: 0 }, q: null, sd: 0, sdL: {}, n: 0 };
+  room.phase = 'dintro'; du.tEnd = T() + 5000; lg(room, '⚔️ ' + dnm(room, pr.a) + ' ضد ' + dnm(room, pr.b), 'sys'); bcast(room);
+}
+function duelAsk(room) {
+  const du = room.du, c = du.cur; c.q = dealQ(room); c.n++; c.botAt = T() + 3500 + Math.random() * 4500;
+}
+function duelHalf(room) {
+  const du = room.du, c = du.cur; room.phase = 'dplay'; du.tEnd = c.sd ? 0 : T() + room.dT * 1000; duelAsk(room); bcast(room);
+}
+function duelJudge(room, ok, skip) {
+  const du = room.du, c = du.cur; if (room.phase !== 'dplay' || !c.q) return;
+  if (c.sd) {
+    if (skip) return;
+    c.sdL[c.ans] = !!ok; lg(room, (ok ? '✅ ' : '❌ ') + dnm(room, c.ans), ok ? 'win' : 'bad');
+    if (c.sd === 1) { c.sd = 2; const t = c.asker; c.asker = c.ans; c.ans = t; duelAsk(room); bcast(room); return }
+    const ra = c.sdL[c.a], rb = c.sdL[c.b];
+    if (ra !== rb) return duelEnd(room, ra ? c.a : c.b, 'sd');
+    c.sd = 1; c.sdL = {}; c.asker = c.half % 2 ? c.b : c.a; c.ans = c.asker === c.a ? c.b : c.a; c.sdr = (c.sdr || 0) + 1; c.half++; duelAsk(room); bcast(room); return;
+  }
+  if (skip) { c.sk[c.asker]++; du.skt[c.asker] = (du.skt[c.asker] || 0) + 1; lg(room, '⏭️ ' + dnm(room, c.asker) + ' تخطى سؤال', 'sys') }
+  else if (ok) { c.sc[c.ans]++; lg(room, '✅ ' + dnm(room, c.ans) + ' جاوب صح', 'win') } else lg(room, '❌ ' + dnm(room, c.ans) + ' غلط', 'bad');
+  duelAsk(room); bcast(room);
+}
+function duelTimeUp(room) {
+  const du = room.du, c = du.cur;
+  if (c.half === 1) { c.half = 2; const t = c.asker; c.asker = c.ans; c.ans = t; c.q = null; room.phase = 'dmid'; du.tEnd = T() + 5000; lg(room, '🔄 النص التاني: اتبدلت الأدوار', 'sys'); return bcast(room) }
+  const A = c.sc[c.a], B = c.sc[c.b];
+  if (A !== B) return duelEnd(room, A > B ? c.a : c.b, 'score');
+  if (c.sk[c.a] !== c.sk[c.b]) return duelEnd(room, c.sk[c.a] < c.sk[c.b] ? c.a : c.b, 'skips');
+  c.sd = 1; c.sdL = {}; c.half = 3; c.asker = c.a; c.ans = c.b; c.q = null; c.tie = 1; room.phase = 'dsd'; du.tEnd = T() + 4000; lg(room, '⚡ تعادل! سؤال واحد لكل واحد (موت مفاجئ)', 'sys'); bcast(room);
+}
+function duelEnd(room, w, how) {
+  const du = room.du, c = du.cur, l = w === c.a ? c.b : c.a, pr = du.pairs[du.pi];
+  pr.w = w; pr.done = true; pr.sa = c.sc[c.a]; pr.sb = c.sc[c.b];
+  if (room.players[w]) room.players[w].score += 10;
+  if (how !== 'ff' && room.players[l]) room.players[l].score += 5;
+  addRH(room, [dnm(room, w)], 'مبارزة ضد ' + dnm(room, l) + ' (' + c.sc[w] + '-' + c.sc[l] + (how === 'sd' ? ' بالموت المفاجئ' : how === 'skips' ? ' بالتخطي الأقل' : how === 'ff' ? ' انسحاب' : '') + ')');
+  du.res = { w, l, a: c.a, b: c.b, sa: c.sc[c.a], sb: c.sc[c.b], ka: c.sk[c.a], kb: c.sk[c.b], how };
+  lg(room, '🏅 ' + dnm(room, w) + ' كسب المبارزة', 'win');
+  room.phase = 'dres'; du.tEnd = T() + 7000; c.q = null; bcast(room);
+}
+function duelChamp(room, id) {
+  const du = room.du; du.champ = id; room.phase = 'dchamp'; du.cur = null; du.tEnd = 0;
+  if (id) { addRH(room, [dnm(room, id)], '👑 بطل المبارزة'); lg(room, '👑 ' + dnm(room, id) + ' بطل المبارزة!', 'win') }
+  for (const p of Object.values(room.players)) p.ready = false; bcast(room);
+}
+function duelDrop(room, id) {
+  const du = room.du; if (!du || room.phase === 'dchamp') return;
+  du.alive = du.alive.filter(x => x !== id);
+  const c = du.cur, inDuel = c && (c.a === id || c.b === id);
+  if (inDuel && ['dintro', 'dplay', 'dmid', 'dsd'].includes(room.phase)) { duelEnd(room, id === c.a ? c.b : c.a, 'ff'); return }
+  if (room.phase === 'dwait' && du.pi < 0) { // future pairs adjust at duelNext
+  }
+  if (du.alive.length < 2 && ['dwait'].includes(room.phase) && du.pi < 0 && du.pairs.every(p => p.done || !room.players[p.a] || !room.players[p.b])) { /* tick will proceed */ }
+}
+function duelTick(room, now) {
+  const du = room.du; if (!du) return;
+  const c = du.cur, ph = room.phase;
+  if (c && ['dintro', 'dplay', 'dmid', 'dsd'].includes(ph)) { // offline forfeit
+    for (const id of [c.a, c.b]) { const p = room.players[id]; if (p && !p.bot && !p.ws) { du.off[id] = du.off[id] || now; if (now - du.off[id] > 20000) { delete du.off[id]; duelEnd(room, id === c.a ? c.b : c.a, 'ff'); return } } else delete du.off[id] }
+  }
+  if (ph === 'dwait') { if (now >= du.tEnd) duelNext(room) }
+  else if (ph === 'dintro') { if (now >= du.tEnd) duelHalf(room) }
+  else if (ph === 'dmid') { if (now >= du.tEnd) duelHalf(room) }
+  else if (ph === 'dsd') { if (now >= du.tEnd) duelHalf(room) }
+  else if (ph === 'dres') { if (now >= du.tEnd) duelNext(room) }
+  else if (ph === 'dplay') {
+    if (!c.sd && now >= du.tEnd) return duelTimeUp(room);
+    const ap = room.players[c.asker];
+    if (ap && ap.bot && now >= c.botAt) { const ok = Math.random() < .6; if (!c.sd && Math.random() < .08) duelJudge(room, false, true); else duelJudge(room, ok, false); return }
+    if (Math.floor(now / 1000) !== room.lastB) { room.lastB = Math.floor(now / 1000); bcast(room) }
+  }
+}
+function duelView(room, p) {
+  const du = room.du, c = du.cur, me = p.id, ph = room.phase;
+  const o = { r: du.r, pairs: du.pairs.map(x => ({ a: x.a, b: x.b, w: x.w, bye: !!x.bye, done: !!x.done, sa: x.sa, sb: x.sb })), pi: du.pi, rounds: du.rounds.map(rr => rr.map(x => ({ a: x.a, b: x.b, w: x.w, bye: !!x.bye }))), champ: du.champ, res: ph === 'dres' ? du.res : null, tl: du.tEnd ? Math.max(0, Math.round((du.tEnd - T()) / 1000)) : 0, dT: room.dT, alive: du.alive };
+  if (c) { o.cur = { a: c.a, b: c.b, asker: c.asker, ans: c.ans, half: c.half, sc: c.sc, sk: c.sk, sd: c.sd, n: c.n, q: (me === c.asker && ph === 'dplay' && c.q) ? { q: c.q.q, a: c.q.a, c: c.q.c } : null } }
+  return o;
+}
 function leaveRoom(room, p, ws) {
   delete room.players[p.id]; ws.room = null; ws.pid = null; if (room.bp) delete room.bp[p.id]; if (room.bs) delete room.bs[p.id];
   for (const q of Object.values(room.players)) send(q.ws, { t: 'vleave', from: p.id });
@@ -343,6 +469,7 @@ function leaveRoom(room, p, ws) {
   if (room.host === p.id) { const n = hum.find(x => x.ws) || hum[0]; room.host = n.id }
   sys(room, p.name + ' خرج من الغرفة');
   if (room.game === 'spy' && room.sp) { spyDrop(room, p.id); bcast(room); return }
+  if (room.game === 'duel' && room.du && room.phase[0] === 'd') { duelDrop(room, p.id); bcast(room); return }
   if (room.phase !== 'lobby' && room.game === 'who') { const i = room.seats.findIndex(s => s.id === p.id); if (i >= 0) { const wasTurn = i === room.turn; room.seats.splice(i, 1); if (i < room.turn) room.turn--; if (wasTurn) room.turn--; if (room.phase === 'play') { if (live(room).length <= 1) finish(room); else if (wasTurn) nextTurn(room) } } }
   if (room.phase !== 'lobby' && room.game === 'who' && checkVote(room)) return;
   bcast(room);
@@ -361,7 +488,7 @@ function msg(ws, m) {
     }
     if (!p) { const id = rid(); p = room.players[id] = { id, name, score: 0 }; if (!room.host) room.host = id; sys(room, name + ' دخل الغرفة') }
     p.ws = ws; ws.room = room; ws.pid = p.id;
-    send(ws, { t: 'hello', cats: DATA.map(c => ({ id: c.id, name: c.name, emoji: c.emoji, n: c.items.length })), token: p.id, code: room.code }); bcast(room); return;
+    send(ws, { t: 'hello', cats: DATA.map(c => ({ id: c.id, name: c.name, emoji: c.emoji, n: c.items.length })), dcats: DB.cats, token: p.id, code: room.code }); bcast(room); return;
   }
   const room = ws.room, p = room && room.players[ws.pid]; if (!p) return;
   const host = room.host === p.id;
@@ -373,14 +500,15 @@ function msg(ws, m) {
   if (m.t === 'vmute') { p.mm = m.m ? 1 : 0; bcast(room); return }
   if (host && m.t === 'kick') { const q = room.players[m.id]; if (q && q.id !== p.id) { if (q.ws) send(q.ws, { t: 'kicked' }); const w = q.ws || {}; leaveRoom(room, q, w) } return }
   if (host && m.t === 'host') { const q = room.players[m.id]; if (q && !q.bot && q.ws) { room.host = q.id; sys(room, q.name + ' بقى الهوست 👑'); bcast(room) } return }
-  if (host && m.t === 'tolobby' && room.phase !== 'lobby') { room.phase = 'lobby'; room.seats = []; room.sp = null; room.pend = null; for (const x of Object.values(room.players)) x.ready = false; bcast(room); return }
-  const startGame = () => { room.game === 'spy' ? startSpy(room) : startRound(room) };
+  if (host && m.t === 'tolobby' && room.phase !== 'lobby') { room.phase = 'lobby'; room.seats = []; room.sp = null; room.du = null; room.pend = null; for (const x of Object.values(room.players)) x.ready = false; bcast(room); return }
+  const startGame = () => { room.game === 'spy' ? startSpy(room) : room.game === 'duel' ? startDuel(room) : startRound(room) };
   const chkReady = () => { const hum = Object.values(room.players).filter(x => !x.bot && x.ws); if (hum.length && hum.every(x => x.ready)) startGame(); else bcast(room) };
   if (room.phase === 'lobby') {
     if (m.t === 'ready') { p.ready = !p.ready; chkReady(); return }
     if (!host) return;
     if (m.t === 'set') {
-      if (CATS[m.cat]) room.cat = m.cat; if (m.game === 'who' || m.game === 'spy') room.game = m.game;
+      if (CATS[m.cat]) room.cat = m.cat; if (m.game === 'who' || m.game === 'spy' || m.game === 'duel') room.game = m.game;
+      if (m.dcat && DB.cats.some(c => c.id === m.dcat)) room.dcat = m.dcat; if (m.dT) room.dT = Math.max(20, Math.min(600, +m.dT | 0));
       if (m.dur) room.dur = Math.max(20, Math.min(1800, +m.dur | 0)); if (m.spies) room.spies = m.spies == 2 ? 2 : 1;
       if (m.clueT) room.clueT = Math.max(10, Math.min(90, +m.clueT | 0)); if (m.voteT) room.voteT = Math.max(20, Math.min(240, +m.voteT | 0));
       for (const x of Object.values(room.players)) x.ready = false; bcast(room)
@@ -388,6 +516,12 @@ function msg(ws, m) {
     else if (m.t === 'addbot') { if (Object.keys(room.players).length < MAXSEATS) { const bid = 'b' + rid(), taken = new Set(Object.values(room.players).map(x => x.name)); room.players[bid] = { id: bid, name: BOTN.find(x => !taken.has(x)) || 'بوت ' + bid.slice(1, 3), bot: true, score: 0 }; bcast(room) } }
     else if (m.t === 'rmbot') { const b = Object.values(room.players).find(x => x.bot); if (b) delete room.players[b.id]; bcast(room) }
     else if (m.t === 'start') { startGame() }
+    return;
+  }
+  if (room.game === 'duel' && room.phase[0] === 'd' && room.du) {
+    const c = room.du.cur;
+    if (room.phase === 'dchamp' && m.t === 'ready') { p.ready = !p.ready; chkReady(); return }
+    if (room.phase === 'dplay' && c && c.asker === p.id) { if (m.t === 'ans') duelJudge(room, !!m.ok, false); else if (m.t === 'skip') duelJudge(room, false, true) }
     return;
   }
   if (room.game === 'spy' && room.phase[0] === 's') {
