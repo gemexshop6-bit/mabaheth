@@ -49,7 +49,8 @@ function state(room, p) {
     o.turn = room.seats[room.turn] && room.seats[room.turn].id;
     o.left = Math.max(0, Math.round((room.endAt - T()) / 1000)); o.tLeft = Math.max(0, Math.round((room.turnEnd - T()) / 1000));
     o.pend = room.pend ? { by: room.pend.by, text: room.pend.text, voted: !!room.pend.votes[p.id], mine: room.pend.by === p.id } : null;
-    if (room.phase === 'break') { o.bp = room.bp; o.br = room.br }
+    if (room.phase === 'break' || room.phase === 'result') o.bp = room.bp;
+    o.bs = room.bs || {};
   }
   return o;
 }
@@ -58,8 +59,8 @@ function toast(p, text) { send(p.ws, { t: 'toast', text }) }
 function live(room) { return room.seats.filter(s => !s.done) }
 function startRound(room) {
   const cat = CATS[room.cat], ids = Object.keys(room.players);
-  while (ids.length < 3 && ids.length < MAXSEATS) { const bid = 'b' + rid(); room.players[bid] = { id: bid, name: BOTN[ids.length % BOTN.length], bot: true, score: 0 }; ids.push(bid) }
-  const used = new Set(); room.seats = []; room.log = []; room.pend = null; room.bp = {}; room.br = {};
+  while (ids.length < 2 && ids.length < MAXSEATS) { const bid = 'b' + rid(); room.players[bid] = { id: bid, name: BOTN[ids.length % BOTN.length], bot: true, score: 0 }; ids.push(bid) }
+  const used = new Set(); room.seats = []; room.log = []; room.pend = null; room.bp = {}; room.br = {}; room.bs = {};
   for (const id of ids.sort(() => Math.random() - .5)) {
     let c; do { c = Math.floor(Math.random() * cat.items.length) } while (used.has(c)); used.add(c);
     room.seats.push({ id, card: c, done: false, rank: 0, miss: 0, hints: [], hu: 0, cand: cat.items.map((_, i) => i), asked: {}, gain: 0 });
@@ -81,7 +82,7 @@ function nextTurn(room) {
 }
 function finish(room) {
   const last = live(room); for (const s of last) { s.done = true; s.rank = 99 }
-  room.phase = 'result'; room.pend = null; lg(room, '🏁 خلصت الجولة!', 'sys');
+  room.phase = 'result'; room.pend = null; room.bp = {}; room.bs = {}; lg(room, '🏁 خلصت الجولة! اختاروا مين كسب أو اتخطوا', 'sys');
   for (const s of room.seats) if (s.rank === 99) s.rank = 0;
   bcast(room);
 }
@@ -89,6 +90,19 @@ function award(room, sd, how) {
   const pts = PTS[Math.min(room.nfin, PTS.length - 1)] - sd.hu * HINT; room.nfin++; sd.rank = room.nfin; sd.done = true;
   const p = room.players[sd.id], g = Math.max(10, pts); sd.gain = g; p.score += g;
   const it = itemOf(room, sd); lg(room, '🏆 ' + p.name + ' ' + how + ' وطلع ' + it.n + '! (+' + g + ' نقطة)', 'win');
+}
+function checkVote(room) {
+  const hum = Object.values(room.players).filter(x => !x.bot && x.ws); if (!hum.length) return false;
+  room.bs = room.bs || {}; room.bp = room.bp || {};
+  if (hum.every(x => room.bs[x.id])) { lg(room, '⏭ اتخطينا الروند', 'sys'); startRound(room); return true }
+  if (room.phase === 'play') return false;
+  const pk = hum.map(x => room.bp[x.id]);
+  if (pk.every(v => v && room.seats.some(s => s.id === v)) && pk.every(v => v === pk[0])) {
+    const w = room.seats.find(s => s.id === pk[0]);
+    if (w && !w.done) award(room, w, 'اتختار كأحسن واحد'); else if (w) lg(room, '🏆 ' + room.players[w.id].name + ' كسب الروند!', 'win');
+    startRound(room); return true
+  }
+  return false;
 }
 function ask(room, sd, qi) {
   const q = CATS[room.cat].q[qi]; if (!q) return; const it = itemOf(room, sd), a = yes(it, q), p = room.players[sd.id];
@@ -126,7 +140,7 @@ setInterval(() => {
     try {
       const now = T();
       if (room.phase === 'play') {
-        if (now >= room.endAt) { room.phase = 'break'; room.pend = null; room.bp = {}; room.br = {}; lg(room, '⏰ الوقت خلص! اختاروا مين كسب', 'sys'); bcast(room); continue }
+        if (now >= room.endAt) { room.phase = 'break'; room.pend = null; room.bp = {}; room.bs = {}; lg(room, '⏰ الوقت خلص! اختاروا مين كسب', 'sys'); bcast(room); continue }
         const sd = room.seats[room.turn], pl = sd && room.players[sd.id];
         if (!sd) continue;
         if (room.pend) { const hv = Object.values(room.players).filter(x => !x.bot && x.ws && x.id !== room.pend.by); if (now >= room.pend.end || hv.every(x => x.id in room.pend.votes)) resolvePend(room); continue }
@@ -139,13 +153,14 @@ setInterval(() => {
   }
 }, 400);
 function leaveRoom(room, p, ws) {
-  delete room.players[p.id]; ws.room = null; ws.pid = null;
+  delete room.players[p.id]; ws.room = null; ws.pid = null; if (room.bp) delete room.bp[p.id]; if (room.bs) delete room.bs[p.id];
   for (const q of Object.values(room.players)) send(q.ws, { t: 'vleave', from: p.id });
   const hum = Object.values(room.players).filter(x => !x.bot);
   if (!hum.length) { delete rooms[room.code]; return }
   if (room.host === p.id) { const n = hum.find(x => x.ws) || hum[0]; room.host = n.id }
   sys(room, p.name + ' خرج من الغرفة');
   if (room.phase !== 'lobby') { const i = room.seats.findIndex(s => s.id === p.id); if (i >= 0) { const wasTurn = i === room.turn; room.seats.splice(i, 1); if (i < room.turn) room.turn--; if (wasTurn) room.turn--; if (room.phase === 'play') { if (live(room).length <= 1) finish(room); else if (wasTurn) nextTurn(room) } } }
+  if (room.phase !== 'lobby' && checkVote(room)) return;
   bcast(room);
 }
 function msg(ws, m) {
@@ -181,22 +196,14 @@ function msg(ws, m) {
     return;
   }
   const sd = room.seats.find(s => s.id === p.id);
-  if (room.phase === 'result') { if (host && m.t === 'again') { room.phase = 'lobby'; room.seats = []; bcast(room) } return }
-  if (room.phase === 'break') {
-    if (m.t === 'bpick') { if (room.seats.some(s => s.id === m.id && !s.done)) { room.bp[p.id] = m.id; bcast(room) } }
-    else if (m.t === 'bready') {
-      if (!room.bp[p.id]) return toast(p, 'اختار الكسبان الأول');
-      room.br[p.id] = 1; const hum = Object.values(room.players).filter(x => !x.bot && x.ws);
-      if (hum.every(x => room.br[x.id])) {
-        const cnt = {}; for (const v of Object.values(room.bp)) cnt[v] = (cnt[v] || 0) + 1;
-        const w = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0], ws2 = room.seats.find(s => s.id === w);
-        if (ws2) award(room, ws2, 'اتختار كأحسن واحد'); 
-        if (live(room).length <= 1) return finish(room);
-        room.phase = 'play'; room.endAt = T() + room.dur * 1000; room.bp = {}; room.br = {}; lg(room, '▶ استكملنا!', 'sys'); room.turn--; nextTurn(room);
-      } else bcast(room);
-    }
+  if (room.phase === 'break' || room.phase === 'result') {
+    room.bs = room.bs || {};
+    if (m.t === 'bpick') { if (room.seats.some(s => s.id === m.id)) { room.bp[p.id] = m.id; delete room.bs[p.id]; if (!checkVote(room)) bcast(room) } }
+    else if (m.t === 'bskip') { if (room.bs[p.id]) delete room.bs[p.id]; else { room.bs[p.id] = 1; delete room.bp[p.id] } if (!checkVote(room)) bcast(room) }
+    else if (room.phase === 'result' && host && m.t === 'again') { room.phase = 'lobby'; room.seats = []; bcast(room) }
     return;
   }
+  if (m.t === 'bskip' && room.phase === 'play') { room.bs = room.bs || {}; if (room.bs[p.id]) delete room.bs[p.id]; else room.bs[p.id] = 1; if (!checkVote(room)) bcast(room); return }
   if (!sd || sd.done) return;
   if (m.t === 'vote') { if (room.pend && room.pend.by !== p.id && !(p.id in room.pend.votes)) { room.pend.votes[p.id] = !!m.y; bcast(room) } return }
   if (room.seats[room.turn].id !== p.id || room.pend) return;
@@ -211,6 +218,6 @@ function msg(ws, m) {
 }
 wss.on('connection', ws => {
   ws.on('message', d => { try { msg(ws, JSON.parse(d)) } catch (e) { console.error(e) } });
-  ws.on('close', () => { const room = ws.room; if (room) { const p = room.players[ws.pid]; if (p && p.ws === ws) { p.ws = null; if (room.phase === 'lobby') { /* keep seat for rejoin */ } bcast(room) } } });
+  ws.on('close', () => { const room = ws.room; if (room) { const p = room.players[ws.pid]; if (p && p.ws === ws) { p.ws = null; if (room.phase !== 'lobby' && checkVote(room)) return; bcast(room) } } });
 });
 srv.listen(PORT, () => console.log('up ' + PORT));
