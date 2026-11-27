@@ -81,15 +81,13 @@ function body() {
   if (S.phase === 'result') {
     const sorted = [...S.seats].sort((a, b) => (a.rank || 99) - (b.rank || 99));
     return `<div class="res"><h2>🏁 النتيجة</h2><div class="cards">${sorted.map(s => card(s)).join('')}</div>${board()}
-    ${host ? `<button class="btn y" onclick="send({t:'again'})">🔁 جولة جديدة</button>` : '<p class="mut">مستنيين الهوست يبدأ جولة جديدة</p>'}</div>`;
+    ${votePanel('🏁 الجولة خلصت!')}
+    ${host ? `<button class="btn" onclick="send({t:'again'})">🏠 رجوع للوبي</button>` : ''}</div>`;
   }
   const mine = S.seats.find(s => s.id === S.you), last = S.log[S.log.length - 1];
   let act = '';
-  if (S.phase === 'break') {
-    const und = S.seats.filter(s => !s.done);
-    act = `<div class="brk"><h2>⏰ الوقت خلص!</h2><p>اختاروا مين الكسبان وبعدين كلكم دوسوا "استكمال"</p><div class="row wrap">${und.map(s => `<button class="chip ${S.bp[S.you] === s.id ? 'sel' : ''}" onclick="send({t:'bpick',id:'${s.id}'})">${esc(pl(s.id).name)} ${Object.values(S.bp).filter(v => v === s.id).length ? '👍' + Object.values(S.bp).filter(v => v === s.id).length : ''}</button>`).join('')}</div>
-    <button class="btn y" onclick="send({t:'bready'})">${S.br[S.you] ? '✅ مستنيين الباقي' : '▶ استكمال'}</button> <small>(${Object.keys(S.br).length}/${S.players.filter(p => !p.bot && p.on).length} جاهزين)</small></div>`;
-  } else if (mine && mine.done) act = `<div class="act"><p class="mut">🎉 إنت خلصت! كارتك طلع <b>${esc(mine.card.n)}</b>. اتفرج على الباقي وشجّعهم بالإيموجي</p></div>`;
+  if (S.phase === 'break') act = votePanel('⏰ الوقت خلص!');
+  else if (mine && mine.done) act = `<div class="act"><p class="mut">🎉 إنت خلصت! كارتك طلع <b>${esc(mine.card.n)}</b>. اتفرج على الباقي وشجّعهم بالإيموجي</p></div>`;
   else if (S.pend) {
     act = S.pend.mine ? `<div class="act"><p>⏳ مستني الباقي يجاوبوا على: <b>${esc(S.pend.text)}</b></p></div>` : S.pend.voted ? `<div class="act"><p class="mut">صوتك اتسجل</p></div>` : `<div class="act"><p>❓ ${esc(pl(S.pend.by).name)} بيسأل: <b>${esc(S.pend.text)}</b> (بالنسبة لكارته)</p><div class="row"><button class="btn t" onclick="send({t:'vote',y:1})">✅ أيوه</button><button class="btn r" onclick="send({t:'vote',y:0})">❌ لأ</button></div></div>`;
   } else if (S.turn === S.you) {
@@ -98,7 +96,19 @@ function body() {
     <div class="row"><input id="gs" class="inp" maxlength="40" placeholder="عارف إنت مين؟ اكتب الاسم"><button class="btn y sm" onclick="gsend()">خمّن!</button><button class="btn p sm" onclick="send({t:'hint'})">💡 -10</button></div>
     ${mine && mine.hints.length ? `<div class="hints">${mine.hints.map(h => '💡 ' + esc(h)).join(' • ')}</div>` : ''}</div>`;
   } else act = `<div class="act"><p class="mut">⏳ دور <b>${esc(pl(S.turn).name)}</b> (${S.tLeft}ث) — اسمع أسئلته وجاوب 😉</p>${mine && mine.hints.length ? `<div class="hints">${mine.hints.map(h => '💡 ' + esc(h)).join(' • ')}</div>` : ''}</div>`;
-  return `<div class="play"><div class="cards">${S.seats.map(s => card(s)).join('')}</div><div class="tick">${last ? esc(last.text) : ''}</div>${act}</div>`;
+  const skp = S.phase === 'play' ? (() => { const hum = S.players.filter(p => !p.bot && p.on), n = hum.filter(p => (S.bs || {})[p.id]).length; return `<div class="row"><button class="chip ${(S.bs || {})[S.you] ? 'sel' : ''}" onclick="send({t:'bskip'})">⏭ تخطي روند ${n ? '(' + n + '/' + hum.length + ')' : ''}</button></div>` })() : '';
+  return `<div class="play"><div class="cards">${S.seats.map(s => card(s)).join('')}</div><div class="tick">${last ? esc(last.text) : ''}</div>${act}${skp}</div>`;
+}
+function votePanel(title) {
+  const hum = S.players.filter(p => !p.bot && p.on), bp = S.bp || {}, bs = S.bs || {};
+  const picked = hum.filter(p => bp[p.id]), skipped = hum.filter(p => bs[p.id]);
+  const vals = picked.map(p => bp[p.id]), diff = vals.length > 1 && vals.some(v => v !== vals[0]);
+  const wait = hum.filter(p => !bp[p.id] && !bs[p.id]).map(p => p.name);
+  const st = diff ? '⚠️ اختياراتكم مختلفة، اتفقوا على نفس الاسم عشان نكمل' : wait.length ? 'مستنيين: ' + wait.map(esc).join('، ') : '';
+  return `<div class="brk"><h2>${title}</h2><p>مين كسب؟ كلكم دوسوا على نفس الاسم عشان نكمل للجولة الجاية</p>
+  <div class="row wrap">${S.seats.map(s => { const n = pl(s.id).name, who = hum.filter(p => bp[p.id] === s.id); return `<button class="chip ${bp[S.you] === s.id ? 'sel' : ''}" onclick="send({t:'bpick',id:'${s.id}'})">${esc(n)} كسب ${who.length ? '👍' + who.length : ''}</button>` }).join('')}</div>
+  <div class="row wrap"><button class="chip ${bs[S.you] ? 'sel' : ''}" onclick="send({t:'bskip'})">⏭ تخطي روند ${skipped.length ? '(' + skipped.length + '/' + hum.length + ')' : ''}</button></div>
+  <small>${st}</small></div>`;
 }
 function askf() { const v = $('fq').value.trim(); if (v) send({ t: 'askf', text: v }) }
 function gsend() { const v = $('gs').value.trim(); if (v) send({ t: 'guess', text: v }) }
@@ -131,10 +141,10 @@ function helpOpen() {
   ['🎤 دورك', 'لما يجيلك الدور تقدر: تسأل سؤال جاهز من الأزرار (زي "أنا راجل؟") والإجابة بتيجي لوحدها، أو تكتب سؤال أيوه/لأ بنفسك واللاعبين يصوّتوا. بعد كده الدور بيعدّي للي بعدك.'],
   ['🤔 التخمين', 'عارف إنت مين؟ اكتب الاسم واضغط "خمّن". لو صح تاخد نقط كبيرة (أول واحد ١٠٠، التاني ٧٠، وهكذا). لو غلط بتفوّت دورك الجاي!'],
   ['💡 التلميح', 'زرار التلميح بيدّيك معلومة عن اسمك بس بيخصم ١٠ نقط.'],
-  ['⏱ الوقت', 'اللي بيحدد وقت الجولة هو الهوست. لو الوقت خلص ومحدش كسب، بتظهر شاشة استراحة: اختاروا مين الكسبان وكلكم دوسوا "استكمال" وكملوا.'],
+  ['⏱ الوقت', 'اللي بيحدد وقت الجولة هو الهوست. في آخر كل جولة بتظهر أزرار بأسماء اللاعبين ("محمد كسب"، "خالد كسب"): لازم الاتنين يدوسوا على نفس الاسم عشان تبدأ الجولة الجاية. وزرار "تخطي روند" لازم الاتنين يدوسوه عشان الجولة تتخطى.'],
   ['🏆 النقط', 'الجولة بتكمل لحد ما يفضل واحد بس. بعدها بتشوفوا كل الكروت، والنقط بتفضل متسجلة في ترتيب الغرفة جولة بعد جولة.'],
   ['🎙 الصوت والشات', 'الشات الكتابي والمايك شغالين من أول ما تدخل الغرفة، حتى قبل اللعب. وفي إيموجي تبعتها وتطلع قدام الكل.'],
-  ['🤖 البوتات', 'لو الغرفة فاضية، الهوست يضيف بوتات بتلعب وتسأل وتخمّن زي أي لاعب.']];
+  ['🤖 البوتات', 'اللعبة بتبدأ بلاعبين اتنين. ولو لاعب واحد بس في الغرفة، بيتضاف بوت لوحده. البوت بيوافق تلقائي.']];
   d.innerHTML = `<div class="box"><div class="row"><h2 style="flex:1;margin:0">📖 إزاي تلعب</h2><button class="ib rd" onclick="helpClose()">✖</button></div>${H.map(h => `<div class="rule"><b>${h[0]}</b><p>${h[1]}</p></div>`).join('')}</div>`;
   document.body.appendChild(d);
 }
