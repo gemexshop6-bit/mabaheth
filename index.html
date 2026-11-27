@@ -1,0 +1,123 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>المباحث - القضية الأولى</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet"><style>
+:root{color-scheme:dark;--bg:#101a2b;--bg2:#17253b;--paper:#e9dcb8;--ink:#2a2418;--ink2:#5d5238;--stamp:#b3261e;--ok:#2f7d57;--line:#c9b985;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 50% 0,var(--bg2),var(--bg));color:#f1ead6;font-family:Cairo,Tahoma,sans-serif;min-height:100vh;font-size:16px;line-height:1.7}
+#app{max-width:560px;margin:0 auto;padding:16px 16px 40px}
+h1{font-size:46px;font-weight:900;margin:8px 0;letter-spacing:0}
+h2,h3{margin:20px 0 8px;font-weight:700}
+.m{color:#b9b49f;margin:4px 0}
+.paper{background:var(--paper);color:var(--ink);border-radius:4px;padding:14px 16px;margin:10px 0;border-inline-start:6px solid var(--line);box-shadow:0 3px 0 rgba(0,0,0,.35)}
+.paper .m{color:var(--ink2)}
+.row{display:flex;gap:12px;align-items:center;cursor:pointer}
+.row:active{transform:translateY(2px)}
+.av{width:72px;height:72px;flex:none;border:3px solid var(--ink);border-radius:4px;overflow:hidden;background:#000}
+.av svg{width:100%;height:100%;display:block}
+.stamp{display:inline-block;border:3px solid var(--stamp);color:var(--stamp);padding:0 12px;font-weight:900;transform:rotate(-6deg);font-size:20px;border-radius:4px;background:rgba(233,220,184,.92)}
+.b{display:block;width:100%;border:0;border-radius:4px;background:#d9b44a;color:#241c06;font:700 18px Cairo,Tahoma,sans-serif;padding:12px;margin:12px 0;cursor:pointer;box-shadow:0 3px 0 #8a6d1c}
+.b:active{transform:translateY(3px);box-shadow:none}
+.b.red{background:var(--stamp);color:#fff;box-shadow:0 3px 0 #6e1712}
+.top{display:flex;justify-content:space-between;background:#0a111e;border:1px solid #2b3d58;border-radius:4px;padding:8px 14px;font-weight:700;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.alert{background:#fff4d6;color:var(--ink);border-radius:4px;border-inline-start:6px solid var(--stamp);padding:10px 14px;margin:12px 0}
+.hint{background:#0a111e;border:1px dashed #d9b44a;border-radius:4px;padding:8px 14px;margin:8px 0;color:#f3dd9a}
+.q{display:inline-block;border:2px solid var(--ink);background:transparent;color:var(--ink);border-radius:4px;padding:4px 12px;margin:6px 6px 0 0;font:700 15px Cairo,Tahoma,sans-serif;cursor:pointer}
+.q:disabled{opacity:.4}
+ul.n{margin:6px 0;padding-inline-start:20px}
+.done{opacity:.55}
+.big{font-size:56px;font-weight:900;margin:0}
+</style><style>
+input.t{width:100%;padding:12px;border-radius:4px;border:2px solid var(--line);font:700 18px Cairo,Tahoma,sans-serif;background:#fff8e4;color:var(--ink);margin:6px 0}
+.code{font-size:44px;font-weight:900;letter-spacing:6px;text-align:center;color:#d9b44a;direction:ltr}
+.chat{background:#0a111e;border:1px solid #2b3d58;border-radius:4px;padding:8px 12px;max-height:220px;overflow:auto;font-size:15px}
+.chat div{margin:2px 0}.chat .sys{color:#d9b44a}.cin{display:flex;gap:8px}.cin input{flex:1;margin:6px 0}.cin button{width:80px;margin:6px 0}
+.pl{display:inline-block;background:#0a111e;border:1px solid #2b3d58;border-radius:20px;padding:0 12px;margin:3px}.off{opacity:.45}
+</style></head><body><div id="app"></div><script>const P=o=>`<svg viewBox="0 0 100 100"><rect width="100" height="100" fill="${o.bg}"/><path d="M8 100Q12 72 50 70Q88 72 92 100Z" fill="${o.cl}"/><path d="M40 70L50 84L60 70Z" fill="rgba(255,255,255,.28)"/><rect x="43" y="55" width="14" height="17" fill="${o.sk}"/>${o.hj?`<path d="M26 48Q24 14 50 14Q76 14 74 48Q74 78 50 80Q26 78 26 48Z" fill="${o.hj}"/>`:''}<ellipse cx="50" cy="44" rx="18" ry="21" fill="${o.sk}"/><ellipse cx="50" cy="52" rx="18" ry="13" fill="rgba(0,0,0,.09)"/>${o.hj?'':`<path d="M31 42Q30 19 50 19Q70 19 69 42Q62 29 50 29Q38 29 31 42Z" fill="${o.hr}"/>`}${o.cap?`<path d="M30 33Q32 14 50 14Q68 14 70 33Z" fill="${o.cap}"/><rect x="28" y="31" width="44" height="5" rx="2" fill="${o.cap}"/>`:''}<circle cx="43" cy="44" r="2" fill="#1c1410"/><circle cx="57" cy="44" r="2" fill="#1c1410"/><path d="M39 39Q43 37 47 39M53 39Q57 37 61 39" stroke="#2a1d14" stroke-width="1.6" fill="none"/><path d="M46 57Q50 59 54 57" stroke="#7a3f33" stroke-width="1.6" fill="none"/>${o.mu?`<path d="M41 53Q50 50 59 53Q50 55 41 53Z" fill="${o.mc||'#1b1b1b'}"/>`:''}${o.gl?`<circle cx="43" cy="44" r="5.5" fill="none" stroke="#111" stroke-width="1.2"/><circle cx="57" cy="44" r="5.5" fill="none" stroke="#111" stroke-width="1.2"/><path d="M48.5 44H51.5" stroke="#111" stroke-width="1.2"/>`:''}</svg>`;
+
+const A=document.getElementById('app');
+const set=h=>{A.innerHTML=h;};
+let ws,cfg,S,flash='',tab='',myname='';try{myname=localStorage.mbName||''}catch(e){}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function conn(first){
+  ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host);
+  ws.onopen=()=>{ if(first)first(); else{let s=null;try{s=JSON.parse(localStorage.mbSess||'null')}catch(e){}if(s)send({t:'join',code:s.code,token:s.token,name:myname})}};
+  ws.onmessage=e=>{const m=JSON.parse(e.data);
+    if(m.t==='hello'){cfg=m.cfg;try{localStorage.mbSess=JSON.stringify({code:m.code,token:m.token})}catch(e){}}
+    else if(m.t==='state'){S=m;render()}
+    else if(m.t==='err'){toast(m.e);if(!S){localStorage.removeItem('mbSess');home()}}
+    else if(m.t==='flash'){flash=m.text}};
+  ws.onclose=()=>{if(S)setTimeout(()=>conn(),1500);else toast('مفيش اتصال بالسيرفر، جرب تاني')};
+}
+const send=o=>ws&&ws.readyState===1&&ws.send(JSON.stringify(o));
+function home(){
+  S=null;
+  set(`<div style="text-align:center;padding-top:30px"><span class="stamp">سري للغاية</span><h1>المباحث</h1><p class="m">القضية الأولى: سرقة محل الدهب في خان الخليلي</p><p class="m">لعب جماعي أونلاين</p></div>
+  <input class="t" id="nm" placeholder="اسمك" maxlength="20" value="${esc(myname)}">
+  <button class="b" onclick="mk()">اعمل غرفة جديدة</button>
+  <input class="t" id="cd" placeholder="كود الغرفة (٤ أرقام)" inputmode="numeric" maxlength="4" style="direction:ltr;text-align:center">
+  <button class="b" style="background:#e9dcb8" onclick="jn()">ادخل غرفة</button><h3>غرف مفتوحة دلوقتي</h3><div id="rl" class="m">بنحمل...</div>`);
+  fetch('/rooms').then(r=>r.json()).then(l=>{const e=document.getElementById('rl');if(!e)return;e.innerHTML=l.length?l.map(x=>`<div class="paper row" onclick="document.getElementById('cd').value='${x.code}';jn()"><div><b>غرفة ${esc(x.host||'')}</b> <span class="m">(${x.n} / 4)</span><p class="m">${esc(x.title)} - كود ${x.code}</p></div></div>`).join(''):'مفيش غرف مفتوحة دلوقتي. اعمل غرفة وابعت الكود لصحابك.'}).catch(()=>{})
+}
+function toast(t){let e=document.getElementById('toast');if(!e){e=document.createElement('div');e.id='toast';e.style.cssText='position:fixed;top:12px;left:12px;right:12px;z-index:99;background:#b3261e;color:#fff;padding:12px 16px;border-radius:6px;font-weight:700;text-align:center';document.body.appendChild(e)}e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',4000)}
+function nm(){let v=document.getElementById('nm').value.trim();if(!v)v='محقق '+Math.floor(10+Math.random()*90);myname=v;try{localStorage.mbName=v}catch(e){}return v}
+function mk(){const n=nm();if(!n)return;try{localStorage.removeItem('mbSess')}catch(e){};conn(()=>send({t:'create',name:n}))}
+function jn(){const n=nm();if(!n)return;const c=document.getElementById('cd').value.trim();if(!c)return toast('اكتب كود الغرفة');try{localStorage.removeItem('mbSess')}catch(e){};conn(()=>send({t:'join',code:c,name:n}))}
+function chatBox(){
+  return `<h3>الشات</h3><div class="chat" id="ch">${S.chat.map(c=>c.s?`<div class="sys">• ${esc(c.text)}</div>`:`<div><b>${esc(c.n)}:</b> ${esc(c.text)}</div>`).join('')}</div>
+  <div class="cin"><input class="t" id="ci" placeholder="اكتب رسالة" maxlength="200" onkeydown="if(event.key==='Enter')sc()"><button class="b" onclick="sc()">ابعت</button></div>`;
+}
+function sc(){const i=document.getElementById('ci');if(i&&i.value.trim()){send({t:'chat',text:i.value});i.value=''}}
+function plist(){return S.players.map(p=>`<span class="pl ${p.on?'':'off'}">${esc(p.name)}${p.role?' - '+cfg.R[p.role].n:''}${p.id===S.host?' 👑':''}</span>`).join('')}
+let lastKey='';
+function render(){
+  const keep=document.getElementById('ci')?.value||'',focus=document.activeElement?.id==='ci';
+  const key=S.phase;
+  if(S.phase==='lobby')lobby();else if(S.phase==='play')play();else over();
+  const ci=document.getElementById('ci');if(ci){ci.value=keep;if(focus)ci.focus()}
+  const ch=document.getElementById('ch');if(ch)ch.scrollTop=ch.scrollHeight;
+  if(lastKey!==key){window.scrollTo(0,0);lastKey=key}
+}
+function lobby(){
+  const me=S.players.find(p=>p.id===S.you);
+  const taken=r=>S.players.find(p=>p.role===r);
+  set(`<div class="top"><span>غرفة المباحث</span><span>${S.players.length} / 4</span></div>
+  <p class="m" style="text-align:center">كود الغرفة، ابعته لصحابك</p><div class="code">${S.code}</div>
+  <div style="text-align:center">${plist()}</div>
+  <h3>القضية</h3>`+cfg.cases.map(k=>`<div class="paper row" ${S.you===S.host?`onclick="send({t:'case',id:'${k.id}'})"`:'style="cursor:default"'}><div><b>${k.id===S.caseId?'✅ ':''}${k.title}</b> <span class="m">(${k.place} - ${k.level})</span><p class="m">${k.blurb}</p></div></div>`).join('')+`
+  <h3>اختار دورك</h3>`+Object.entries(cfg.R).map(([k,r])=>{const t=taken(k);const mine=t&&t.id===S.you;
+   return `<div class="paper row" ${t&&!mine?'style="opacity:.5;cursor:default"':`onclick="send({t:'role',role:${mine?'null':`'${k}'`}})"`}><div class="av">${P(r.o)}</div><div><b>${r.n}</b>${mine?' ✅':''}<p class="m">${r.d}</p><p class="m">${t?'مأخوذ: '+esc(t.name):'فاضي، لو محدش أخده البوت هيمثله ('+r.bot+')'}</p></div></div>`}).join('')+
+  (S.you===S.host?`<button class="b red" onclick="send({t:'start'})">ابدأ التحقيق</button>`:`<p class="m" style="text-align:center">مستنيين ${esc((S.players.find(p=>p.id===S.host)||{}).name||'')} يبدأ اللعبة</p>`)+chatBox());
+}
+function play(){
+  const me=S.players.find(p=>p.id===S.you),r=cfg.R[me.role];
+  const done=S.mydone,d=done.length,N=S.myTasks.length;
+  const voted=S.players.filter(p=>p.vote).length;
+  let h=`<div class="top"><span>${r.n}</span><span>المهام: ${d} / ${N}</span><span>الضربات: ${S.strikes} / 2</span></div><div style="text-align:center">${plist()}</div>`;
+  if(flash){h+=`<div class="alert">${esc(flash)}</div>`}
+  if(tab==='acc'){
+    h+=`<h2>مين الجاني؟</h2><p class="m">لازم كل اللاعبين يتفقوا على نفس الشخص. ${voted} / ${S.players.length} صوّتوا. الاتهام الغلط بياخد ضربة، وعند ضربتين الفريق بيخسر.</p>`+S.cs.suspects.map((s,i)=>S.cleared.includes(i)?`<div class="paper row done" style="cursor:default"><div class="av">${P(s.o)}</div><div><b>${s.n}</b> (اتبرّأ)<p class="m">${s.t}</p></div></div>`:`<div class="paper row" onclick="send({t:'vote',i:${i}});tab=''"><div class="av">${P(s.o)}</div><div><b>اتهم ${s.n}</b><p class="m">${s.t}</p></div></div>`).join('')+`<button class="b" onclick="tab='';render()">رجوع للتحقيق</button>`;
+    return set(h+chatBox());
+  }
+  h+=`<h3>ملف القضية: ${esc(S.cs.title)}</h3><div class="paper"><b>${esc(S.cs.place)}</b><p>${esc(S.cs.intro)}</p></div>`;
+  h+=`<h3>المشتبه فيهم</h3>`+S.cs.suspects.map((s,i)=>`<div class="paper row ${S.cleared.includes(i)?'done':''}" style="cursor:default"><div class="av" style="width:56px;height:56px">${P(s.o)}</div><div><b>${s.n}</b>${S.cleared.includes(i)?' (اتبرّأ)':''}<p class="m">${s.t}</p></div></div>`).join('');
+  const locked=S.notes.length<S.unlockAt;
+  h+=`<h3>مهامك</h3>`+S.myTasks.map((t,i)=>{const lk=i===4&&locked&&!done.includes(i);return `<div class="paper row ${done.includes(i)||lk?'done':''}" onclick="${done.includes(i)||lk?(lk?`toast('المهمة دي بتفتح لما الفريق يجمع ${S.unlockAt} ملاحظات في الدفتر')`:''):`flash='';send({t:'task',i:${i}})`}"><b>${lk?'🔒 ':''}${t}</b></div>`}).join('');
+  if(d>=N)h+=`<div class="alert">خلصت كل مهامك. راجع دفتر الفريق وناقشوا في الشات.</div>`;
+  h+=`<h3>دفتر الفريق (${S.notes.length})</h3><div class="paper">${S.notes.length?`<ul class="n">${S.notes.slice().reverse().map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:'<p class="m">لسه فاضي. ابدأ بأول مهمة.</p>'}</div>`;
+  if(S.botRoles.length)h+=`<p class="m">البوتات: ${S.botRoles.map(k=>cfg.R[k].bot).join('، ')}</p>`;
+  const mv=me.vote;
+  h+=mv?`<div class="hint">صوتك اتسجل. مستنيين الباقي (${voted} / ${S.players.length})</div><button class="b" onclick="send({t:'unvote'})">غيّر صوتك</button>`:`<button class="b red" onclick="tab='acc';render()">وجّه الاتهام (تصويت)</button>`;
+  set(h+chatBox());
+}
+function over(){
+  const x=S.result,s=S.cs.suspects[x.accused];
+  const ev=`<h3>الأدلة الحاسمة اللي جمعتوها (${x.keys.length}، المطلوب ${x.need})</h3><div class="paper">${x.keys.length?`<ul class="n">${x.keys.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:'<p class="m">ماجمعتوش أي دليل حاسم.</p>'}</div><h3>القصة الكاملة</h3><div class="paper">${esc(x.sol)}</div>`;
+  let h;
+  if(x.win)h=`<div style="text-align:center;padding-top:20px"><span class="stamp" style="color:var(--ok);border-color:var(--ok)">القضية اتحلت</span><p class="big">${x.sc}</p><p class="m">نقطة، والرتبة: ${x.rank}</p></div><div class="paper"><b>اتهامكم صح.</b> ${esc(s.n)} هو الجاني، وأدلتكم كفاية إن النيابة تحبسه.</div>`;
+  else h=`<div style="text-align:center;padding-top:20px"><span class="stamp">الفريق خسر</span></div><div class="paper">استنفدتوا الضربتين والجاني الحقيقي فلت. اتحفظت القضية ضد مجهول.</div>`;
+  h+=ev+(S.you===S.host?`<button class="b" onclick="send({t:'again'})">جولة جديدة</button>`:'<p class="m">مستنيين صاحب الغرفة يبدأ جولة جديدة</p>')+chatBox();
+  set(h);
+}
+home();
+let sess=null;try{sess=JSON.parse(localStorage.mbSess||'null')}catch(e){}
+if(sess&&myname){conn()}
+</script></body></html>
