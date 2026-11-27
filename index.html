@@ -1,165 +1,113 @@
-<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>المباحث - القضية الأولى</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet"><style>
-:root{color-scheme:dark;--bg:#101a2b;--bg2:#17253b;--paper:#e9dcb8;--ink:#2a2418;--ink2:#5d5238;--stamp:#b3261e;--ok:#2f7d57;--line:#c9b985;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-*{box-sizing:border-box}
-body{margin:0;background:radial-gradient(circle at 50% 0,var(--bg2),var(--bg));color:#f1ead6;font-family:Cairo,Tahoma,sans-serif;min-height:100vh;font-size:16px;line-height:1.7}
-#app{max-width:560px;margin:0 auto;padding:16px 16px 40px}
-h1{font-size:46px;font-weight:900;margin:8px 0;letter-spacing:0}
-h2,h3{margin:20px 0 8px;font-weight:700}
-.m{color:#b9b49f;margin:4px 0}
-.paper{background:var(--paper);color:var(--ink);border-radius:4px;padding:14px 16px;margin:10px 0;border-inline-start:6px solid var(--line);box-shadow:0 3px 0 rgba(0,0,0,.35)}
-.paper .m{color:var(--ink2)}
-.row{display:flex;gap:12px;align-items:center;cursor:pointer}
-.row:active{transform:translateY(2px)}
-.av{width:72px;height:72px;flex:none;border:3px solid var(--ink);border-radius:4px;overflow:hidden;background:#000}
-.av svg{width:100%;height:100%;display:block}
-.stamp{display:inline-block;border:3px solid var(--stamp);color:var(--stamp);padding:0 12px;font-weight:900;transform:rotate(-6deg);font-size:20px;border-radius:4px;background:rgba(233,220,184,.92)}
-.b{display:block;width:100%;border:0;border-radius:4px;background:#d9b44a;color:#241c06;font:700 18px Cairo,Tahoma,sans-serif;padding:12px;margin:12px 0;cursor:pointer;box-shadow:0 3px 0 #8a6d1c}
-.b:active{transform:translateY(3px);box-shadow:none}
-.b.red{background:var(--stamp);color:#fff;box-shadow:0 3px 0 #6e1712}
-.top{display:flex;justify-content:space-between;background:#0a111e;border:1px solid #2b3d58;border-radius:4px;padding:8px 14px;font-weight:700;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
-.alert{background:#fff4d6;color:var(--ink);border-radius:4px;border-inline-start:6px solid var(--stamp);padding:10px 14px;margin:12px 0}
-.hint{background:#0a111e;border:1px dashed #d9b44a;border-radius:4px;padding:8px 14px;margin:8px 0;color:#f3dd9a}
-.q{display:inline-block;border:2px solid var(--ink);background:transparent;color:var(--ink);border-radius:4px;padding:4px 12px;margin:6px 6px 0 0;font:700 15px Cairo,Tahoma,sans-serif;cursor:pointer}
-.q:disabled{opacity:.4}
-ul.n{margin:6px 0;padding-inline-start:20px}
-.done{opacity:.55}
-.big{font-size:56px;font-weight:900;margin:0}
-</style><style>
-input.t{width:100%;padding:12px;border-radius:4px;border:2px solid var(--line);font:700 18px Cairo,Tahoma,sans-serif;background:#fff8e4;color:var(--ink);margin:6px 0}
-.code{font-size:44px;font-weight:900;letter-spacing:6px;text-align:center;color:#d9b44a;direction:ltr}
-.chat{background:#0a111e;border:1px solid #2b3d58;border-radius:4px;padding:8px 12px;max-height:220px;overflow:auto;font-size:15px}
-.chat div{margin:2px 0}.chat .sys{color:#d9b44a}.cin{display:flex;gap:8px}.cin input{flex:1;margin:6px 0}.cin button{width:80px;margin:6px 0}
-.pl{display:inline-block;background:#0a111e;border:1px solid #2b3d58;border-radius:20px;padding:0 12px;margin:3px}.off{opacity:.45}
-</style></head><body><div id="app"></div><script>const P=o=>`<svg viewBox="0 0 100 100"><rect width="100" height="100" fill="${o.bg}"/><path d="M8 100Q12 72 50 70Q88 72 92 100Z" fill="${o.cl}"/><path d="M40 70L50 84L60 70Z" fill="rgba(255,255,255,.28)"/><rect x="43" y="55" width="14" height="17" fill="${o.sk}"/>${o.hj?`<path d="M26 48Q24 14 50 14Q76 14 74 48Q74 78 50 80Q26 78 26 48Z" fill="${o.hj}"/>`:''}<ellipse cx="50" cy="44" rx="18" ry="21" fill="${o.sk}"/><ellipse cx="50" cy="52" rx="18" ry="13" fill="rgba(0,0,0,.09)"/>${o.hj?'':`<path d="M31 42Q30 19 50 19Q70 19 69 42Q62 29 50 29Q38 29 31 42Z" fill="${o.hr}"/>`}${o.cap?`<path d="M30 33Q32 14 50 14Q68 14 70 33Z" fill="${o.cap}"/><rect x="28" y="31" width="44" height="5" rx="2" fill="${o.cap}"/>`:''}<circle cx="43" cy="44" r="2" fill="#1c1410"/><circle cx="57" cy="44" r="2" fill="#1c1410"/><path d="M39 39Q43 37 47 39M53 39Q57 37 61 39" stroke="#2a1d14" stroke-width="1.6" fill="none"/><path d="M46 57Q50 59 54 57" stroke="#7a3f33" stroke-width="1.6" fill="none"/>${o.mu?`<path d="M41 53Q50 50 59 53Q50 55 41 53Z" fill="${o.mc||'#1b1b1b'}"/>`:''}${o.gl?`<circle cx="43" cy="44" r="5.5" fill="none" stroke="#111" stroke-width="1.2"/><circle cx="57" cy="44" r="5.5" fill="none" stroke="#111" stroke-width="1.2"/><path d="M48.5 44H51.5" stroke="#111" stroke-width="1.2"/>`:''}</svg>`;
-
-const A=document.getElementById('app');
-const set=h=>{A.innerHTML=h;};
-let ws,cfg,S,flash='',tab='',myname='';try{myname=localStorage.mbName||''}catch(e){}
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function conn(first){
-  ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host);
-  ws.onopen=()=>{ if(first)first(); else{let s=null;try{s=JSON.parse(localStorage.mbSess||'null')}catch(e){}if(s)send({t:'join',code:s.code,token:s.token,name:myname})}};
-  ws.onmessage=e=>{const m=JSON.parse(e.data);
-    if(m.t==='hello'){cfg=m.cfg;try{localStorage.mbSess=JSON.stringify({code:m.code,token:m.token})}catch(e){}}
-    else if(m.t==='state'){S=m;render()}
-    else if(m.t==='err'){toast(m.e);if(!S){localStorage.removeItem('mbSess');home()}}
-    else if(m.t==='flash'){flash=m.text}
-    else if(m.t==='rtc'||m.t==='vjoin'||m.t==='vleave'){vmsg(m)}};
-  ws.onclose=()=>{if(S)setTimeout(()=>conn(),1500);else toast('مفيش اتصال بالسيرفر، جرب تاني')};
-}
-const send=o=>ws&&ws.readyState===1&&ws.send(JSON.stringify(o));
-function home(){
-  S=null;
-  set(`<div style="text-align:center;padding-top:30px"><span class="stamp">سري للغاية</span><h1>المباحث</h1><p class="m">القضية الأولى: سرقة محل الدهب في خان الخليلي</p><p class="m">لعب جماعي أونلاين</p></div>
-  <input class="t" id="nm" placeholder="اسمك" maxlength="20" value="${esc(myname)}">
-  <button class="b" onclick="mk()">اعمل غرفة جديدة</button>
-  <input class="t" id="cd" placeholder="كود الغرفة (٤ أرقام)" inputmode="numeric" maxlength="4" style="direction:ltr;text-align:center">
-  <button class="b" style="background:#e9dcb8" onclick="jn()">ادخل غرفة</button><h3>غرف مفتوحة دلوقتي</h3><div id="rl" class="m">بنحمل...</div>`);
-  fetch('/rooms').then(r=>r.json()).then(l=>{const e=document.getElementById('rl');if(!e)return;e.innerHTML=l.length?l.map(x=>`<div class="paper row" onclick="document.getElementById('cd').value='${x.code}';jn()"><div><b>غرفة ${esc(x.host||'')}</b> <span class="m">(${x.n} / 4)</span><p class="m">${esc(x.title)} - كود ${x.code}</p></div></div>`).join(''):'مفيش غرف مفتوحة دلوقتي. اعمل غرفة وابعت الكود لصحابك.'}).catch(()=>{})
-}
-function toast(t){let e=document.getElementById('toast');if(!e){e=document.createElement('div');e.id='toast';e.style.cssText='position:fixed;top:12px;left:12px;right:12px;z-index:99;background:#b3261e;color:#fff;padding:12px 16px;border-radius:6px;font-weight:700;text-align:center';document.body.appendChild(e)}e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',4000)}
-function nm(){let v=document.getElementById('nm').value.trim();if(!v)v='محقق '+Math.floor(10+Math.random()*90);myname=v;try{localStorage.mbName=v}catch(e){}return v}
-function mk(){const n=nm();if(!n)return;try{localStorage.removeItem('mbSess')}catch(e){};conn(()=>send({t:'create',name:n}))}
-function jn(){const n=nm();if(!n)return;const c=document.getElementById('cd').value.trim();if(!c)return toast('اكتب كود الغرفة');try{localStorage.removeItem('mbSess')}catch(e){};conn(()=>send({t:'join',code:c,name:n}))}
-function chatBox(){
-  return `<h3>الشات</h3><div class="chat" id="ch">${S.chat.map(c=>c.s?`<div class="sys">• ${esc(c.text)}</div>`:`<div><b>${esc(c.n)}:</b> ${esc(c.text)}</div>`).join('')}</div>
-  <div class="cin"><input class="t" id="ci" placeholder="اكتب رسالة" maxlength="200" onkeydown="if(event.key==='Enter')sc()"><button class="b" onclick="sc()">ابعت</button></div>`;
-}
-function sc(){const i=document.getElementById('ci');if(i&&i.value.trim()){send({t:'chat',text:i.value});i.value=''}}
-function plist(){return S.players.map(p=>`<span class="pl ${p.on?'':'off'}">${esc(p.name)}${p.role?' - '+cfg.R[p.role].n:''}${p.id===S.host?' 👑':''}</span>`).join('')}
-let lastKey='';
-function render(){setTimeout(vui,0);
-  const keep=document.getElementById('ci')?.value||'',focus=document.activeElement?.id==='ci';
-  const key=S.phase;
-  if(S.phase==='lobby')lobby();else if(S.phase==='play')play();else over();
-  const ci=document.getElementById('ci');if(ci){ci.value=keep;if(focus)ci.focus()}
-  const ch=document.getElementById('ch');if(ch)ch.scrollTop=ch.scrollHeight;
-  if(lastKey!==key){window.scrollTo(0,0);lastKey=key}
-}
-function lobby(){
-  const me=S.players.find(p=>p.id===S.you);
-  const taken=r=>S.players.find(p=>p.role===r);
-  set(`<div class="top"><span>غرفة المباحث</span><span>${S.players.length} / 4</span></div>
-  <p class="m" style="text-align:center">كود الغرفة، ابعته لصحابك</p><div class="code">${S.code}</div>
-  <div style="text-align:center">${plist()}</div>
-  <h3>القضية</h3>`+cfg.cases.map(k=>`<div class="paper row" ${S.you===S.host?`onclick="send({t:'case',id:'${k.id}'})"`:'style="cursor:default"'}><div><b>${k.id===S.caseId?'✅ ':''}${k.title}</b> <span class="m">(${k.place} - ${k.level})</span><p class="m">${k.blurb}</p></div></div>`).join('')+`
-  <h3>اختار دورك</h3>`+Object.entries(cfg.R).map(([k,r])=>{const t=taken(k);const mine=t&&t.id===S.you;
-   return `<div class="paper row" ${t&&!mine?'style="opacity:.5;cursor:default"':`onclick="send({t:'role',role:${mine?'null':`'${k}'`}})"`}><div class="av">${P(r.o)}</div><div><b>${r.n}</b>${mine?' ✅':''}<p class="m">${r.d}</p><p class="m">${t?'مأخوذ: '+esc(t.name):'فاضي، لو محدش أخده البوت هيمثله ('+r.bot+')'}</p></div></div>`}).join('')+
-  (S.you===S.host?`<button class="b red" onclick="send({t:'start'})">ابدأ التحقيق</button>`:`<p class="m" style="text-align:center">مستنيين ${esc((S.players.find(p=>p.id===S.host)||{}).name||'')} يبدأ اللعبة</p>`)+chatBox());
-}
-function play(){
-  const me=S.players.find(p=>p.id===S.you),r=cfg.R[me.role];
-  const done=S.mydone,d=done.length,N=S.myTasks.length;
-  const voted=S.players.filter(p=>p.vote).length;
-  let h=`<div class="top"><span>${r.n}</span><span>المهام: ${d} / ${N}</span><span>الضربات: ${S.strikes} / 2</span></div><div style="text-align:center">${plist()}</div>`;
-  if(flash){h+=`<div class="alert">${esc(flash)}</div>`}
-  if(tab==='acc'){
-    h+=`<h2>مين الجاني؟</h2><p class="m">لازم كل اللاعبين يتفقوا على نفس الشخص. ${voted} / ${S.players.length} صوّتوا. الاتهام الغلط بياخد ضربة، وعند ضربتين الفريق بيخسر.</p>`+S.cs.suspects.map((s,i)=>S.cleared.includes(i)?`<div class="paper row done" style="cursor:default"><div class="av">${P(s.o)}</div><div><b>${s.n}</b> (اتبرّأ)<p class="m">${s.t}</p></div></div>`:`<div class="paper row" onclick="send({t:'vote',i:${i}});tab=''"><div class="av">${P(s.o)}</div><div><b>اتهم ${s.n}</b><p class="m">${s.t}</p></div></div>`).join('')+`<button class="b" onclick="tab='';render()">رجوع للتحقيق</button>`;
-    return set(h+chatBox());
-  }
-  h+=`<h3>ملف القضية: ${esc(S.cs.title)}</h3><div class="paper"><b>${esc(S.cs.place)}</b><p>${esc(S.cs.intro)}</p></div>`;
-  h+=`<h3>المشتبه فيهم</h3>`+S.cs.suspects.map((s,i)=>`<div class="paper row ${S.cleared.includes(i)?'done':''}" style="cursor:default"><div class="av" style="width:56px;height:56px">${P(s.o)}</div><div><b>${s.n}</b>${S.cleared.includes(i)?' (اتبرّأ)':''}<p class="m">${s.t}</p></div></div>`).join('');
-  const locked=S.notes.length<S.unlockAt;
-  h+=`<h3>مهامك</h3>`+S.myTasks.map((t,i)=>{const lk=i===4&&locked&&!done.includes(i);return `<div class="paper row ${done.includes(i)||lk?'done':''}" onclick="${done.includes(i)||lk?(lk?`toast('المهمة دي بتفتح لما الفريق يجمع ${S.unlockAt} ملاحظات في الدفتر')`:''):`flash='';send({t:'task',i:${i}})`}"><b>${lk?'🔒 ':''}${t}</b></div>`}).join('');
-  if(d>=N)h+=`<div class="alert">خلصت كل مهامك. راجع دفتر الفريق وناقشوا في الشات.</div>`;
-  h+=`<h3>دفتر الفريق (${S.notes.length})</h3><div class="paper">${S.notes.length?`<ul class="n">${S.notes.slice().reverse().map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:'<p class="m">لسه فاضي. ابدأ بأول مهمة.</p>'}</div>`;
-  if(S.botRoles.length)h+=`<p class="m">البوتات: ${S.botRoles.map(k=>cfg.R[k].bot).join('، ')}</p>`;
-  const mv=me.vote;
-  h+=mv?`<div class="hint">صوتك اتسجل. مستنيين الباقي (${voted} / ${S.players.length})</div><button class="b" onclick="send({t:'unvote'})">غيّر صوتك</button>`:`<button class="b red" onclick="tab='acc';render()">وجّه الاتهام (تصويت)</button>`;
-  set(h+chatBox());
-}
-function over(){
-  const x=S.result,s=S.cs.suspects[x.accused];
-  const ev=`<h3>الأدلة الحاسمة اللي جمعتوها (${x.keys.length}، المطلوب ${x.need})</h3><div class="paper">${x.keys.length?`<ul class="n">${x.keys.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:'<p class="m">ماجمعتوش أي دليل حاسم.</p>'}</div><h3>القصة الكاملة</h3><div class="paper">${esc(x.sol)}</div>`;
-  let h;
-  if(x.win)h=`<div style="text-align:center;padding-top:20px"><span class="stamp" style="color:var(--ok);border-color:var(--ok)">القضية اتحلت</span><p class="big">${x.sc}</p><p class="m">نقطة، والرتبة: ${x.rank}</p></div><div class="paper"><b>اتهامكم صح.</b> ${esc(s.n)} هو الجاني، وأدلتكم كفاية إن النيابة تحبسه.</div>`;
-  else h=`<div style="text-align:center;padding-top:20px"><span class="stamp">الفريق خسر</span></div><div class="paper">استنفدتوا الضربتين والجاني الحقيقي فلت. اتحفظت القضية ضد مجهول.</div>`;
-  h+=ev+(S.you===S.host?`<button class="b" onclick="send({t:'again'})">جولة جديدة</button>`:'<p class="m">مستنيين صاحب الغرفة يبدأ جولة جديدة</p>')+chatBox();
-  set(h);
-}
-home();
-let sess=null;try{sess=JSON.parse(localStorage.mbSess||'null')}catch(e){}
-if(sess&&myname){conn()}
-
-/* voice chat: WebRTC mesh, server only relays signaling */
-const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]};
-let vStream=null,vOn=false,vMuted=false;const vPc={};
-function vui(){let b=document.getElementById('vbtn');if(!b){b=document.createElement('div');b.id='vbtn';b.style.cssText='position:fixed;bottom:14px;left:14px;z-index:50;display:flex;gap:8px;align-items:center;direction:rtl';document.body.appendChild(b)}
- if(!S||!S.code){b.style.display='none';return}b.style.display='flex';
- const st='border:0;border-radius:24px;padding:12px 16px;font-weight:700;font-size:15px;color:#fff;box-shadow:0 2px 8px #0006;';
- b.innerHTML=vOn?`<button style="${st}background:${vMuted?'#777':'#2e7d32'}" onclick="vmute()">${vMuted?'🔇 مكتوم':'🎙️ شغال'}</button><button style="${st}background:#b3261e" onclick="vstop()">اخرج من الصوت</button>`:`<button style="${st}background:#1565c0" onclick="vstart()">🎙️ شات صوتي</button>`}
-async function vstart(){
- try{vStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}catch(e){return toast('مش قادر أفتح المايك. اسمح للمتصفح بالمايك وجرب تاني')}
- vOn=true;vMuted=false;vui();send({t:'vjoin'});
-}
-function vmute(){vMuted=!vMuted;if(vStream)vStream.getAudioTracks().forEach(t=>t.enabled=!vMuted);vui()}
-function vstop(){send({t:'vleave'});for(const k in vPc)vclose(k);if(vStream)vStream.getTracks().forEach(t=>t.stop());vStream=null;vOn=false;vui()}
-function vclose(id){const o=vPc[id];if(!o)return;try{o.pc.close()}catch(e){};if(o.el)o.el.remove();delete vPc[id]}
-function vmk(id){
- if(vPc[id])return vPc[id];
- const pc=new RTCPeerConnection(ICE),o={pc,el:null,q:[]};vPc[id]=o;
- vStream.getTracks().forEach(t=>pc.addTrack(t,vStream));
- pc.onicecandidate=e=>{if(e.candidate)send({t:'rtc',to:id,d:{c:e.candidate}})};
- pc.ontrack=e=>{if(!o.el){o.el=document.createElement('audio');o.el.autoplay=true;o.el.playsInline=true;document.body.appendChild(o.el)}o.el.srcObject=e.streams[0];o.el.play().catch(()=>{})};
- pc.onconnectionstatechange=()=>{if(pc.connectionState==='failed'||pc.connectionState==='closed')vclose(id)};
- return o;
-}
-async function voff(id){vclose(id);const o=vmk(id);const off=await o.pc.createOffer();await o.pc.setLocalDescription(off);send({t:'rtc',to:id,d:{s:o.pc.localDescription}})}
-async function vmsg(m){
- if(m.t==='vleave'){vclose(m.from);return}
- if(!vOn)return;
- try{
- if(m.t==='vjoin'){vclose(m.from);send({t:'rtc',to:m.from,d:{h:1}});if(S.you<m.from)await voff(m.from);return}
- const d=m.d;
- if(d.h){if(S.you<m.from)await voff(m.from);return}
- const o=vmk(m.from);
- if(d.s){
-  if(d.s.type==='offer'&&o.pc.signalingState!=='stable'){vclose(m.from);return vmsg(m)}
-  await o.pc.setRemoteDescription(d.s);
-  for(const c of o.q)await o.pc.addIceCandidate(c).catch(()=>{});o.q=[];
-  if(d.s.type==='offer'){const a=await o.pc.createAnswer();await o.pc.setLocalDescription(a);send({t:'rtc',to:m.from,d:{s:o.pc.localDescription}})}
- }else if(d.c){if(o.pc.remoteDescription)await o.pc.addIceCandidate(d.c).catch(()=>{});else o.q.push(d.c)}
- }catch(e){}
-}
-</script></body></html>
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"><meta name="theme-color" content="#0a111e"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><title>المباحث</title>
+<style>
+:root{--bg:#0d1523;--bg2:#16233a;--card:#1a2840;--line:#2b3d58;--gold:#d9b44a;--paper:#e9dcb8;--ink:#2a2418;--red:#c0392b;--ok:#3fa56b;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:#f1ead6;font-family:Tahoma,"Segoe UI",Arial,sans-serif;font-size:14px;line-height:1.55}
+button{font-family:inherit}
+#app{height:100vh;height:100dvh;display:flex;flex-direction:column}
+.scr{height:100%;overflow:auto;padding:14px;background:radial-gradient(circle at 50% 0,var(--bg2),var(--bg))}
+.wrap{max-width:560px;margin:0 auto}
+h1{font-size:44px;margin:6px 0;font-weight:900;color:var(--gold);text-align:center;letter-spacing:0}
+h2,h3{margin:10px 0 6px}
+.m{color:#a9a48f}
+.btn{display:block;width:100%;border:0;border-radius:6px;background:var(--gold);color:#241c06;font-weight:700;font-size:16px;padding:10px 12px;margin:8px 0;cursor:pointer;box-shadow:0 3px 0 #8a6d1c}
+.btn:active{transform:translateY(2px);box-shadow:none}
+.btn.red{background:var(--red);color:#fff;box-shadow:0 3px 0 #6e1712}
+.btn.sm{display:inline-block;width:auto;padding:5px 12px;font-size:13px;margin:3px}
+.btn.ghost{background:#24354f;color:#f1ead6;box-shadow:0 3px 0 #111a2a}
+.btn:disabled{opacity:.45}
+input.t{width:100%;padding:10px;border-radius:6px;border:2px solid var(--line);background:#fff8e4;color:var(--ink);font:700 16px Tahoma,sans-serif;margin:5px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0}
+.code{font-size:44px;font-weight:900;letter-spacing:6px;text-align:center;color:var(--gold);direction:ltr}
+.pl{display:inline-block;background:#0a111e;border:1px solid var(--line);border-radius:20px;padding:0 10px;margin:3px;font-size:13px}.pl.off{opacity:.45}
+.rolec{display:flex;gap:8px;align-items:center;padding:8px 10px;border:2px solid var(--line);border-radius:8px;margin:6px 0;cursor:pointer;background:#142036}
+.rolec.mine{border-color:var(--gold);background:#2a2412}.rolec.taken{opacity:.55}
+.rolec .ic{font-size:26px}
+/* play */
+.hd{height:40px;flex:none;display:flex;align-items:center;gap:8px;padding:0 8px;background:#0a111e;border-bottom:1px solid var(--line);font-weight:700;white-space:nowrap}
+.hd .sp{flex:1;overflow:hidden;text-overflow:ellipsis}
+.ib{border:1px solid var(--line);background:#16233a;color:#f1ead6;border-radius:6px;padding:3px 9px;font-size:14px;cursor:pointer;height:30px}
+.ib.on{background:#2e7d32}.ib.rd{background:#8c2a20}
+.bd{flex:1;min-height:0;display:flex}
+.mn{flex:1;min-width:0;display:flex;flex-direction:column}
+.tc{flex:1;min-height:0;overflow:auto;position:relative;background:#070c14}
+.tabs{height:44px;flex:none;display:flex;background:#0a111e;border-top:1px solid var(--line)}
+.tab{flex:1;border:0;background:transparent;color:#a9a48f;font-weight:700;font-size:13px;cursor:pointer;border-top:3px solid transparent;padding:0 2px}
+.tab.on{color:var(--gold);border-top-color:var(--gold);background:#121d30}
+.tab .bg{background:var(--red);color:#fff;border-radius:9px;padding:0 6px;font-size:11px;margin-inline-start:3px}
+.chp{width:215px;flex:none;display:flex;flex-direction:column;border-inline-start:1px solid var(--line);background:#0a111e}
+.chp h4{margin:0;padding:6px 10px;font-size:13px;background:#101b2e;border-bottom:1px solid var(--line)}
+.chl{flex:1;overflow:auto;padding:6px 8px;font-size:12px}
+.chl div{margin:3px 0;word-break:break-word}
+.chl .sys{color:var(--gold);font-size:12px}
+.rl{color:#7fc4ff;font-size:11px}
+.cin{display:flex;gap:4px;padding:6px;border-top:1px solid var(--line)}
+.cin input{flex:1;min-width:0;padding:7px;border-radius:6px;border:1px solid var(--line);background:#fff8e4;color:var(--ink);font:600 14px Tahoma,sans-serif}
+.cin button{border:0;border-radius:6px;background:var(--gold);color:#241c06;font-weight:700;padding:0 12px}
+.pbar{display:flex;flex-wrap:wrap;gap:3px;padding:5px 8px;border-bottom:1px solid var(--line)}
+.rot{background:#3b2f10;color:#ffe9a8;text-align:center;font-size:12px;padding:3px;flex:none;display:none}
+@media (orientation:portrait){.rot{display:block}}
+@media (orientation:portrait),(max-width:640px){.chp{position:fixed;top:40px;bottom:44px;inset-inline-end:0;width:min(86vw,320px);z-index:30;display:none;box-shadow:-4px 0 14px #000a}.chp.open{display:flex}}
+@media (min-width:641px) and (orientation:landscape){.chtog{display:none}}
+/* scene */
+.scw{height:100%;display:flex;align-items:center;justify-content:center;background:#000}
+.sc{position:relative;height:100%;max-width:100%;aspect-ratio:16/9;overflow:hidden}
+@media (orientation:portrait){.sc{height:auto;width:100%}.scw{align-items:flex-start;padding-top:6px}}
+.sc img{width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none}
+.hs{position:absolute;transform:translate(-50%,-50%);aspect-ratio:1;border-radius:50%;border:2px solid #ffd966;background:rgba(255,217,102,.12);animation:pl 1.8s infinite;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;text-shadow:0 0 4px #000}
+.hs.done{border-color:var(--ok);background:rgba(63,165,107,.25);animation:none}
+.hs.lock{border-color:#888;border-style:dashed;background:rgba(0,0,0,.35);animation:none}
+@keyframes pl{0%,100%{box-shadow:0 0 0 0 rgba(255,217,102,.55)}50%{box-shadow:0 0 0 7px rgba(255,217,102,0)}}
+.sch{position:absolute;top:6px;inset-inline-start:6px;background:#000b;border:1px solid var(--line);border-radius:6px;padding:3px 9px;font-size:12px}
+.scf{position:absolute;bottom:6px;inset-inline:6px;background:#000c;border:1px solid var(--gold);border-radius:6px;padding:6px 10px;font-size:13px;display:none}
+/* panels */
+.pn{padding:10px;max-width:900px;margin:0 auto}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.col{flex:1;min-width:230px}
+.tool{display:inline-block;border:2px solid var(--line);background:#16233a;color:#f1ead6;border-radius:8px;padding:6px 10px;margin:3px;cursor:pointer;font-size:14px}
+.tool.on{border-color:var(--gold);background:#2a2412}
+.reg{fill:rgba(255,217,102,.0);stroke:#ffd966;stroke-dasharray:3 3;cursor:pointer}
+.reg:hover,.reg:active{fill:rgba(255,217,102,.25)}
+.fnd{background:#e9dcb8;color:#2a2418;border-radius:4px;padding:6px 8px;margin:5px 0;border-inline-start:5px solid var(--gold);font-size:13px}
+.fnd b{display:block}
+.pr{display:inline-block;background:#f4ecd4;border:3px solid #2a2418;border-radius:6px;padding:3px;margin:4px;cursor:pointer;text-align:center;color:#2a2418;font-size:12px;font-weight:700}
+.pr.on{border-color:var(--red);box-shadow:0 0 0 3px #c0392b66}
+.pr svg{width:92px;height:92px;display:block;background:#f4ecd4}
+.big svg{width:150px;height:150px}
+/* board */
+.bdw{display:flex;height:100%}
+.tray{width:150px;flex:none;overflow:auto;background:#0f1a2c;border-inline-end:1px solid var(--line);padding:6px}
+.tray .it{display:flex;gap:4px;align-items:center;background:#e9dcb8;color:#2a2418;border-radius:4px;padding:4px 6px;margin:4px 0;font-size:12px;border-inline-start:4px solid var(--gold)}
+.tray .it span{flex:1}
+.tray .it button{border:0;background:var(--gold);border-radius:4px;font-size:12px;padding:2px 6px}
+.tray .it.sus{border-inline-start-color:#7fc4ff}.tray .it.body{border-inline-start-color:#c26be0}.tray .it.print{border-inline-start-color:#ff8c5a}.tray .it.testimony{border-inline-start-color:#e05a5a}
+.cork{position:relative;flex:1;background:#3a2a1a center/cover no-repeat;overflow:hidden;touch-action:none}
+.cork svg.th{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+.pin{position:absolute;width:15%;min-width:74px;font-size:10px;background:#f1e6c4;color:#2a2418;border-radius:3px;padding:5px 6px 4px;font-size:11px;font-weight:700;line-height:1.3;box-shadow:2px 4px 8px #0008;cursor:grab;user-select:none;touch-action:none;border-top:5px solid #c0392b}
+.pin.sus{background:#fff;padding:4px;border-top-color:#2c6e91;text-align:center}
+.pin.sus img{width:100%;aspect-ratio:3/4;object-fit:cover;object-position:top;display:block;border:1px solid #999}
+.pin.sel{outline:3px solid #52c8ff}
+.pin .x{position:absolute;top:-8px;inset-inline-start:-8px;background:#222;color:#fff;border-radius:50%;width:18px;height:18px;text-align:center;font-size:11px;line-height:18px;cursor:pointer}
+/* suspects */
+.sg{display:flex;gap:6px;padding:8px 8px 0}
+.sc2{flex:1;display:flex;gap:6px;align-items:center;background:#16233a;border:2px solid var(--line);border-radius:8px;padding:4px;cursor:pointer;min-width:0}
+.sc2.on{border-color:var(--gold)}
+.sc2.gone{opacity:.4}
+.sc2 img{width:44px;height:58px;object-fit:cover;object-position:top;border-radius:4px}
+.mood{height:6px;border-radius:3px;background:#243553;overflow:hidden;margin-top:3px}.mood i{display:block;height:100%;background:linear-gradient(90deg,#3fa56b,#e0b43a,#c0392b)}
+.iv{display:flex;gap:10px;padding:8px;height:calc(100% - 66px)}
+.ivp{width:150px;flex:none;text-align:center}
+.ivp img{width:100%;aspect-ratio:3/4;object-fit:cover;object-position:top;border-radius:8px;border:2px solid var(--gold)}
+.ivl{flex:1;display:flex;flex-direction:column;min-width:0}
+.log{flex:1;overflow:auto;background:#0a111e;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px}
+.q{margin:5px 0;color:#9ec9ff}.q b{color:#7fc4ff;font-size:12px}
+.a{margin:5px 0;background:#2b2412;border-inline-start:4px solid var(--gold);padding:5px 8px;border-radius:4px}
+.a.crack{background:#3a1713;border-color:var(--red);font-weight:700}
+@media (orientation:portrait){.iv{flex-direction:column}.ivp{width:100%;display:flex;gap:8px;text-align:start;align-items:center}.ivp img{width:70px}}
+.res{max-width:560px;margin:0 auto;text-align:center}
+.stamp{display:inline-block;border:4px solid var(--red);color:var(--red);padding:2px 18px;font-weight:900;font-size:26px;transform:rotate(-5deg);border-radius:6px;margin:8px}
+.stamp.ok{border-color:var(--ok);color:var(--ok)}
+#toast{position:fixed;top:48px;left:10px;right:10px;z-index:99;background:#b3261e;color:#fff;padding:9px 14px;border-radius:6px;font-weight:700;text-align:center;display:none}
+.modal{position:fixed;inset:0;background:#000b;z-index:60;display:flex;align-items:center;justify-content:center;padding:14px}
+.modal .box{background:var(--card);border:2px solid var(--gold);border-radius:10px;padding:12px;max-width:520px;width:100%;max-height:90%;overflow:auto}
+</style></head><body><div id="app"></div><div id="toast"></div><script src="/game.js"></script></body></html>
