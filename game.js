@@ -26,6 +26,13 @@ function toast(t) { const e = $('toast'); e.textContent = t; e.style.display = '
 function nm() { let v = ($('nm').value || '').trim(); if (!v) v = 'محقق ' + Math.floor(10 + Math.random() * 90); myname = v; try { localStorage.mbName = v } catch (e) { } return v }
 function mk() { const n = nm(); try { localStorage.removeItem('mbSess') } catch (e) { }; conn(() => send({ t: 'create', name: n })) }
 function jn(c) { const n = nm(); c = c || ($('cd').value || '').trim(); if (!c) return toast('اكتب كود الغرفة'); try { localStorage.removeItem('mbSess') } catch (e) { }; conn(() => send({ t: 'join', code: c, name: n })) }
+function leaveRoom() {
+  if (!confirm('تخرج من الروم وترجع للصفحة الرئيسية؟')) return;
+  send({ t: 'leave' }); try { localStorage.removeItem('mbSess') } catch (e) { }
+  try { if (vOn) vstop() } catch (e) { }
+  const w = ws; S = null; if (w) { w.onclose = null; setTimeout(() => { try { w.close() } catch (e) { } }, 300) }
+  home();
+}
 function fsToggle() {
   const d = document, e = d.documentElement;
   if (d.fullscreenElement || d.webkitFullscreenElement) { (d.exitFullscreen || d.webkitExitFullscreen).call(d); return }
@@ -55,6 +62,7 @@ function lobby() {
   ${Object.keys(cfg.roles).map(k => { const o = S.players.find(p => p.role === k); const mine = o && o.id === S.you; return `<div class="rolec ${mine ? 'mine' : ''} ${o && !mine ? 'taken' : ''}" onclick="pickRole('${k}')"><span class="ic">${ICON[k]}</span><div><b>${cfg.roles[k]}</b><div class="m">${ROLEDESC[k]}</div></div><span style="margin-inline-start:auto">${mine ? '✔ تخصصك' : o ? esc(o.name) : ''}</span></div>` }).join('')}
   <p class="m">لو مفيش لاعب على تخصص، أي حد يقدر يشتغل فيه. لازم لاعب واحد على الأقل.</p>
   <button class="btn ghost" onclick="helpOpen()">📖 إزاي تلعب؟ اقرأ القوانين الأول</button>
+  <button class="btn ghost" onclick="leaveRoom()">🚪 خروج من الروم</button>
   ${host ? '<button class="btn red" onclick="send({t:\'start\'})">ابدأ التحقيق</button>' : '<div class="card" style="text-align:center">مستنيين صاحب الغرفة يبدأ...</div>'}
   </div></div>`;
 }
@@ -90,7 +98,7 @@ function playShell() {
   const tabs = [['scene', '🔎 المسرح'], ['role', (ICON[me.role] || '🧰') + ' تخصصي'], ['board', '🗂 اللوحة'], ['sus', '👥 المشتبه فيهم'], ['accuse', '⚖ اتهم']];
   const key = 'x';
   if (!$('mn')) {
-    A.innerHTML = `<div class="hd"><span class="sp" id="ttl"></span><span id="vslot"></span><button class="ib" onclick="helpOpen()">📖 إزاي تلعب</button><button class="ib chtog" onclick="togChat()">💬</button><button class="ib" onclick="fsToggle()" title="ملء الشاشة">⛶ ملء الشاشة</button></div>
+    A.innerHTML = `<div class="hd"><span class="sp" id="ttl"></span><span id="vslot"></span><button class="ib rd" onclick="leaveRoom()">🚪 خروج</button><button class="ib" onclick="helpOpen()">📖 إزاي تلعب</button><button class="ib chtog" onclick="togChat()">💬</button><button class="ib" onclick="fsToggle()" title="ملء الشاشة">⛶ ملء الشاشة</button></div>
     <div class="rot">لف الموبايل عرض عشان تلعب براحتك 📱↔️</div>
     <div class="bd"><div class="chp" id="chp"><h4>🎧 غرفة العمليات</h4><div class="pbar" id="pbar"></div><div class="chl" id="chl"></div><div class="cin"><input id="ci" placeholder="اكتب رسالة" maxlength="200" onkeydown="if(event.key==='Enter')sc()"><button onclick="sc()">ابعت</button></div></div>
     <div class="mn" id="mn"><div class="tc" id="tc"></div><div class="tabs" id="tabs"></div></div></div>`;
