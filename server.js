@@ -496,7 +496,8 @@ function msg(ws, m) {
   const host = room.host === p.id;
   if (m.t === 'leave') { leaveRoom(room, p, ws); return }
   if (m.t === 'rtc') { const q = room.players[m.to]; if (q && q.ws && m.d && typeof m.d === 'object') send(q.ws, { t: 'rtc', from: p.id, d: m.d }); return }
-  if (m.t === 'vjoin' || m.t === 'vleave') { p.mic = m.t === 'vjoin' ? 1 : 0; p.mm = 0; for (const q of Object.values(room.players)) if (q.id !== p.id) send(q.ws, { t: m.t, from: p.id }); return }
+  if (m.t === 'vjoin' || m.t === 'vleave') { p.mic = m.t === 'vjoin' ? 1 : 0; p.mm = 0; for (const q of Object.values(room.players)) if (q.id !== p.id) send(q.ws, { t: m.t, from: p.id }); bcast(room); return }
+  if (m.t === 'vflag') { p.mic = 1; p.mm = m.m ? 1 : 0; bcast(room); return }
   if (m.t === 'chat') { const x = clean(m.text, 200); if (x) { room.chat.push({ id: p.id, name: p.name, text: x }); if (room.chat.length > 120) room.chat.shift(); bcast(room) } return }
   if (m.t === 'emo') { const e = String(m.e || '').slice(0, 8); for (const q of Object.values(room.players)) send(q.ws, { t: 'emo', from: p.id, name: p.name, e }); return }
   if (m.t === 'vmute') { p.mm = m.m ? 1 : 0; bcast(room); return }
