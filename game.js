@@ -41,6 +41,8 @@ function fsToggle() {
   const r = f.call(e); const lock = () => { try { screen.orientation.lock('landscape').catch(() => { }) } catch (x) { } };
   if (r && r.then) r.then(lock).catch(() => toast('مقدرتش أفتح ملء الشاشة')); else lock();
 }
+function theme(){const d=document.documentElement,n=d.dataset.theme==='dark'?'light':'dark';d.dataset.theme=n;try{localStorage.mbTheme=n}catch(e){};if(S)render();else home()}
+const thb=()=>`<button class="ib" onclick="theme()">${document.documentElement.dataset.theme==='dark'?'☀️ فاتح':'🌙 غامق'}</button>`;
 function fmt(s) { s = Math.max(0, s | 0); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') }
 const pl = id => S.players.find(p => p.id === id) || { name: '؟', score: 0 };
 // ---------- home
@@ -51,7 +53,7 @@ function home() {
   <div class="row"><button class="btn y" onclick="mk()">🎉 افتح غرفة جديدة</button></div>
   <div class="row"><input id="cd" class="inp" inputmode="numeric" maxlength="4" placeholder="كود الغرفة"><button class="btn t" onclick="jn()">ادخل</button></div>
   <div id="rl" class="rl"></div>
-  <div class="row"><button class="btn p" onclick="helpOpen()">📖 إزاي تلعب</button><button class="btn" onclick="fsToggle()">⛶ ملء الشاشة</button></div></div></div>`;
+  <div class="row"><button class="btn p" onclick="helpOpen()">📖 إزاي تلعب</button><button class="btn" onclick="fsToggle()">⛶ ملء الشاشة</button><button class="btn" onclick="theme()">${document.documentElement.dataset.theme==='dark'?'☀️ فاتح':'🌙 غامق'}</button></div></div></div>`;
   fetch('/rooms').then(r => r.json()).then(l => { const e = $('rl'); if (!e || S) return; e.innerHTML = l.length ? '<b>غرف مفتوحة:</b> ' + l.map(r => `<button class="chip" onclick="$('cd').value='${r.code}';jn()">${r.code} • ${esc(r.host)} (${r.n})</button>`).join('') : '' }).catch(() => { });
 }
 function mk() { const n = nm(); const f = () => send({ t: 'create', name: n }); if (ws && ws.readyState === 1) f(); else conn(f) }
@@ -91,9 +93,9 @@ function body() {
   else if (S.pend) {
     act = S.pend.mine ? `<div class="act"><p>⏳ مستني الباقي يجاوبوا على: <b>${esc(S.pend.text)}</b></p></div>` : S.pend.voted ? `<div class="act"><p class="mut">صوتك اتسجل</p></div>` : `<div class="act"><p>❓ ${esc(pl(S.pend.by).name)} بيسأل: <b>${esc(S.pend.text)}</b> (بالنسبة لكارته)</p><div class="row"><button class="btn t" onclick="send({t:'vote',y:1})">✅ أيوه</button><button class="btn r" onclick="send({t:'vote',y:0})">❌ لأ</button></div></div>`;
   } else if (S.turn === S.you) {
-    act = `<div class="act mine"><div class="row wrap"><b>🎤 دورك (${S.tLeft}ث):</b>${S.q.map(q => `<button class="chip q" onclick="send({t:'ask',qi:${q.i}})">${esc(q.t)}</button>`).join('')}</div>
-    <div class="row"><input id="fq" class="inp" maxlength="80" placeholder="اسأل سؤال بإجابة أيوه/لأ (الناس هتصوّت)"><button class="btn t sm" onclick="askf()">اسأل</button></div>
-    <div class="row"><input id="gs" class="inp" maxlength="40" placeholder="عارف إنت مين؟ اكتب الاسم (غلط = تفوّت دور)"><button class="btn y sm" onclick="gsend()">خمّن!</button><button class="btn p sm" onclick="send({t:'hint'})">💡 تلميح (-10)</button></div>
+    act = `<div class="act mine"><div class="row cr"><b>🎤 دورك (${S.tLeft}ث)</b>${S.q.map(q => `<button class="chip q" onclick="send({t:'ask',qi:${q.i}})">${esc(q.t)}</button>`).join('')}</div>
+    <div class="row"><input id="fq" class="inp" maxlength="80" placeholder="اسأل سؤال أيوه/لأ (الناس تصوّت)"><button class="btn t sm" onclick="askf()">اسأل</button></div>
+    <div class="row"><input id="gs" class="inp" maxlength="40" placeholder="عارف إنت مين؟ اكتب الاسم"><button class="btn y sm" onclick="gsend()">خمّن!</button><button class="btn p sm" onclick="send({t:'hint'})">💡 -10</button></div>
     ${mine && mine.hints.length ? `<div class="hints">${mine.hints.map(h => '💡 ' + esc(h)).join(' • ')}</div>` : ''}</div>`;
   } else act = `<div class="act"><p class="mut">⏳ دور <b>${esc(pl(S.turn).name)}</b> (${S.tLeft}ث) — اسمع أسئلته وجاوب 😉</p>${mine && mine.hints.length ? `<div class="hints">${mine.hints.map(h => '💡 ' + esc(h)).join(' • ')}</div>` : ''}</div>`;
   return `<div class="play"><div class="cards">${S.seats.map(s => card(s)).join('')}</div><div class="tick">${last ? esc(last.text) : ''}</div>${act}</div>`;
@@ -113,7 +115,7 @@ function render() {
   const keep = {}; ['fq', 'gs', 'ci'].forEach(id => { const e = $(id); if (e) keep[id] = [e.value, document.activeElement === e] });
   const sc = $('msgs') ? $('msgs').scrollTop : 0, bot = $('msgs') ? ($('msgs').scrollHeight - $('msgs').scrollTop - $('msgs').clientHeight < 40) : true;
   const timer = S.phase === 'play' ? `<span class="tm" id="tm">⏱ ${fmt(S.left)}</span>` : '';
-  A.innerHTML = `<div class="hd"><b class="ttl">🎭 ${esc((cfg.cats.find(c => c.id === S.cat) || {}).emoji || '')} غرفة ${S.code}</b>${timer}<span class="sp"></span><span id="vslot"></span><button class="ib" onclick="side=!side;render()">💬</button><button class="ib" onclick="helpOpen()">📖</button><button class="ib" onclick="fsToggle()">⛶</button><button class="ib rd" onclick="leaveRoom()">🚪 خروج</button></div>
+  A.innerHTML = `<div class="hd"><b class="ttl">🎭 ${esc((cfg.cats.find(c => c.id === S.cat) || {}).emoji || '')} غرفة ${S.code}</b>${timer}<span class="sp"></span><span id="vslot"></span><button class="ib" onclick="side=!side;render()">💬</button><button class="ib" onclick="helpOpen()">📖</button>${thb()}<button class="ib" onclick="fsToggle()">⛶</button><button class="ib rd" onclick="leaveRoom()">🚪 خروج</button></div>
   <div class="main ${side ? '' : 'noside'}"><div class="mid">${body()}</div>${side ? sidebar() : ''}</div>`;
   for (const id in keep) { const e = $(id); if (e) { e.value = keep[id][0]; if (keep[id][1]) e.focus() } }
   const mg = $('msgs'); if (mg) mg.scrollTop = bot ? mg.scrollHeight : sc;
