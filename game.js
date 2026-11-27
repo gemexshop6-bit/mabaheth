@@ -339,3 +339,22 @@ function rotChk() {
 }
 function rotX() { try { sessionStorage.mbRot = 1 } catch (e) { } rotChk() }
 addEventListener('resize', rotChk); addEventListener('orientationchange', () => setTimeout(rotChk, 200)); setTimeout(rotChk, 300);
+
+// ---------- PWA: service worker + install prompt
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => { }));
+let dip = null;
+const isStd = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function instBar() {
+  if (isStd() || document.getElementById('inst')) return; try { if (localStorage.mbInst === '1') return } catch (e) { }
+  if (!S && (dip || isIOS)) {
+    const d = document.createElement('div'); d.id = 'inst'; d.className = 'inst';
+    d.innerHTML = dip ? '<span>📲 ثبّت اللعبة كتطبيق على موبايلك</span><button class="btn y" onclick="instGo()">ثبّت</button><button class="ib" onclick="instX()">✖</button>' : '<span>📲 ثبّتها على الشاشة الرئيسية: دوس <b>مشاركة</b> ⬆️ وبعدين <b>أضف إلى الشاشة الرئيسية</b></span><button class="ib" onclick="instX()">✖</button>';
+    document.body.appendChild(d);
+  }
+}
+function instX() { try { localStorage.mbInst = '1' } catch (e) { } const e = document.getElementById('inst'); if (e) e.remove() }
+function instGo() { if (!dip) return; dip.prompt(); dip.userChoice.finally(() => { dip = null; instX() }) }
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); dip = e; setTimeout(instBar, 800) });
+addEventListener('appinstalled', () => instX());
+setInterval(() => { const e = document.getElementById('inst'); if (e && S) e.remove(); else if (!e && !S && (dip || isIOS)) instBar() }, 1500);
