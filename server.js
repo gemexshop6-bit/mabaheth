@@ -108,6 +108,8 @@ function msg(ws,m){
     }
     bcast(room);
   }else if(m.t==='unvote'&&room.phase==='play'){p.vote=null;bcast(room)}
+  else if(m.t==='rtc'){const q=room.players[m.to];if(q&&q.ws&&m.d&&typeof m.d==='object')send(q.ws,{t:'rtc',from:p.id,d:m.d})}
+  else if(m.t==='vjoin'||m.t==='vleave'){for(const q of Object.values(room.players))if(q.id!==p.id)send(q.ws,{t:m.t,from:p.id})}
   else if(m.t==='chat'){const text=clean(m.text);if(!text)return;room.chat.push({n:p.name,text});if(room.chat.length>200)room.chat.shift();bcast(room)}
   else if(m.t==='again'&&room.phase==='over'&&p.id===room.host){
     room.phase='lobby';room.notes=[];room.botLevel=0;room.bulletin=0;room.strikes=0;room.cleared=[];room.result=null;
