@@ -135,6 +135,13 @@ function confront(room, p, sid, ev) {
   bcast(room);
 }
 
+function leaveRoom(room, p, ws) {
+  delete room.players[p.id]; ws.room = null; ws.pid = null;
+  for (const q of Object.values(room.players)) send(q.ws, { t: 'vleave', from: p.id });
+  if (!Object.keys(room.players).length) { delete rooms[room.code]; return }
+  if (room.host === p.id) { const n = Object.values(room.players).find(x => x.ws) || Object.values(room.players)[0]; room.host = n.id }
+  sys(room, p.name + ' خرج من الغرفة'); bcast(room);
+}
 function msg(ws, m) {
   if (m.t === 'create' || m.t === 'join') {
     let room, p;
@@ -151,6 +158,7 @@ function msg(ws, m) {
   }
   const room = ws.room, p = room && room.players[ws.pid]; if (!p) return;
   const isChief = can(room, p, 'chief') || p.id === room.host && !roleOf(room, 'chief');
+  if (m.t === 'leave') { leaveRoom(room, p, ws); return }
   if (m.t === 'rtc') { const q = room.players[m.to]; if (q && q.ws && m.d && typeof m.d === 'object') send(q.ws, { t: 'rtc', from: p.id, d: m.d }); return }
   if (m.t === 'vjoin' || m.t === 'vleave') { for (const q of Object.values(room.players)) if (q.id !== p.id) send(q.ws, { t: m.t, from: p.id }); return }
   if (m.t === 'chat') { const text = clean(m.text); if (!text) return; room.chat.push({ n: p.name, role: p.role, text }); if (room.chat.length > 200) room.chat.shift(); return bcast(room) }
