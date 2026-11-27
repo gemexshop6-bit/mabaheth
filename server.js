@@ -4,7 +4,7 @@ const PORT = process.env.PORT || 3000, SP = +process.env.WSPEED || 1;
 const read = f => fs.readFileSync(path.join(__dirname, f));
 const DATA = JSON.parse(read('data.json').toString());
 const CATS = {}; for (const c of DATA) CATS[c.id] = c;
-const HTML = read('index.html'), JS = read('game.js');
+const HTML = read('index.html'), JS = read('game.js'), SWJS = read('sw.js'), MANI = read('manifest.webmanifest');
 const T = () => Date.now() * SP;
 const MAXSEATS = 8, PTS = [100, 70, 50, 30, 20, 10], HINT = 10, TURN = 30000;
 const srv = http.createServer((q, r) => {
@@ -15,6 +15,8 @@ const srv = http.createServer((q, r) => {
     r.writeHead(200, { 'content-type': 'application/json' }); r.end(JSON.stringify(l)); return;
   }
   if (/^\/[\w-]+\.(jpg|png)$/.test(u)) { const f = path.join(__dirname, u.slice(1)); const b64 = f.replace(/\.(jpg|png)$/, '.b64'); if (!fs.existsSync(f) && fs.existsSync(b64)) { r.writeHead(200, { 'content-type': u.endsWith('.png') ? 'image/png' : 'image/jpeg', 'cache-control': 'public, max-age=86400' }); r.end(Buffer.from(fs.readFileSync(b64, 'utf8').trim(), 'base64')); return } if (fs.existsSync(f)) { r.writeHead(200, { 'content-type': u.endsWith('.png') ? 'image/png' : 'image/jpeg', 'cache-control': 'public, max-age=86400' }); r.end(fs.readFileSync(f)); return } }
+  if (u === '/sw.js') { r.writeHead(200, { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'no-cache', 'service-worker-allowed': '/' }); r.end(SWJS); return }
+  if (u === '/manifest.webmanifest') { r.writeHead(200, { 'content-type': 'application/manifest+json; charset=utf-8', 'cache-control': 'no-cache' }); r.end(MANI); return }
   if (u === '/game.js') { r.writeHead(200, { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'no-cache' }); r.end(JS); return }
   r.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); r.end(HTML);
 });
