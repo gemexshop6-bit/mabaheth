@@ -14,7 +14,7 @@ function conn(first) {
   ws.onopen = () => { if (first) first(); else { let s = null; try { s = JSON.parse(localStorage.mbSess || 'null') } catch (e) { } if (s) send({ t: 'join', code: s.code, token: s.token, name: myname }) } };
   ws.onmessage = e => {
     const m = JSON.parse(e.data);
-    if (m.t === 'hello') { cfg = m; try { localStorage.mbSess = JSON.stringify({ code: m.code, token: m.token }) } catch (e) { } }
+    if (m.t === 'hello') { cfg = m; try { localStorage.mbSess = JSON.stringify({ code: m.code, token: m.token }) } catch (e) { } if (vOn) send({ t: 'vflag', m: vMuted ? 1 : 0 }) }
     else if (m.t === 'state') { S = m; S._t = Date.now(); if (inv) { inv = ''; try { history.replaceState(null, '', location.pathname) } catch (e) { } } fx(); render() }
     else if (m.t === 'kicked') { toast('الهوست طردك من الغرفة'); vstop(); try { localStorage.removeItem('mbSess') } catch (e) { } S = null; home() }
     else if (m.t === 'toast') toast(m.text);
