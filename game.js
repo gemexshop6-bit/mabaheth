@@ -51,12 +51,12 @@ const pl = id => S.players.find(p => p.id === id) || { name: '؟', score: 0 };
 // ---------- home
 function home() {
   S = null; const iv = inv || '';
-  A.innerHTML = `<div class="home"><div class="logo"><div class="big">🎭</div><h1>اعرف مين المعايا؟</h1><p>اعمل غرفة وكمّلوا ماتش لعبتين: اعرف مين معايا والجاسوس</p><div class="promo" aria-hidden="true"><div class="sl s1"><div class="tx"><b>استمتع إنت وأصحابك</b><small>افتح غرفة وادعي شلتك والعبوا مع بعض</small></div><div class="faces"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#fff" stroke="#2b2140" stroke-width="3"/><circle cx="14" cy="17" r="2.6" fill="#2b2140"/><circle cx="26" cy="17" r="2.6" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#FF6B9D" stroke="#2b2140" stroke-width="3"/><path d="M10 17l7-2M30 17l-7-2" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/><path d="M10 25Q20 38 30 25z" fill="#fff" stroke="#2b2140" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#2EC4B6" stroke="#2b2140" stroke-width="3"/><circle cx="14" cy="17" r="2.6" fill="#2b2140"/><circle cx="26" cy="17" r="2.6" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#fff" stroke="#2b2140" stroke-width="3"/><path d="M7 15h26v6H7z" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg></div></div><div class="sl s2"><div class="tx"><span class="soon">جديد 🔥</span><b>لعبة الجاسوس متاحة دلوقتي</b><small>افتح غرفة واختار الجاسوس من جواها</small></div><div class="spy"><span><svg viewBox="0 0 60 60"><ellipse cx="30" cy="22" rx="24" ry="6" fill="#444" stroke="#FFC93C" stroke-width="2.5"/><path d="M15 21Q16 6 30 6Q44 6 45 21z" fill="#444" stroke="#FFC93C" stroke-width="2.5"/><rect x="15" y="18" width="30" height="4" fill="#FFC93C"/><circle cx="30" cy="36" r="12" fill="#ffe0bd" stroke="#2b2140" stroke-width="2.5"/><path d="M19 33h22v6H19z" fill="#2b2140"/><path d="M18 52q12-9 24 0v8H18z" fill="#fff" stroke="#2b2140" stroke-width="2.5"/></svg></span><em>؟</em><em class="q2">؟</em></div></div></div></div>
+  A.innerHTML = `<div class="home"><div class="logo"><div class="big">🎭</div><h1>اعرف مين المعايا؟</h1><p>اعمل غرفة وكمّلوا ماتش تلات ألعاب: اعرف مين معايا والجاسوس والمبارزة</p><div class="promo" aria-hidden="true"><div class="sl s1"><div class="tx"><b>استمتع إنت وأصحابك</b><small>افتح غرفة وادعي شلتك والعبوا مع بعض</small></div><div class="faces"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#fff" stroke="#2b2140" stroke-width="3"/><circle cx="14" cy="17" r="2.6" fill="#2b2140"/><circle cx="26" cy="17" r="2.6" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#FF6B9D" stroke="#2b2140" stroke-width="3"/><path d="M10 17l7-2M30 17l-7-2" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/><path d="M10 25Q20 38 30 25z" fill="#fff" stroke="#2b2140" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#2EC4B6" stroke="#2b2140" stroke-width="3"/><circle cx="14" cy="17" r="2.6" fill="#2b2140"/><circle cx="26" cy="17" r="2.6" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#fff" stroke="#2b2140" stroke-width="3"/><path d="M7 15h26v6H7z" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg></div></div><div class="sl s2"><div class="tx"><span class="soon">جديد 🔥</span><b>المبارزة: تحدي الأسئلة</b><small>واحد يسأل وواحد يجاوب بصوته، والفايز يكمل لحد البطل</small></div><div class="sw">⚔️</div></div><div class="sl s3"><div class="tx"><b>تلات ألعاب في غرفة واحدة</b><small>اعرف مين معايا • الجاسوس • المبارزة</small></div><div class="tri"><span>🎭</span><span>🕵️</span><span>⚔️</span></div></div></div></div>
   <div class="panel">${iv ? `<div class="inv">📩 اتدعيت لغرفة <b>${esc(iv)}</b>، اكتب اسمك وادخل</div>` : ''}<input id="nm" class="inp" maxlength="20" placeholder="اسمك" value="${esc(myname)}">
   ${iv ? '' : `<div class="row"><button class="btn y" onclick="mk()">🎉 اعمل غرفة</button></div>`}
   <div class="row"><input id="cd" class="inp" inputmode="numeric" maxlength="4" placeholder="كود الغرفة" value="${esc(iv)}"><button class="btn t" onclick="jn()">ادخل غرفة</button></div>
   <div id="rl" class="rl"></div>
-  <div class="row"><button class="btn p" onclick="helpOpen()">📖 إزاي تلعب</button><button class="btn" onclick="fsToggle()">⛶ ملء الشاشة</button><button class="btn" onclick="theme()">${document.documentElement.dataset.theme==='dark'?'☀️ فاتح':'🌙 غامق'}</button></div></div></div>`;
+  <div class="row"><button class="btn p" onclick="helpOpen()">📖 إزاي تلعب</button><button class="btn" onclick="fsToggle()">⛶ ملء الشاشة</button><button class="btn" onclick="theme()">${document.documentElement.dataset.theme==='dark'?'☀️ فاتح':'🌙 غامق'}</button></div></div><div class="dev">تطوير: elnaholy</div></div>`;
   fetch('/rooms').then(r => r.json()).then(l => { const e = $('rl'); if (!e || S) return; e.innerHTML = l.length ? '<b>غرف مفتوحة:</b> ' + l.map(r => `<button class="chip" onclick="$('cd').value='${r.code}';jn()">${r.code} • ${esc(r.host)} (${r.n})</button>`).join('') : '' }).catch(() => { });
 }
 function mk() { const n = nm(); const f = () => send({ t: 'create', name: n }); if (ws && ws.readyState === 1) f(); else conn(f) }
@@ -79,31 +79,66 @@ function card(sd, big) {
 }
 function board() { return `<div class="sb">${[...S.players].sort((a, b) => b.score - a.score).map((p, i) => `<span class="chip ${p.id === S.you ? 'me' : ''}">${i === 0 && p.score > 0 ? '👑' : ''}${p.bot ? '🤖' : ''}${esc(p.name)} <b>${p.score}</b></span>`).join('')}</div>` }
 function plist() {
-  const host = S.host === S.you, ph = S.phase === 'lobby' || S.phase === 'sres';
+  const host = S.host === S.you, ph = S.phase === 'lobby' || S.phase === 'sres' || S.phase === 'dchamp';
   return `<div class="pls">${S.players.map(p => `<div class="pr ${p.on ? '' : 'off'}"><span class="pn">${S.host === p.id ? '👑' : ''}${p.bot ? '🤖' : '🙂'} ${esc(p.name)}${p.id === S.you ? ' <small>(إنت)</small>' : ''}</span><b class="sc" title="النقط">${p.score}</b><span class="st" title="${p.on ? 'موجود' : 'غايب'}">${p.on ? '🟢' : '⚪'}</span><span class="mc ${p.mic ? '' : 'moff'}" title="${p.mic === 1 ? 'المايك شغال' : p.mic === 2 ? 'المايك مكتوم' : 'المايك مقفول'}">${p.mic === 2 ? '🔇' : '🎙️'}</span>${ph && !p.bot ? `<span class="rd">${p.ready ? '✅' : '⏳'}</span>` : ''}${host && p.id !== S.you ? `<button class="ib" title="خليه هوست" ${p.bot || !p.on ? 'disabled' : ''} onclick="send({t:'host',id:'${p.id}'})">👑</button><button class="ib rd" title="اطرده" onclick="kick('${p.id}')">🚫</button>` : ''}</div>`).join('')}</div>`;
 }
 function rhist() {
   if (!S.rh.length) return '<p class="mut">لسه مفيش جولات اتلعبت</p>';
-  return `<div class="rhs">${[...S.rh].reverse().map(r => { const c = cfg.cats.find(x => x.id === r.cat) || {}; return `<div class="rh"><b>#${r.n}</b> ${r.g === 'spy' ? '🕵️' : '🎭'} ${c.emoji || ''} <span>${r.w.length ? '🏆 ' + r.w.map(esc).join('، ') : esc(r.note || '—')}</span>${r.w.length && r.note ? ` <small>${esc(r.note)}</small>` : ''}</div>` }).join('')}</div>`;
+  return `<div class="rhs">${[...S.rh].reverse().map(r => { const c = cfg.cats.find(x => x.id === r.cat) || {}; return `<div class="rh"><b>#${r.n}</b> ${r.g === 'spy' ? '🕵️' : r.g === 'duel' ? '⚔️' : '🎭'} ${r.g === 'duel' ? '' : c.emoji || ''} <span>${r.w.length ? '🏆 ' + r.w.map(esc).join('، ') : esc(r.note || '—')}</span>${r.w.length && r.note ? ` <small>${esc(r.note)}</small>` : ''}</div>` }).join('')}</div>`;
 }
-const GAMES = [['who', '🎭', 'اعرف مين معايا'], ['spy', '🕵️', 'الجاسوس']];
+const GAMES = [['who', '🎭', 'اعرف مين معايا'], ['spy', '🕵️', 'الجاسوس'], ['duel', '⚔️', 'المبارزة']];
 function lobby() {
-  const host = S.host === S.you, me = pl(S.you), spy = S.game === 'spy', n = S.players.length, hum = S.players.filter(p => !p.bot && p.on), rd = hum.filter(p => p.ready).length;
+  const host = S.host === S.you, me = pl(S.you), spy = S.game === 'spy', duel = S.game === 'duel', n = S.players.length, hum = S.players.filter(p => !p.bot && p.on), rd = hum.filter(p => p.ready).length;
   const opt = (arr, cur, key, fmtf) => `<div class="row wrap">${arr.map(v => `<button class="chip ${cur === v ? 'sel' : ''}" ${host ? `onclick="send({t:'set',${key}:${v}})"` : 'disabled'}>${fmtf(v)}</button>`).join('')}</div>`;
   return `<div class="lob"><div class="card"><h3>👥 اللاعبين (${n}/8) • كود الغرفة <span class="code">${S.code}</span></h3>${plist()}
     <div class="row wrap"><button class="chip" onclick="shareLink()">🔗 لينك الدعوة</button>${host ? `<button class="chip" onclick="send({t:'addbot'})">🤖 ضيف بوت</button><button class="chip" onclick="send({t:'rmbot'})">➖ شيل بوت</button>` : ''}</div>
     <h3>🏆 نتايج الجولات</h3>${rhist()}</div>
     <div class="card"><h3>🎮 اللعبة ${host ? '' : '(الهوست بيختار)'}</h3><div class="cats">${GAMES.map(g => `<button class="cat ${S.game === g[0] ? 'sel' : ''}" ${host ? `onclick="send({t:'set',game:'${g[0]}'})"` : 'disabled'}><span>${g[1]}</span>${g[2]}</button>`).join('')}</div>
-    <h3>🎯 المجال</h3><div class="cats">${cfg.cats.map(c => `<button class="cat ${c.id === S.cat ? 'sel' : ''}" ${host ? `onclick="send({t:'set',cat:'${c.id}'})"` : 'disabled'}><span>${c.emoji}</span>${c.name}<small>${c.n}</small></button>`).join('')}</div>
-    ${spy ? `<h3>🕵️ عدد الجواسيس</h3>${opt([1, 2], S.spies, 'spies', v => v === 1 ? 'جاسوس واحد' : 'اتنين (من ٦ لاعبين)')}<h3>🗣 وقت كل كلمة</h3>${opt([20, 30, 45, 60], S.clueT, 'clueT', v => v + ' ث')}<h3>🗳 وقت النقاش والتصويت</h3>${opt([45, 60, 90, 120], S.voteT, 'voteT', v => v + ' ث')}` : `<h3>⏱ وقت الجولة</h3>${opt([60, 180, 300, 600, 900], S.dur, 'dur', v => v / 60 + ' دقيقة')}`}
+    ${duel ? `<h3>🎯 مجال الأسئلة</h3><div class="cats">${cfg.dcats.map(c => `<button class="cat ${c.id === S.dcat ? 'sel' : ''}" ${host ? `onclick="send({t:'set',dcat:'${c.id}'})"` : 'disabled'}><span>${c.emoji}</span>${c.name}<small>${c.n}</small></button>`).join('')}</div><h3>⏱ وقت كل نص (النص الأول والتاني)</h3>${opt([60, 120, 180, 300], S.dT, 'dT', v => v / 60 + ' دقيقة')}` : `<h3>🎯 المجال</h3><div class="cats">${cfg.cats.map(c => `<button class="cat ${c.id === S.cat ? 'sel' : ''}" ${host ? `onclick="send({t:'set',cat:'${c.id}'})"` : 'disabled'}><span>${c.emoji}</span>${c.name}<small>${c.n}</small></button>`).join('')}</div>`}
+    ${duel ? '' : spy ? `<h3>🕵️ عدد الجواسيس</h3>${opt([1, 2], S.spies, 'spies', v => v === 1 ? 'جاسوس واحد' : 'اتنين (من ٦ لاعبين)')}<h3>🗣 وقت كل كلمة</h3>${opt([20, 30, 45, 60], S.clueT, 'clueT', v => v + ' ث')}<h3>🗳 وقت النقاش والتصويت</h3>${opt([45, 60, 90, 120], S.voteT, 'voteT', v => v + ' ث')}` : `<h3>⏱ وقت الجولة</h3>${opt([60, 180, 300, 600, 900], S.dur, 'dur', v => v / 60 + ' دقيقة')}`}
     <button class="btn ${me.ready ? 't' : 'y'} big2" onclick="send({t:'ready'})">${me.ready ? '✅ إنت جاهز (دوس تلغي)' : '🙋 جاهز'}</button>
     <p class="mut">اللعبة بتبدأ لما كل اللاعبين يدوسوا "جاهز" (${rd}/${hum.length}). ${spy ? 'الجاسوس من ٣ لـ٨ لاعبين، ولو أقل بيتضاف بوتات.' : ''}</p>
     ${host ? `<button class="btn big2" onclick="send({t:'start'})">🚀 ابدأ دلوقتي</button>` : ''}</div></div>`;
+}
+// ================= المبارزة (واجهة) =================
+function dbracket() {
+  const du = S.du, N = id => id ? esc(pl(id).name) : '—';
+  return `<div class="brk">${du.rounds.map((rr, ri) => `<div class="brr"><b>${ri === du.rounds.length - 1 && rr.length === 1 ? '🏁 النهائي' : 'الدور ' + (ri + 1)}</b>${rr.map((m, mi) => { const live = ri === du.r && mi === du.pi && S.phase !== 'dwait'; return m.bye ? `<div class="bm"><span class="w">${N(m.a)}</span> <small>🎫 bye</small></div>` : `<div class="bm ${live ? 'live' : ''}"><span class="${m.w === m.a ? 'w' : ''}">${N(m.a)}</span> <small>${m.w ? (m.sa != null ? '' : '') : 'ضد'}</small> <span class="${m.w === m.b ? 'w' : ''}">${N(m.b)}</span>${live ? ' 🔴' : ''}</div>` }).join('')}</div>`).join('')}</div>`;
+}
+function duelBody() {
+  const du = S.du, c = du.cur, ph = S.phase, host = S.host === S.you, N = id => esc(pl(id).name), me = S.you;
+  const dc = (cfg.dcats || []).find(x => x.id === S.dcat) || {};
+  const bar = c ? `<div class="dsc">${[c.a, c.b].map(id => `<div class="ds ${c.asker === id ? 'ask' : ''} ${id === me ? 'meb' : ''}"><b>${N(id)}${id === me ? ' (إنت)' : ''}</b><i>${c.sc[id]}</i><small>${c.sd ? '' : '⏭ ' + c.sk[id] + ' • '}${c.asker === id ? '🎤 بيسأل' : '🗣 بيجاوب'}</small></div>`).join('<span class="vs">⚔️</span>')}</div>` : '';
+  if (ph === 'dwait') return `<div class="dm"><h2>🏟️ البطولة</h2><p class="mut">المبارزة الجاية بعد ${du.tl} ث...</p>${dbracket()}${board()}</div>`;
+  if (ph === 'dintro') return `<div class="dm"><h2>⚔️ ${N(c.a)} ضد ${N(c.b)}</h2><p>${c.a === me || c.b === me ? '🎙️ جهّز المايك! ' : '👀 هتتفرج. '}النص الأول: <b>${N(c.asker)}</b> بيسأل و<b>${N(c.ans)}</b> بيجاوب بصوته</p><p class="mut">يبدأ بعد ${du.tl} ث</p>${bar}</div>`;
+  if (ph === 'dmid') return `<div class="dm"><h2>🔄 النص التاني</h2><p>اتبدلت الأدوار: <b>${N(c.asker)}</b> بيسأل دلوقتي و<b>${N(c.ans)}</b> بيجاوب</p>${bar}<p class="mut">يبدأ بعد ${du.tl} ث</p></div>`;
+  if (ph === 'dsd') return `<div class="dm"><h2>⚡ تعادل! موت مفاجئ</h2><p>سؤال واحد لكل واحد. اللي يجاوب صح والتاني يغلط يكسب. يبدأ بعد ${du.tl} ث</p>${bar}</div>`;
+  if (ph === 'dplay') {
+    const sd = c.sd;
+    let mid;
+    if (c.asker === me) mid = `<div class="qcard"><small>${(cfg.dcats.find(x => x.id === (c.q && c.q.c)) || {}).emoji || ''} ${(cfg.dcats.find(x => x.id === (c.q && c.q.c)) || {}).name || ''}</small><div class="qq">${c.q ? esc(c.q.q) : '...'}</div><div class="qa">✔ الإجابة: <b>${c.q ? esc(c.q.a) : ''}</b></div></div>
+      <p class="mut">اسأل السؤال بصوتك، وبعدين احكم على إجابة ${N(c.ans)}</p>
+      <div class="row wrap" style="justify-content:center"><button class="btn t big2" onclick="send({t:'ans',ok:true})">✅ صح</button><button class="btn r big2" onclick="send({t:'ans',ok:false})">❌ غلط</button>${sd ? '' : `<button class="btn" onclick="send({t:'skip'})">⏭ تخطي</button>`}</div>`;
+    else if (c.ans === me) mid = `<div class="qcard wt"><div class="qq">🗣 جاوب بصوتك على سؤال ${N(c.asker)}!</div><div class="qa">${sd ? '⚡ سؤال الموت المفاجئ' : 'كل إجابة صح بتزود نقطتك'}</div></div>`;
+    else mid = `<div class="qcard wt"><div class="qq">👀 ${N(c.asker)} بيسأل و${N(c.ans)} بيجاوب</div><div class="qa">${sd ? '⚡ موت مفاجئ' : 'السكور بيتحدث لايف'}</div></div>`;
+    return `<div class="dm">${bar}${mid}<p class="mut">${dc.emoji || ''} ${esc(dc.name || '')} • النص ${c.half > 2 ? '⚡' : c.half}</p></div>`;
+  }
+  if (ph === 'dres') {
+    const r = du.res, how = { score: 'بأكتر إجابات صح', skips: 'بتخطي أقل بعد التعادل', sd: 'بالموت المفاجئ', ff: 'بانسحاب المنافس' }[r.how];
+    return `<div class="dm"><h2>🏅 ${N(r.w)} كسب المبارزة!</h2><p class="big2s">${N(r.a)} <b>${r.sa}</b> : <b>${r.sb}</b> ${N(r.b)}</p><p>${how} • الفايز +10 والتاني +5</p>${board()}<p class="mut">اللي بعده بعد ${du.tl} ث</p></div>`;
+  }
+  if (ph === 'dchamp') {
+    const me0 = pl(me), hum = S.players.filter(p => !p.bot && p.on), rd = hum.filter(p => p.ready).length;
+    return `<div class="dm"><h2>👑 البطل: ${du.champ ? N(du.champ) : '—'}</h2><div class="trophy">🏆</div>${dbracket()}${board()}
+    <div class="row wrap" style="justify-content:center"><button class="btn ${me0.ready ? 't' : 'y'}" onclick="send({t:'ready'})">${me0.ready ? '✅ جاهز (' + rd + '/' + hum.length + ')' : '🔁 بطولة جديدة (' + rd + '/' + hum.length + ')'}</button>${host ? `<button class="btn" onclick="send({t:'tolobby'})">🏠 غيّر اللعبة أو المجال</button>` : ''}</div></div>`;
+  }
+  return '';
 }
 function body() {
   const host = S.host === S.you, cat = (cfg.cats.find(c => c.id === S.cat) || {});
   if (S.phase === 'lobby') return lobby();
   if (S.phase[0] === 's') return spyBody();
+  if (S.phase[0] === 'd') return duelBody();
   if (S.phase === 'result') {
     const sorted = [...S.seats].sort((a, b) => (a.rank || 99) - (b.rank || 99));
     return `<div class="res"><h2>🏁 النتيجة</h2><div class="cards">${sorted.map(s => card(s)).join('')}</div>${board()}
@@ -197,15 +232,15 @@ function renderNow() {
   const mid0 = document.querySelector('.mid'), ms0 = mid0 ? mid0.scrollTop : 0, samePh = rPh === S.phase + ':' + S.cat; rPh = S.phase + ':' + S.cat;
   const keep = {}; ['fq', 'gs', 'ci', 'cl'].forEach(id => { const e = $(id); if (e) keep[id] = [e.value, document.activeElement === e] });
   const sc = $('msgs') ? $('msgs').scrollTop : 0, bot = $('msgs') ? ($('msgs').scrollHeight - $('msgs').scrollTop - $('msgs').clientHeight < 40) : true;
-  const tl = S.phase === 'play' ? S.left : (S.sp && 'sclue svote sguess'.includes(S.phase) ? S.sp.left : null), timer = tl != null ? `<span class="tm" id="tm">⏱ ${fmt(tl)}</span>` : '';
-  A.innerHTML = `<div class="hd"><b class="ttl">${S.game === 'spy' ? '🕵️' : '🎭'} ${esc((cfg.cats.find(c => c.id === S.cat) || {}).emoji || '')} ${S.code}</b><span class="chip me myp" title="نقطك في الغرفة">⭐ ${pl(S.you).score}</span>${timer}<span class="sp"></span><span id="vslot"></span><button class="ib" title="لينك دعوة" onclick="shareLink()">🔗</button><button class="ib" onclick="side=!side;render()">💬</button><button class="ib" onclick="helpOpen()">📖</button><button class="ib" onclick="theme()">${document.documentElement.dataset.theme === 'dark' ? '☀️' : '🌙'}</button><button class="ib" onclick="fsToggle()">⛶</button><button class="ib rd" onclick="leaveRoom()">🚪</button></div>
+  const tl = S.phase === 'play' ? S.left : (S.sp && 'sclue svote sguess'.includes(S.phase) ? S.sp.left : (S.du && S.phase === 'dplay' && S.du.cur && !S.du.cur.sd ? S.du.tl : null)), timer = tl != null ? `<span class="tm" id="tm">⏱ ${fmt(tl)}</span>` : '';
+  A.innerHTML = `<div class="hd"><b class="ttl">${S.game === 'spy' ? '🕵️' : S.game === 'duel' ? '⚔️' : '🎭'} ${S.game === 'duel' ? '' : esc((cfg.cats.find(c => c.id === S.cat) || {}).emoji || '')} ${S.code}</b><span class="chip me myp" title="نقطك في الغرفة">⭐ ${pl(S.you).score}</span>${timer}<span class="sp"></span><span id="vslot"></span><button class="ib" title="لينك دعوة" onclick="shareLink()">🔗</button><button class="ib" onclick="side=!side;render()">💬</button><button class="ib" onclick="helpOpen()">📖</button><button class="ib" onclick="theme()">${document.documentElement.dataset.theme === 'dark' ? '☀️' : '🌙'}</button><button class="ib" onclick="fsToggle()">⛶</button><button class="ib rd" onclick="leaveRoom()">🚪</button></div>
   <div class="main ${side ? '' : 'noside'}"><div class="mid">${body()}</div>${side ? sidebar() : ''}</div>`;
   for (const id in keep) { const e = $(id); if (e) { e.value = keep[id][0]; if (keep[id][1]) e.focus() } }
   const mg = $('msgs'); if (mg) mg.scrollTop = bot ? mg.scrollHeight : sc;
   const mid1 = document.querySelector('.mid'); if (mid1 && samePh) mid1.scrollTop = ms0;
   vui();
 }
-setInterval(() => { if (S) { const base = S.phase === 'play' ? S.left : (S.sp && 'sclue svote sguess'.includes(S.phase) ? S.sp.left : null), e = $('tm'); if (base != null && e) { const d = (Date.now() - S._t) / 1000, l = Math.max(0, base - d); e.textContent = '⏱ ' + fmt(l); e.className = 'tm' + (l < 10 ? ' low' : ''); if (l < 6 && l > 0 && Math.floor(l) !== S._lt) { S._lt = Math.floor(l); SFX.tick() } } } }, 500);
+setInterval(() => { if (S) { const base = S.phase === 'play' ? S.left : (S.sp && 'sclue svote sguess'.includes(S.phase) ? S.sp.left : (S.du && S.phase === 'dplay' && S.du.cur && !S.du.cur.sd ? S.du.tl : null)), e = $('tm'); if (base != null && e) { const d = (Date.now() - S._t) / 1000, l = Math.max(0, base - d); e.textContent = '⏱ ' + fmt(l); e.className = 'tm' + (l < 10 ? ' low' : ''); if (l < 6 && l > 0 && Math.floor(l) !== S._lt) { S._lt = Math.floor(l); SFX.tick() } } } }, 500);
 // ---------- rules
 function helpOpen() {
   if ($('helpm')) return; const d = document.createElement('div'); d.id = 'helpm'; d.className = 'modal'; d.onclick = e => { if (e.target === d) helpClose() };
@@ -214,10 +249,12 @@ function helpOpen() {
   ['👥 اللاعبين', 'قايمة اللاعبين بتبيّن مين موجود ومين غايب، ومين فاتح المايك. الهوست (👑) يقدر يطرد لاعب أو يدي الهوست لحد تاني.'],
   ['🎭 اعرف مين معايا', 'كل واحد بيتحط على دماغه كارت وإنت مش شايف كارتك. اسأل أسئلة أيوه/لأ أو خمّن اسمك. آخر الجولة بتظهر أزرار بأسماء اللاعبين ("محمد كسب"): لازم كلهم يدوسوا نفس الاسم عشان نكمل، وزرار "تخطي روند" لازم كلهم يدوسوه. الاسم اللي بيتختار ياخد ٥ نقط.'],
   ['🕵️ الجاسوس (٣ لـ٨ لاعبين)', 'كل اللاعبين بياخدوا نفس الكلمة السرية (من نفس مجالات اللعبة التانية) ما عدا الجاسوس، هو مش بيعرفها. بالدور كل واحد يقول كلمة واحدة توصف الكلمة من غير ما ينطقها (صوت أو كتابة). بعدها نقاش وتصويت على الجاسوس. لو الأغلبية كشفته بيخمّن الكلمة من ٤ اختيارات: لو صح يكسب، لو غلط الفريق يكسب. لو محدش اتكشف الجاسوس يكسب. لو اللاعبين قلال بيتضاف بوت ذكي بيلعب.'],
+  ['⚔️ المبارزة (٢ لـ٨ لاعبين)', 'بطولة خروج مغلوب. الهوست يختار مجال الأسئلة (أو منوّع). اللاعبين بيتقسموا اتنين اتنين، ولو العدد فردي واحد بيعدّي بالـ bye. كل مبارزة نصين، كل نص بالوقت اللي الهوست حدده، والأدوار بتتبدل. اللي بيسأل بيشوف السؤال وإجابته على شاشته وبيقراه بصوته، واللي بيجاوب بيرد بصوته. بعدها اللي بيسأل يدوس ✅ أو ❌ وبينقل للسؤال اللي بعده، وممكن يتخطى سؤال. الأكتر في الإجابات الصح يكسب. لو اتعادلوا يكسب اللي تخطّى أقل، ولو لسه تعادل: موت مفاجئ بسؤال لكل واحد. باقي اللاعبين بيتفرجوا على السكور لايف. الفايز بيكمل لحد ما يفضل بطل واحد.'],
+  ['🏅 نقط المبارزة', 'الفايز في كل مبارزة +١٠ والخسران +٥، والنقط بتتجمع مع باقي الألعاب في نفس الغرفة. من غير ما أي سؤال يتكرر في الغرفة.'],
   ['🎁 نقط الجاسوس', 'الجاسوس لو كسب ياخد ٥. ولو الفريق كسب، كل واحد صوّت صح على الجاسوس ياخد ٥. من ٦ لاعبين الهوست يقدر يختار جاسوسين.'],
   ['🎙 الصوت والشات', 'الشات الكتابي والمايك شغالين من أول ما تدخل، والإيموجي بتطلع قدام الكل.'],
   ['🤖 البوتات', 'لو اللاعبين أقل من اللازم بيتضاف بوت لوحده. تقدر كمان تضيف بوتات من اللوبي.']];
-  d.innerHTML = `<div class="box"><div class="row"><h2 style="flex:1;margin:0">📖 إزاي تلعب</h2><button class="ib rd" onclick="helpClose()">✖</button></div>${H.map(h => `<div class="rule"><b>${h[0]}</b><p>${h[1]}</p></div>`).join('')}</div>`;
+  d.innerHTML = `<div class="box"><div class="row"><h2 style="flex:1;margin:0">📖 إزاي تلعب</h2><button class="ib rd" onclick="helpClose()">✖</button></div>${H.map(h => `<div class="rule"><b>${h[0]}</b><p>${h[1]}</p></div>`).join('')}<div class="dev">تطوير: elnaholy</div></div>`;
   document.body.appendChild(d);
 }
 function helpClose() { const d = $('helpm'); if (d) d.remove() }
