@@ -41,6 +41,7 @@ function home() {
   A.innerHTML = `<div class="scr"><div class="wrap"><h1>المباحث</h1><p class="m" style="text-align:center">لعبة تحقيق جماعية. اتحقق مع صحابك واستجوب المشتبه فيهم واقبض على القاتل.</p>
   <div class="card"><input class="t" id="nm" placeholder="اسمك" maxlength="20" value="${esc(myname)}">
   <button class="btn" onclick="mk()">افتح غرفة جديدة</button></div>
+  <button class="btn ghost" onclick="helpOpen()">📖 إزاي تلعب؟ (القوانين والشرح)</button>
   <div class="card"><h3>ادخل غرفة</h3><input class="t" id="cd" placeholder="كود الغرفة (٤ أرقام)" inputmode="numeric" maxlength="4" style="text-align:center;letter-spacing:6px">
   <button class="btn" onclick="jn()">ادخل</button><div id="rl"></div></div></div></div>`;
   fetch('/rooms').then(r => r.json()).then(l => { const e = $('rl'); if (e && l.length) e.innerHTML = '<p class="m">غرف مفتوحة:</p>' + l.map(x => `<button class="btn ghost" onclick="jn('${esc(x.code)}')">غرفة ${esc(x.code)} - ${esc(x.host || '')} (${x.n}/4)</button>`).join('') }).catch(() => { });
@@ -53,6 +54,7 @@ function lobby() {
   <h3>اختار تخصصك</h3>
   ${Object.keys(cfg.roles).map(k => { const o = S.players.find(p => p.role === k); const mine = o && o.id === S.you; return `<div class="rolec ${mine ? 'mine' : ''} ${o && !mine ? 'taken' : ''}" onclick="pickRole('${k}')"><span class="ic">${ICON[k]}</span><div><b>${cfg.roles[k]}</b><div class="m">${ROLEDESC[k]}</div></div><span style="margin-inline-start:auto">${mine ? '✔ تخصصك' : o ? esc(o.name) : ''}</span></div>` }).join('')}
   <p class="m">لو مفيش لاعب على تخصص، أي حد يقدر يشتغل فيه. لازم لاعب واحد على الأقل.</p>
+  <button class="btn ghost" onclick="helpOpen()">📖 إزاي تلعب؟ اقرأ القوانين الأول</button>
   ${host ? '<button class="btn red" onclick="send({t:\'start\'})">ابدأ التحقيق</button>' : '<div class="card" style="text-align:center">مستنيين صاحب الغرفة يبدأ...</div>'}
   </div></div>`;
 }
@@ -88,7 +90,7 @@ function playShell() {
   const tabs = [['scene', '🔎 المسرح'], ['role', (ICON[me.role] || '🧰') + ' تخصصي'], ['board', '🗂 اللوحة'], ['sus', '👥 المشتبه فيهم'], ['accuse', '⚖ اتهم']];
   const key = 'x';
   if (!$('mn')) {
-    A.innerHTML = `<div class="hd"><span class="sp" id="ttl"></span><span id="vslot"></span><button class="ib chtog" onclick="togChat()">💬</button><button class="ib" onclick="fsToggle()" title="ملء الشاشة">⛶ ملء الشاشة</button></div>
+    A.innerHTML = `<div class="hd"><span class="sp" id="ttl"></span><span id="vslot"></span><button class="ib" onclick="helpOpen()">📖 إزاي تلعب</button><button class="ib chtog" onclick="togChat()">💬</button><button class="ib" onclick="fsToggle()" title="ملء الشاشة">⛶ ملء الشاشة</button></div>
     <div class="rot">لف الموبايل عرض عشان تلعب براحتك 📱↔️</div>
     <div class="bd"><div class="chp" id="chp"><h4>🎧 غرفة العمليات</h4><div class="pbar" id="pbar"></div><div class="chl" id="chl"></div><div class="cin"><input id="ci" placeholder="اكتب رسالة" maxlength="200" onkeydown="if(event.key==='Enter')sc()"><button onclick="sc()">ابعت</button></div></div>
     <div class="mn" id="mn"><div class="tc" id="tc"></div><div class="tabs" id="tabs"></div></div></div>`;
@@ -300,6 +302,25 @@ async function vmsg(m) {
     } else if (d.c) { if (o.pc.remoteDescription) await o.pc.addIceCandidate(d.c).catch(() => { }); else o.q.push(d.c) }
   } catch (e) { }
 }
+
+// ================= إزاي تلعب =================
+const HELP=[
+['🎯 فكرة اللعبة','إنت وصحابك فريق مباحث (لحد 4 لاعبين). في جريمة قتل و3 مشتبه فيهم، وواحد بس هو القاتل. تجمعوا أدلة من المسرح والجثة والبصمات، تستجوبوا المشتبه فيهم، وفي الآخر تتهموا القاتل الصح. الشغل كله جماعي، ومحدش بيعرف يحل لوحده.'],
+['🚀 إزاي تبدأ','واحد يفتح غرفة جديدة ويبعت الكود (٤ أرقام) لصحابه، وهما يكتبوه في "ادخل غرفة". كل واحد يختار تخصصه في اللوبي، وصاحب الغرفة يدوس "ابدأ التحقيق". اتكلموا مع بعض بالشات الكتابي أو زرار 🎙️ شات صوتي فوق.'],
+['🔦 المحقق الميداني','هو اللي بيفحص المسرح. من تبويب "المسرح" اضغط على الدواير الصفراء في الصورة لتجمع الأدلة (الدايرة الخضرا يعني اتجمعت، والمقفولة 🔒 محتاجة إذن الرئيس). في أماكن مفيهاش حاجة، وده طبيعي. لما تلاقي دليل عليه بصمة، ارفعها من تبويب "تخصصي".'],
+['🔬 الطبيب الشرعي','بيفحص الجثة. اختار أداة (عدسة، مسطرة، ترمومتر كبد، عينة) وبعدين اضغط على مكان في الجثة. كل أداة بتنفع مع أماكن معينة، فجرب. وبالترمومتر هتحسب وقت الوفاة: الجسم بيبرد درجة تقريبا كل ساعة من ٣٧، وده بيفرق في أقوال المشتبه فيهم.'],
+['🖐️ خبير البصمات','المحقق بيرفع بصمات من المسرح. إنت تقارن النقش بتاع البصمة المجهولة (شكل الحلقات والدواير الصغيرة) ببصمات أصحابها وتعتمد التطابق. التخمين الغلط بيخسّر الفريق نقط.'],
+['⭐ رئيس المباحث','بيدير الفريق. بيصدر الأوامر اللي بتفتح حاجات جديدة: الدولاب المقفول (٣ أدلة)، السلم الخلفي (٥ أدلة)، وباب الاتهام (٨ أدلة). وهو الوحيد اللي بيقدم الاتهام الرسمي في الآخر. لو مفيش لاعب على تخصص، أي حد في الفريق يقدر يشتغل فيه.'],
+['🗣 الاستجواب','من تبويب "المشتبه فيهم" اختار شخص واكتب له أي سؤال بالعربي زي ما تحب: كنت فين؟ تعرف المجني عليه منين؟ كل واحد يرد بشخصيته. لاحظ شريط التوتر تحت صورته. لو كررت نفس السؤال أو ضغطت عليه هيتوتر أكتر.'],
+['📎 واجهه بدليل','دي أهم حاجة في الاستجواب. دوس "واجهه بدليل" واختار دليل لقيتوه. المشتبه فيه بيتهرب أو يكدب أو يتوتر، ولو واجهته بأدلة صح كفاية بينهار ويقول حقيقة جديدة، وساعات بتظهر شهادة جديدة تضاف للأدلة. المواجهة بدليل غلط مش بتضر، بس مش هتفيد.'],
+['🗂 لوحة التحقيق','لوحة فلين مشتركة، كل اللي في الغرفة بيشوف نفس اللوحة. دوس 📌 جنب أي دليل أو مشتبه فيه علشان تعلقه، وحركه بصباعك. دوس "وصّل بخيط أحمر" واضغط على كارتين علشان تربط بينهم (اضغط عليهم تاني يشيل الخيط). فكر في السلسلة: سلاح الجريمة، البصمة، الدافع، الشهادة. الخيوط الصح بتزود رتبتكم.'],
+['⚖ الاتهام والتصويت','لما رئيس المباحث يفتح باب الاتهام، كل لاعب يصوّت على اللي شاكك فيه. لازم أغلبية الفريق على نفس الشخص، وبعدين الرئيس يضغط "قدّم الاتهام".'],
+['🏆 الكسب والخسارة','لو المتهم هو القاتل: كسبتوا وبتاخدوا رتبة من نقيب لحد لواء حسب الأدلة الأساسية اللي لقيتوها والخيوط الصح على اللوحة وعدد الغلطات. لو غلط: المتهم البريء بيخرج من القسم والباقي بيبقوا أحرص. غلطتين والقضية بتفشل. فاتأكدوا قبل ما تتهموا.'],
+['💡 نصايح','اتكلموا مع بعض وقولوا كل دليل جديد. استجوبوا الكل أكتر من مرة بعد كل دليل جديد. مش كل مشتبه فيه بيكدب في كل حاجة، ومش كل دليل مهم. ولف الموبايل عرض، وادوس ⛶ ملء الشاشة.']
+];
+function helpOpen(){ if($('helpm'))return; const d=document.createElement('div'); d.id='helpm'; d.className='modal'; d.onclick=e=>{if(e.target===d)helpClose()};
+ d.innerHTML='<div class="box" style="max-width:640px;max-height:92%"><div style="display:flex;align-items:center"><h3 style="margin:0;flex:1;color:var(--gold)">📖 إزاي تلعب</h3><button class="ib" onclick="helpClose()">✕ إغلاق</button></div><div class="m" style="margin:4px 0 8px">قوانين اللعبة وشرح خطوة بخطوة</div>'+HELP.map(h=>'<div class="card"><b style="color:var(--gold)">'+h[0]+'</b><div style="margin-top:3px">'+h[1]+'</div></div>').join('')+'<button class="btn" onclick="helpClose()">فهمت، يلا نلعب</button></div>'; document.body.appendChild(d); }
+function helpClose(){const d=$('helpm'); if(d)d.remove()}
 home();
 let _ses = null; try { _ses = JSON.parse(localStorage.mbSess || 'null') } catch (e) { }
 if (_ses) { conn(() => send({ t: 'join', code: _ses.code, token: _ses.token, name: myname })) }
