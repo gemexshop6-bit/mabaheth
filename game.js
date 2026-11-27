@@ -35,7 +35,7 @@ function floatEmo(m) { const d = document.createElement('div'); d.className = 'e
 function nm() { let v = ($('nm').value || '').trim(); if (!v) v = 'لاعب ' + Math.floor(10 + Math.random() * 90); myname = v; try { localStorage.mbName = v } catch (e) { } return v }
 function fsToggle() {
   const d = document, e = d.documentElement;
-  if (d.fullscreenElement || d.webkitFullscreenElement) { (d.exitFullscreen || d.webkitExitFullscreen).call(d); return }
+  if (d.fullscreenElement || d.webkitFullscreenElement) { noAuto = 1; (d.exitFullscreen || d.webkitExitFullscreen).call(d); return }
   const f = e.requestFullscreen || e.webkitRequestFullscreen;
   if (!f) return toast('المتصفح ده مش بيدعم ملء الشاشة. من آيفون: شارك ثم "أضف للشاشة الرئيسية"');
   const r = f.call(e); const lock = () => { try { screen.orientation.lock('landscape').catch(() => { }) } catch (x) { } };
@@ -48,7 +48,7 @@ const pl = id => S.players.find(p => p.id === id) || { name: '؟', score: 0 };
 // ---------- home
 function home() {
   S = null;
-  A.innerHTML = `<div class="home"><div class="logo"><div class="big">🎭</div><h1>اعرف مين المعايا؟</h1><p>لعبة الحفلات اللي هتموّتك ضحك مع صحابك</p></div>
+  A.innerHTML = `<div class="home"><div class="logo"><div class="big">🎭</div><h1>اعرف مين المعايا؟</h1><p>لعبة الحفلات اللي هتموّتك ضحك مع صحابك</p><div class="promo" aria-hidden="true"><div class="sl s1"><div class="tx"><b>استمتع إنت وأصحابك</b><small>افتح غرفة وادعي شلتك والعبوا مع بعض</small></div><div class="faces"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#fff" stroke="#2b2140" stroke-width="3"/><circle cx="14" cy="17" r="2.6" fill="#2b2140"/><circle cx="26" cy="17" r="2.6" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#FF6B9D" stroke="#2b2140" stroke-width="3"/><path d="M10 17l7-2M30 17l-7-2" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/><path d="M10 25Q20 38 30 25z" fill="#fff" stroke="#2b2140" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#2EC4B6" stroke="#2b2140" stroke-width="3"/><circle cx="14" cy="17" r="2.6" fill="#2b2140"/><circle cx="26" cy="17" r="2.6" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#fff" stroke="#2b2140" stroke-width="3"/><path d="M7 15h26v6H7z" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg></div></div><div class="sl s2"><div class="tx"><span class="soon">قريبًا</span><b>انتظروا قريبًا: لعبة الجاسوس</b><small>🔒 لسه مش متاحة، بنجهزها لكم</small></div><div class="spy"><span><svg viewBox="0 0 60 60"><ellipse cx="30" cy="22" rx="24" ry="6" fill="#444" stroke="#FFC93C" stroke-width="2.5"/><path d="M15 21Q16 6 30 6Q44 6 45 21z" fill="#444" stroke="#FFC93C" stroke-width="2.5"/><rect x="15" y="18" width="30" height="4" fill="#FFC93C"/><circle cx="30" cy="36" r="12" fill="#ffe0bd" stroke="#2b2140" stroke-width="2.5"/><path d="M19 33h22v6H19z" fill="#2b2140"/><path d="M18 52q12-9 24 0v8H18z" fill="#fff" stroke="#2b2140" stroke-width="2.5"/></svg></span><em>؟</em><em class="q2">؟</em></div></div></div></div>
   <div class="panel"><input id="nm" class="inp" maxlength="20" placeholder="اسمك" value="${esc(myname)}">
   <div class="row"><button class="btn y" onclick="mk()">🎉 افتح غرفة جديدة</button></div>
   <div class="row"><input id="cd" class="inp" inputmode="numeric" maxlength="4" placeholder="كود الغرفة"><button class="btn t" onclick="jn()">ادخل</button></div>
@@ -110,8 +110,9 @@ function sidebar() {
   <div class="row"><input id="ci" class="inp" maxlength="200" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter')csend()"><button class="btn t sm" onclick="csend()">إرسال</button></div></div>`;
 }
 function csend() { const v = $('ci').value.trim(); if (v) { send({ t: 'chat', text: v }); $('ci').value = '' } }
-function render() {
+function renderNow() {
   if (!S) return;
+  const mid0 = document.querySelector('.mid'), ms0 = mid0 ? mid0.scrollTop : 0, samePh = rPh === S.phase + ':' + S.cat; rPh = S.phase + ':' + S.cat;
   const keep = {}; ['fq', 'gs', 'ci'].forEach(id => { const e = $(id); if (e) keep[id] = [e.value, document.activeElement === e] });
   const sc = $('msgs') ? $('msgs').scrollTop : 0, bot = $('msgs') ? ($('msgs').scrollHeight - $('msgs').scrollTop - $('msgs').clientHeight < 40) : true;
   const timer = S.phase === 'play' ? `<span class="tm" id="tm">⏱ ${fmt(S.left)}</span>` : '';
@@ -119,6 +120,7 @@ function render() {
   <div class="main ${side ? '' : 'noside'}"><div class="mid">${body()}</div>${side ? sidebar() : ''}</div>`;
   for (const id in keep) { const e = $(id); if (e) { e.value = keep[id][0]; if (keep[id][1]) e.focus() } }
   const mg = $('msgs'); if (mg) mg.scrollTop = bot ? mg.scrollHeight : sc;
+  const mid1 = document.querySelector('.mid'); if (mid1 && samePh) mid1.scrollTop = ms0;
   vui();
 }
 setInterval(() => { if (S && S.phase === 'play') { const d = (Date.now() - S._t) / 1000, e = $('tm'); if (e) { const l = Math.max(0, S.left - d); e.textContent = '⏱ ' + fmt(l); e.className = 'tm' + (l < 30 ? ' low' : ''); if (l < 10 && l > 0 && Math.floor(l) !== S._lt) { S._lt = Math.floor(l); SFX.tick() } } } }, 500);
@@ -181,3 +183,38 @@ async function vmsg(m) {
 home();
 let _ses = null; try { _ses = JSON.parse(localStorage.mbSess || 'null') } catch (e) { }
 if (_ses) { conn(() => send({ t: 'join', code: _ses.code, token: _ses.token, name: myname })) }
+
+// ---------- scroll-safe rendering: never rebuild the DOM while a finger/momentum scroll is active
+var rPh = '', tch = 0, lastSc = 0, rqT = 0, rqSince = 0;
+function render() {
+  if (!S) return;
+  const busy = tch || Date.now() - lastSc < 220;
+  if (busy) { if (!rqSince) rqSince = Date.now(); if (Date.now() - rqSince < 4000) { clearTimeout(rqT); rqT = setTimeout(render, 140); return } }
+  rqSince = 0; clearTimeout(rqT); renderNow();
+}
+addEventListener('touchstart', () => { tch = 1 }, { passive: true, capture: true });
+['touchend', 'touchcancel'].forEach(ev => addEventListener(ev, () => { tch = 0; lastSc = Date.now() }, { passive: true, capture: true }));
+addEventListener('scroll', () => { lastSc = Date.now() }, { passive: true, capture: true });
+addEventListener('wheel', () => { lastSc = Date.now() }, { passive: true, capture: true });
+// ---------- auto fullscreen + landscape on first gesture, rotate hint where rotation can't be forced
+var noAuto = 0;
+function isTouch() { return matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window }
+function inFS() { return !!(document.fullscreenElement || document.webkitFullscreenElement) }
+function autoFS() {
+  if (noAuto || inFS() || !isTouch()) return;
+  const e = document.documentElement, f = e.requestFullscreen || e.webkitRequestFullscreen;
+  if (!f) return;
+  try { const r = f.call(e); const lock = () => { try { screen.orientation.lock('landscape').catch(() => { }) } catch (x) { } }; if (r && r.then) r.then(lock).catch(() => { }); else lock() } catch (x) { }
+}
+['pointerdown', 'click'].forEach(ev => addEventListener(ev, () => autoFS(), { capture: true, once: false }));
+document.addEventListener('fullscreenchange', () => { rotChk() });
+function rotChk() {
+  let el = document.getElementById('rot');
+  const portrait = matchMedia('(orientation:portrait)').matches && innerWidth < 760 && isTouch();
+  let dis = 0; try { dis = sessionStorage.mbRot } catch (e) { }
+  if (portrait && !dis) {
+    if (!el) { el = document.createElement('div'); el.id = 'rot'; el.innerHTML = '<div class="rb"><div class="ph">📱</div><h2>لف الموبايل بالعرض</h2><p>اللعبة أحلى وأوسع وهو مقلوب على جنبه. لو الدوران التلقائي مقفول من الإعدادات افتحه.</p><button class="btn y" onclick="rotX()">كمّل بالطول</button></div>'; document.body.appendChild(el) }
+  } else if (el) el.remove();
+}
+function rotX() { try { sessionStorage.mbRot = 1 } catch (e) { } rotChk() }
+addEventListener('resize', rotChk); addEventListener('orientationchange', () => setTimeout(rotChk, 200)); setTimeout(rotChk, 300);
