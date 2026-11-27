@@ -58,12 +58,24 @@ function state(room, p) {
 function bcast(room) { for (const p of Object.values(room.players)) if (p.ws) send(p.ws, state(room, p)) }
 function toast(p, text) { send(p.ws, { t: 'toast', text }) }
 function live(room) { return room.seats.filter(s => !s.done) }
+function deal(room, used) {
+  const h = room.hist || (room.hist = {}), L = h[room.cat] || (h[room.cat] = []), n = CATS[room.cat].items.length;
+  let fresh = []; for (let i = 0; i < n; i++) if (!L.includes(i) && !used.has(i)) fresh.push(i);
+  let c;
+  if (fresh.length) c = pick(fresh);
+  else { // pool exhausted: reuse oldest-used first, never twice in the same round
+    if (!room.recyc || room.recyc !== room.round + 1) { room.recyc = room.round + 1; sys(room, '♻️ خلصت كروت المجال ده، هنعيد من الأقدم'); lg(room, '♻️ خلصت كروت المجال، بنعيد من الأقدم', 'sys') }
+    c = L.find(i => !used.has(i)); if (c === undefined) c = pick([...Array(n).keys()].filter(i => !used.has(i)));
+  }
+  const k = L.indexOf(c); if (k >= 0) L.splice(k, 1); L.push(c);
+  return c;
+}
 function startRound(room) {
   const cat = CATS[room.cat], ids = Object.keys(room.players);
   while (ids.length < 2 && ids.length < MAXSEATS) { const bid = 'b' + rid(); room.players[bid] = { id: bid, name: BOTN[ids.length % BOTN.length], bot: true, score: 0 }; ids.push(bid) }
   const used = new Set(); room.seats = []; room.log = []; room.pend = null; room.bp = {}; room.br = {}; room.bs = {};
   for (const id of ids.sort(() => Math.random() - .5)) {
-    let c; do { c = Math.floor(Math.random() * cat.items.length) } while (used.has(c)); used.add(c);
+    let c = deal(room, used); used.add(c);
     room.seats.push({ id, card: c, done: false, rank: 0, miss: 0, hints: [], hu: 0, cand: cat.items.map((_, i) => i), asked: {}, gain: 0 });
   }
   room.round++; room.phase = 'play'; room.turn = -1; room.endAt = T() + room.dur * 1000; room.nfin = 0;
