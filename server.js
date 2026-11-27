@@ -1,20 +1,22 @@
 const http = require('http'), fs = require('fs'), path = require('path');
 const { WebSocketServer } = require('ws');
 const C = require('./case1.js');
+const W = require('./who.js');
 const PORT = process.env.PORT || 3000;
 const read = f => fs.readFileSync(path.join(__dirname, f));
 const IMG = {};
 for (const k of ['scene', 's1', 's2', 's3', 'board']) IMG[k] = Buffer.from(require('./img_' + k + '.js'), 'base64');
-const HTML = read('index.html'), JS = read('game.js');
+const HTML = read('index.html'), JS = read('game.js'), WJS = read('whoc.js');
 const srv = http.createServer((q, r) => {
   const u = q.url.split('?')[0];
   if (u === '/health') { r.end('ok'); return }
   if (u === '/rooms') {
-    const l = Object.values(rooms).filter(x => x.phase === 'lobby' && Object.keys(x.players).length < 4 && Object.values(x.players).some(p => p.ws)).map(x => ({ code: x.code, host: (x.players[x.host] || {}).name, n: Object.keys(x.players).length }));
+    const l = Object.values(rooms).filter(x => x.phase === 'lobby' && Object.keys(x.players).length + (x.bots ? x.bots.length : 0) < (x.mode === 'who' ? 3 : 4) && Object.values(x.players).some(p => p.ws)).map(x => ({ code: x.code, host: (x.players[x.host] || {}).name, n: Object.keys(x.players).length, mode: x.mode || 'co' }));
     r.writeHead(200, { 'content-type': 'application/json' }); r.end(JSON.stringify(l)); return;
   }
   let m = u.match(/^\/img\/(\w+)\.jpg$/);
   if (m && IMG[m[1]]) { r.writeHead(200, { 'content-type': 'image/jpeg', 'cache-control': 'public,max-age=86400' }); r.end(IMG[m[1]]); return }
+  if (u === '/whoc.js') { r.writeHead(200, { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'no-cache' }); r.end(WJS); return }
   if (u === '/game.js') { r.writeHead(200, { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'no-cache' }); r.end(JS); return }
   r.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); r.end(HTML);
 });
@@ -39,6 +41,7 @@ const roleOf = (room, role) => Object.values(room.players).find(x => x.role === 
 const can = (room, p, role) => p.role === role || !roleOf(room, role);
 const mood = (S) => S.cracked.length ? 'انهار' : S.stress >= 70 ? 'على وشك الانهيار' : S.stress >= 35 ? 'متوتر' : 'هادي';
 function state(room, p) {
+  if (room.mode === 'who') return W.state(room, p);
   return {
     t: 'state', code: room.code, phase: room.phase, you: p.id, host: room.host,
     players: Object.values(room.players).map(x => ({ id: x.id, name: x.name, role: x.role, on: !!x.ws })),
@@ -146,21 +149,26 @@ function msg(ws, m) {
   if (m.t === 'create' || m.t === 'join') {
     let room, p;
     const name = clean(m.name, 20) || 'لاعب';
-    if (m.t === 'create') { room = newRoom(); rooms[room.code] = room }
+    if (m.t === 'create') { if (m.mode === 'who') { room = W.newRoom(mkcode()); room.bcast = bcast } else room = newRoom(); rooms[room.code] = room }
     else {
       room = rooms[clean(m.code)]; if (!room) return send(ws, { t: 'err', e: 'الكود ده مش موجود' });
       if (m.token && room.players[m.token]) p = room.players[m.token];
-      else { if (room.phase !== 'lobby') return send(ws, { t: 'err', e: 'اللعبة بدأت بالفعل' }); if (Object.keys(room.players).length >= 4) return send(ws, { t: 'err', e: 'الغرفة كاملة' }) }
+      else {
+        if (room.phase !== 'lobby' && !(room.mode === 'who' && room.phase === 'result')) return send(ws, { t: 'err', e: 'اللعبة بدأت بالفعل' });
+        if (room.mode === 'who') { const hn = Object.values(room.players).filter(x => x.ws).length; if (hn + room.bots.length >= 3) { if (room.bots.length) room.bots.pop(); else return send(ws, { t: 'err', e: 'الغرفة كاملة (3 لاعبين)' }) } }
+        else if (Object.keys(room.players).length >= 4) return send(ws, { t: 'err', e: 'الغرفة كاملة' })
+      }
     }
     if (!p) { const id = rid(); p = room.players[id] = { id, name, role: null }; if (!room.host) room.host = id; sys(room, name + ' دخل الغرفة') }
     p.ws = ws; ws.room = room; ws.pid = p.id;
-    send(ws, { t: 'hello', cfg: CFG, token: p.id, code: room.code }); bcast(room); return;
+    send(ws, { t: 'hello', cfg: room.mode === 'who' ? W.cfg() : CFG, token: p.id, code: room.code }); bcast(room); return;
   }
   const room = ws.room, p = room && room.players[ws.pid]; if (!p) return;
   const isChief = can(room, p, 'chief') || p.id === room.host && !roleOf(room, 'chief');
   if (m.t === 'leave') { leaveRoom(room, p, ws); return }
   if (m.t === 'rtc') { const q = room.players[m.to]; if (q && q.ws && m.d && typeof m.d === 'object') send(q.ws, { t: 'rtc', from: p.id, d: m.d }); return }
   if (m.t === 'vjoin' || m.t === 'vleave') { for (const q of Object.values(room.players)) if (q.id !== p.id) send(q.ws, { t: m.t, from: p.id }); return }
+  if (room.mode === 'who') return W.msg(room, p, m);
   if (m.t === 'chat') { const text = clean(m.text); if (!text) return; room.chat.push({ n: p.name, role: p.role, text }); if (room.chat.length > 200) room.chat.shift(); return bcast(room) }
   if (m.t === 'role' && room.phase === 'lobby') {
     if (m.role === null) p.role = null;
@@ -276,5 +284,6 @@ wss.on('connection', ws => {
   ws.on('message', d => { try { msg(ws, JSON.parse(d)) } catch (e) { console.log('err', e.message) } });
   ws.on('close', () => { const r = ws.room; if (!r) return; const p = r.players[ws.pid]; if (p && p.ws === ws) { p.ws = null; bcast(r) } });
 });
+setInterval(() => W.tick(rooms), 1000);
 setInterval(() => { const now = Date.now(); for (const c in rooms) { const r = rooms[c]; if (!Object.values(r.players).some(p => p.ws) && now - r.created > 6 * 3600e3) delete rooms[c] } }, 600000);
 srv.listen(PORT, () => console.log('up', PORT));
