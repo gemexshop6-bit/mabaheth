@@ -14,6 +14,7 @@ const srv = http.createServer((q, r) => {
     const l = Object.values(rooms).filter(x => x.phase === 'lobby' && Object.keys(x.players).length < MAXSEATS && Object.values(x.players).some(p => p.ws && p.id === x.host)).map(x => ({ code: x.code, host: x.players[x.host].name, n: Object.keys(x.players).length }));
     r.writeHead(200, { 'content-type': 'application/json' }); r.end(JSON.stringify(l)); return;
   }
+  if (/^\/[\w-]+\.(jpg|png)$/.test(u)) { const f = path.join(__dirname, u.slice(1)); const b64 = f.replace(/\.(jpg|png)$/, '.b64'); if (!fs.existsSync(f) && fs.existsSync(b64)) { r.writeHead(200, { 'content-type': u.endsWith('.png') ? 'image/png' : 'image/jpeg', 'cache-control': 'public, max-age=86400' }); r.end(Buffer.from(fs.readFileSync(b64, 'utf8').trim(), 'base64')); return } if (fs.existsSync(f)) { r.writeHead(200, { 'content-type': u.endsWith('.png') ? 'image/png' : 'image/jpeg', 'cache-control': 'public, max-age=86400' }); r.end(fs.readFileSync(f)); return } }
   if (u === '/game.js') { r.writeHead(200, { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'no-cache' }); r.end(JS); return }
   r.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' }); r.end(HTML);
 });
