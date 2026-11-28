@@ -12,9 +12,23 @@ const UR = process.env.UPSTASH_URL, UTK = process.env.UPSTASH_TOKEN, RL = {}, LB
 const WKN = () => Math.floor((Date.now() / 864e5 + 3) / 7);
 async function rc(cmds) { const x = await fetch(UR + '/pipeline', { method: 'POST', headers: { Authorization: 'Bearer ' + UTK, 'content-type': 'application/json' }, body: JSON.stringify(cmds), signal: AbortSignal.timeout(6000) }); const j = await x.json(); if (!Array.isArray(j)) throw new Error('db'); return j.map(a => a.result) }
 function okProf(p) { if (!p || typeof p !== 'object' || Array.isArray(p)) return null; const s = JSON.stringify(p); if (s.length > 4000) return null; return p }
+
+/* daily snapshot of all profiles, kept 8 days inside the same free DB (about 3 commands + one per 200 players per day) */
+let BKD = '';
+async function backupDay() {
+  const day = new Date().toISOString().slice(0, 10); if (BKD === day) return; BKD = day;
+  try {
+    const [g] = await rc([['SET', 'bk:done:' + day, '1', 'NX', 'EX', '172800']]); if (g !== 'OK') return;
+    let cur = '0', keys = []; do { const [r] = await rc([['SCAN', cur, 'MATCH', 'p:*', 'COUNT', '500']]); cur = r[0]; keys = keys.concat(r[1]) } while (cur !== '0' && keys.length < 20000);
+    const all = {}; for (let i = 0; i < keys.length; i += 200) { const ch = keys.slice(i, i + 200), v = (await rc([['MGET', ...ch]]))[0]; ch.forEach((k, j) => { if (v[j]) all[k.slice(2)] = v[j] }) }
+    const info = (await rc([['HGETALL', 'info']]))[0] || [];
+    await rc([['SET', 'bk:' + day, JSON.stringify({ day, n: keys.length, all, info }), 'EX', '691200']]);
+  } catch (e) { BKD = '' }
+}
 function jr(r, c, o) { r.writeHead(c, { 'content-type': 'application/json', 'cache-control': 'no-store' }); r.end(JSON.stringify(o)) }
 function api(q, r, u) {
   if (!UR || !UTK) return jr(r, 503, { e: 'db off' });
+  backupDay();
   const ip = (q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',')[0].trim(), now = Date.now(), b = RL[ip] = RL[ip] && now - RL[ip].t < 60000 ? RL[ip] : { t: now, n: 0 };
   if (++b.n > 40) return jr(r, 429, { e: 'slow down' });
   const run = async body => {
