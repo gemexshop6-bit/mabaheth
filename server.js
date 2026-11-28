@@ -279,7 +279,7 @@ function state(room, p) {
     ln: room.logn || 0, chat: room.chat.slice(-60), log: room.log.slice(-40), q: qsOf(cat).map((x, i) => ({ i, t: x.t }))
   };
   o.sdiff = Math.max(1, Math.min(3, +room.sdiff || 2));
-  if (room.game === 'snake' && room.sn) o.sn = { pos: room.sn.pos, order: room.sn.order, turn: room.sn.order[room.sn.turn] || null, dice: room.sn.dice, seq: room.sn.seq, win: room.sn.win, diff: room.sn.diff, log: room.sn.log.slice(-6) };
+  if (room.game === 'snake' && room.sn) o.sn = { pos: room.sn.pos, order: room.sn.order, turn: room.sn.order[room.sn.turn] || null, dice: room.sn.dice, seq: room.sn.seq, win: room.sn.win, diff: room.sn.diff, left: room.sn.win ? 0 : Math.max(0, Math.round(((room.sn.turnAt || T()) + SNTURN - T()) / 1000)), log: room.sn.log.slice(-6) };
   if (room.game === 'spy' && room.sp && room.phase[0] === 's') o.sp = spyView(room, p);
   if (room.game === 'duel' && room.du && room.phase[0] === 'd') { o.du = duelView(room, p); o.dcat = room.dcat }
   o.dcat = room.dcat; o.dT = room.dT;
@@ -415,6 +415,7 @@ setInterval(() => {
         else if (now >= room.turnEnd) { lg(room, '⌛ ' + pl.name + ' الوقت خلص عليه'); nextTurn(room) }
         else if (!pl.ws) nextTurn(room);
         else if (Math.floor(now / 1000) !== room.lastB) { room.lastB = Math.floor(now / 1000); bcast(room) }
+      } else if (room.phase === 'snake') { snTick(room, now)
       } else if (room.phase[0] === 's') { spyTick(room, now)
       } else if (room.phase[0] === 'd') { duelTick(room, now)
       } else if (room.phase === 'break' && Math.floor(now / 1000) !== room.lastB) { room.lastB = Math.floor(now / 1000) }
@@ -429,9 +430,9 @@ function snLog(room, t) { if (!room.sn) return; room.sn.log.push(t); if (room.sn
 function snStart(room) {
   room.phase = 'snake'; room.seats = []; room.pend = null; room.bs = {};
   const ps = Object.values(room.players);
-  room.sn = { pos: {}, order: ps.map(p => p.id), turn: 0, dice: 0, seq: 0, win: null, log: [], diff: Math.max(1, Math.min(3, +room.sdiff || 2)) };
+  room.sn = { pos: {}, order: ps.map(p => p.id), turn: 0, dice: 0, seq: 0, win: null, log: [], turnAt: T(), diff: Math.max(1, Math.min(3, +room.sdiff || 2)) };
   ps.forEach(p => { room.sn.pos[p.id] = 0; p.ready = false; p.score = 0 });
-  snLog(room, '🐍 السلم والتعبان — يلا نبدأ!');
+  snLog(room, 'السلم والتعبان — يلا نبدأ!');
   bcast(room); snBot(room);
 }
 function snDice(room, pid) {
@@ -453,12 +454,22 @@ function snRoll(room, pid) {
   const d = snDice(room, pid); let to = (sn.pos[pid] | 0) + d, msg = '';
   if (to > 100) { to = 200 - to; msg = 'عدّى الـ١٠٠ فرجع لـ' + to }
   let land = to;
-  if (SNL[to]) { land = SNL[to]; msg = '🪜 سلم! من ' + to + ' لـ' + land }
-  else if (SNS[to]) { land = SNS[to]; msg = '🐍 تعبان! من ' + to + ' لـ' + land }
+  if (SNL[to]) { land = SNL[to]; msg = '⬆ سلم! من ' + to + ' لـ' + land }
+  else if (SNS[to]) { land = SNS[to]; msg = '⬇ تعبان! من ' + to + ' لـ' + land }
   sn.pos[pid] = land; sn.dice = d; sn.seq++; p.score = land;
-  snLog(room, '🎲 ' + p.name + ': ' + d + (msg ? ' — ' + msg : ' → ' + land));
+  snLog(room, p.name + ': ' + d + (msg ? ' — ' + msg : ' → ' + land));
   if (land >= 100) { sn.win = pid; snLog(room, '🏆 ' + p.name + ' وصل ١٠٠ وكسب!'); bcast(room); return }
-  snNext(room); bcast(room); snBot(room);
+  snNext(room); sn.turnAt = T(); bcast(room); snBot(room);
+}
+const SNTURN = 25000;
+function snTick(room, now) {
+  const sn = room.sn; if (!sn || sn.win || room.phase !== 'snake') return;
+  if (Math.floor(now / 1000) !== room.lastB) { room.lastB = Math.floor(now / 1000); bcast(room) }
+  const pid = sn.order[sn.turn], p = room.players[pid];
+  if (!p) { snNext(room); sn.turnAt = T(); bcast(room); snBot(room); return }
+  if (p.bot) return;
+  if (!p.ws) { snLog(room, '⏳ ' + p.name + ' مش متصل — الدور عدّى'); snNext(room); sn.turnAt = T(); bcast(room); snBot(room); return }
+  if (now - (sn.turnAt || now) >= SNTURN) { snLog(room, '⌛ الوقت خلص على ' + p.name + ' — رمينا الزهر بداله'); snRoll(room, pid) }
 }
 function snBot(room) {
   const sn = room.sn; if (!sn || sn.win || room.phase !== 'snake') return;
