@@ -489,7 +489,7 @@ function bdH(bd) {
 function PN(p) { var f = p.bd && p.bd.indexOf('f') >= 0; return avOf(p) + ' <span class="' + (f ? 'fnm' : '') + '">' + esc(p.name) + '</span>' + bdH(p.bd) }
 
 /* ===== profile: XP, levels, coins, avatars, stats, achievements (saved on the phone) ===== */
-var ACH = [['first', '🎮', 'أول ماتش', 'خلّص أول ماتش', p => p.st.m >= 1], ['w1', '🏅', 'أول فوز', 'اكسب ماتش', p => p.st.w >= 1], ['w10', '🏆', 'عشرة فوز', 'اكسب ١٠ ماتشات', p => p.st.w >= 10], ['m10', '🔟', 'لاعب ثابت', 'العب ١٠ ماتشات', p => p.st.m >= 10], ['str3', '🔥', 'سلسلة ٣', 'اكسب ٣ ورا بعض', p => p.st.bs >= 3], ['sp', '🕵️', 'عميل', 'اكسب كجاسوس أو كاشف جاسوس', p => (p.st.g.spy || [0, 0])[1] >= 1], ['du', '⚔️', 'مبارز', 'اكسب مبارزة', p => (p.st.g.duel || [0, 0])[1] >= 1], ['lv5', '⭐', 'لفل ٥', 'وصّل لفل ٥', p => lvOf(p.xp).l >= 5], ['pt500', '💯', '٥٠٠ نقطة', 'اجمع ٥٠٠ نقطة في المجموع', p => p.st.p >= 500]];
+var ACH = [['first', '🎮', 'أول ماتش', 'خلّص أول ماتش', p => p.st.m >= 1], ['w1', '🏅', 'أول فوز', 'اكسب ماتش', p => p.st.w >= 1], ['w10', '🏆', 'عشرة فوز', 'اكسب ١٠ ماتشات', p => p.st.w >= 10], ['m10', '🔟', 'لاعب ثابت', 'العب ١٠ ماتشات', p => p.st.m >= 10], ['str3', '🔥', 'سلسلة ٣', 'اكسب ٣ ورا بعض', p => p.st.bs >= 3], ['sp', '🕵️', 'عميل', 'اكسب كجاسوس أو كاشف جاسوس', p => (p.st.g.spy || [0, 0])[1] >= 1], ['du', '⚔️', 'مبارز', 'اكسب مبارزة', p => (p.st.g.duel || [0, 0])[1] >= 1], ['lv5', '⭐', 'لفل ٥', 'وصّل لفل ٥', p => lvOf(p.xp).l >= 5], ['pt500', '💯', '٥٠٠ نقطة', 'اجمع ٥٠٠ نقطة في المجموع', p => p.st.p >= 500], ['dc1', '📅', 'أول تحدي', 'خلّص تحدي اليوم', p => !!(p.dc && (p.dc.n | 0) >= 1)], ['dc7', '🔥', '٧ أيام', 'سلسلة ٧ أيام في تحدي اليوم', p => !!(p.dc && (p.dc.b | 0) >= 7)]];
 function lvOf(x) { var l = 1; while (x >= 30 * (l + 1) * l) l++; var a = 30 * l * (l - 1), b = 30 * (l + 1) * l; return { l: l, a: x - a, n: b - a } }
 var PR = null;
 function profLoad() { if (PR) return PR; var o = null; try { o = JSON.parse(localStorage.mbProf || 'null') } catch (e) { } o = o || {}; o.xp = o.xp | 0; o.c = o.c | 0; o.av = o.av | 0; o.own = o.own || [0, 1, 2, 3, 4, 5]; o.ac = o.ac || []; o.st = o.st || {}; var s = o.st; s.m = s.m | 0; s.w = s.w | 0; s.bs = s.bs | 0; s.cs = s.cs | 0; s.p = s.p | 0; s.g = s.g || {}; return PR = o }
@@ -521,6 +521,131 @@ function profState() {
 var _rd = render; render = function () { profState(); return _rd.apply(this, arguments) };
 function profChip() { var e = document.querySelector('.home .panel'); if (!e || document.getElementById('pchip')) return; var p = profLoad(), L = lvOf(p.xp), d = document.createElement('div'); d.id = 'pchip'; d.className = 'pchip'; d.onclick = profOpen; d.innerHTML = '<span class="pav">' + avOf(p) + '</span><div class="pin"><b>' + esc(myname || '') + bdH(p.bd) + ' لفل ' + L.l + '</b><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div></div><span class="pco">🪙 ' + p.c + '</span><button class="lbb fbb" onclick="event.stopPropagation();frOpen(\'f\')">👥<b class="fbd" id="fbd" style="display:none"></b></button><button class="lbb" onclick="event.stopPropagation();lbOpen()">🏆</button>'; e.insertBefore(d, e.firstChild) }
 var _hm = home; home = function () { _hm.apply(this, arguments); profChip() };
+/* ===== تحدي اليوم: ٥ أسئلة كل يوم + سلسلة أيام + جوايز عملات ===== */
+var DCD = null, DCI = 0, DCA = [], DCR = null;
+function dcKey() { try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()) } catch (e) { return new Date().toISOString().slice(0, 10) } }
+function dcSt() { var d = profLoad().dc; return d && typeof d === 'object' ? d : { s: 0, b: 0, d: '', n: 0 } }
+function dcDone() { return dcSt().d === dcKey() }
+function dcLeftM() {
+  try {
+    var o = {}; new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Cairo', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date()).forEach(function (p) { o[p.type] = p.value });
+    var m = ((+o.hour || 0) % 24) * 60 + (+o.minute || 0); return Math.max(1, 1440 - m)
+  } catch (e) { return 0 }
+}
+function dcLeftTxt() { var m = dcLeftM(); return m ? (Math.floor(m / 60) + ' ساعة و' + (m % 60) + ' دقيقة') : 'شوية' }
+function dcCard() {
+  var e = document.querySelector('.home .panel'); if (!e) return;
+  var old = document.getElementById('dcc'); if (old) old.remove();
+  var st = dcSt(), done = dcDone(), d = document.createElement('div');
+  d.id = 'dcc'; d.className = 'dcc' + (done ? ' done' : ''); d.onclick = dcOpen;
+  var sub = done ? ('خلصته النهاردة ✔ • تحدي جديد بعد ' + dcLeftTxt()) : ((st.s | 0) > 0 ? ('سلسلة ' + (st.s | 0) + ' أيام 🔥 • جايزة النهاردة أكبر') : '٥ أسئلة سريعة • جايزة كل يوم أكبر');
+  d.innerHTML = '<div class="dcfl">' + (done ? '✅' : '🔥') + '</div><div class="dctx"><b>تحدي اليوم</b><small>' + esc(sub) + '</small></div><div class="dcgo">' + (done ? 'شوف' : 'العب') + '</div>';
+  var c = document.getElementById('pchip');
+  if (c && c.parentNode === e) e.insertBefore(d, c.nextSibling); else e.insertBefore(d, e.firstChild)
+}
+var _hm2 = home; home = function () { _hm2.apply(this, arguments); dcCard() };
+setInterval(function () { var c = document.getElementById('dcc'); if (c && dcDone() && !document.getElementById('dcm')) { var s = c.querySelector('small'); if (s) s.textContent = 'خلصته النهاردة ✔ • تحدي جديد بعد ' + dcLeftTxt() } }, 60000);
+function dcClose() { var m = document.getElementById('dcm'); if (m) m.remove(); if (!S) home() }
+function dcOpen() {
+  if (document.getElementById('dcm')) return;
+  ensureId(myname);
+  var d = document.createElement('div'); d.id = 'dcm'; d.className = 'modal'; d.onclick = function (e) { if (e.target === d) dcClose() };
+  d.innerHTML = '<div class="dcb" id="dcb"><div class="dcld">بنجهز تحدي النهاردة… 🔥</div></div>';
+  document.body.appendChild(d);
+  var tries = 0;
+  var go = function () {
+    var p = profLoad();
+    if (!p.id) { if (++tries < 25) return setTimeout(go, 300); return dcErr('محتاج حساب عشان نحفظ تقدمك — اتأكد إن النت شغال وجرّب تاني.') }
+    apiP('/api/dc', { id: p.id }).then(function (j) {
+      if (!j || !j.qs || !j.qs.length) throw new Error('no');
+      DCD = j; DCI = 0; DCA = []; DCR = null; dcRender()
+    }).catch(function () { dcErr('محتاج نت عشان نحمّل تحدي النهاردة. جرّب تاني بعد شوية.') })
+  };
+  go()
+}
+function dcErr(msg) {
+  var b = document.getElementById('dcb'); if (!b) return;
+  b.innerHTML = '<div class="dcld">' + esc(msg) + '</div><div class="row"><button class="btn y" onclick="dcRetry()">جرّب تاني</button><button class="btn" onclick="dcClose()">قفل</button></div>'
+}
+function dcRetry() { dcClose(); dcOpen() }
+function dcRender() {
+  var b = document.getElementById('dcb'); if (!b || !DCD) return;
+  if (DCD.st && DCD.st.done) return dcDoneView();
+  if (DCI >= DCD.qs.length) return dcSend();
+  var q = DCD.qs[DCI], dots = '', i;
+  for (i = 0; i < DCD.qs.length; i++) dots += '<i class="' + (i < DCI ? 'on' : (i === DCI ? 'now' : '')) + '"></i>';
+  var o = q.o.map(function (t, k) { return '<button class="dco" id="dco' + k + '" onclick="dcPick(' + k + ')">' + esc(t) + '</button>' }).join('');
+  b.innerHTML = '<div class="dchd"><span class="dcfl sm">🔥</span><b>تحدي اليوم</b><small>سؤال ' + (DCI + 1) + ' من ' + DCD.qs.length + '</small></div><div class="dcpd">' + dots + '</div><div class="dcq">' + esc(q.q) + '</div>' + o
+}
+function dcPick(k) {
+  if (!DCD || DCA[DCI] !== undefined) return;
+  DCA[DCI] = k;
+  var el = document.getElementById('dco' + k); if (el) el.className = 'dco sel';
+  var all = document.querySelectorAll('.dco'); for (var i = 0; i < all.length; i++) all[i].disabled = true;
+  try { SFX.turn() } catch (e) { }
+  setTimeout(function () { DCI++; dcRender() }, 240)
+}
+function dcSend() {
+  var b = document.getElementById('dcb'); if (b) b.innerHTML = '<div class="dcld">بنحسب نتيجتك… 🧮</div>';
+  var p = profLoad();
+  apiP('/api/dc', { id: p.id || '', sub: 1, d: DCD.d, picks: DCA }).then(function (R) {
+    if (!R || R.e) throw new Error('bad');
+    DCR = R;
+    if (R.already) return dcDoneView();
+    var st = dcSt();
+    p.dc = { s: R.streak | 0, b: Math.max(R.best | 0, R.streak | 0), d: DCD.d, n: (st.n | 0) + 1 };
+    p.c = (p.c | 0) + (R.coins | 0);
+    addXP(R.xp | 0); checkAch(); profSave(); profSync(1); sendProf();
+    dcWin(R)
+  }).catch(function () {
+    var b2 = document.getElementById('dcb');
+    if (b2) b2.innerHTML = '<div class="dcld">النتيجة مترحفظتش، النت فصل؟ إجاباتك محفوظة، جرّب تاني.</div><div class="row"><button class="btn y" onclick="dcSend()">جرّب تاني</button><button class="btn" onclick="dcClose()">قفل</button></div>'
+  })
+}
+function dcCount(id, to, ms) {
+  var e = document.getElementById(id); if (!e) return;
+  var t0 = Date.now();
+  var f = function () { var k = Math.min(1, (Date.now() - t0) / ms); e.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f) };
+  f()
+}
+function dcWin(R) {
+  var lit = Math.max(1, Math.min(7, R.streak | 0)), dots = '', rain = '', cols = ['🪙', '✨', '🪙', '⭐', '🪙', '💫'], i;
+  for (i = 0; i < 7; i++) dots += '<i class="' + (i < lit ? 'on' : '') + '"></i>';
+  for (i = 0; i < 18; i++) rain += '<span class="dcf" style="left:' + (3 + Math.random() * 92).toFixed(1) + '%;animation-delay:' + (Math.random() * 1.5).toFixed(2) + 's;animation-duration:' + (1.7 + Math.random() * 1.6).toFixed(2) + 's">' + cols[i % cols.length] + '</span>';
+  var d = document.createElement('div'); d.id = 'dcwin'; d.className = 'dcwin';
+  d.innerHTML = '<div class="dcrain">' + rain + '</div><div class="dcwi"><div class="dcglow"></div>' +
+    '<div class="dcflame big">🔥</div>' +
+    '<h2>تحدي اليوم خلص!</h2>' +
+    '<div class="dcsc">جاوبت صح ' + (R.correct | 0) + ' من ' + (R.n | 0) + '</div>' +
+    '<div class="dcstk"><b id="dcsn">0</b><small>يوم ورا بعض</small></div>' +
+    '<div class="dcdot">' + dots + '</div>' +
+    '<div class="dcrw"><span dir="ltr">+<span id="dccn">0</span></span> 🪙<small dir="ltr">+ ' + (R.xp | 0) + ' XP</small></div>' +
+    '<button class="btn y big2" onclick="dcWinClose()">تمام 🎉</button></div>';
+  document.body.appendChild(d);
+  try { SFX.win() } catch (e) { }
+  confetti(); setTimeout(confetti, 450);
+  dcCount('dcsn', R.streak | 0, 850); dcCount('dccn', R.coins | 0, 1100)
+}
+function dcWinClose() { var w = document.getElementById('dcwin'); if (w) w.remove(); dcReview(); dcCard() }
+function dcReview() {
+  var b = document.getElementById('dcb'); if (!b || !DCD || !DCR) return;
+  var ans = DCR.ans || [], rows = '';
+  DCD.qs.forEach(function (q, i) {
+    var my = DCA[i], k = ans[i], ok = my === k;
+    rows += '<div class="dcrv ' + (ok ? 'ok' : 'no') + '"><b>' + esc(q.q) + '</b><small>' + (ok ? '✔ إجابتك: ' : '✖ إجابتك: ') + esc(q.o[my] || '—') + '</small>' + (ok ? '' : '<small class="cr">الصح: ' + esc(q.o[k] || '') + '</small>') + '</div>'
+  });
+  b.innerHTML = '<div class="dchd"><span class="dcfl sm">🔥</span><b>نتيجة تحدي النهاردة</b></div>' + rows +
+    '<div class="dcnt">سلسلتك: ' + (dcSt().s | 0) + ' يوم • تحدي جديد بعد ' + dcLeftTxt() + '</div>' +
+    '<div class="row"><button class="btn y" onclick="dcClose()">تمام</button></div>'
+}
+function dcDoneView() {
+  var b = document.getElementById('dcb'); if (!b) return;
+  var st = dcSt(), s = (DCD && DCD.st ? DCD.st.s : st.s) | 0, n = 0;
+  b.innerHTML = '<div class="dcrs"><div class="dcfl" style="font-size:44px;animation:dfl 1.8s ease-in-out infinite">🔥</div><b>خلصت تحدي النهاردة</b>' +
+    '<div class="bign">' + s + '</div><small>يوم ورا بعض</small>' +
+    '<div class="dcnt" style="margin-top:10px">تحدي جديد بعد ' + dcLeftTxt() + ' — كمّل السلسلة عشان الجايزة تكبر</div></div>' +
+    '<div class="row"><button class="btn" onclick="dcClose()">تمام</button></div>'
+}
 function profClose() { var m = document.getElementById('profm'); if (m) m.remove(); if (!S) home() }
 function profOpen() {
   if (document.getElementById('profm')) return; ensureId(myname); var p = profLoad(), L = lvOf(p.xp), s = p.st, d = document.createElement('div'); d.id = 'profm'; d.className = 'modal'; d.onclick = function (e) { if (e.target === d) profClose() };
@@ -529,7 +654,7 @@ function profOpen() {
   var ac = ACH.map(function (a) { var o = p.ac.indexOf(a[0]) >= 0; return '<div class="acb' + (o ? ' on' : '') + '" title="' + a[3] + '"><span>' + (o ? a[1] : '🔒') + '</span><small>' + a[2] + '</small></div>' }).join('');
   var gs = Object.keys(gl).map(function (k) { var g = s.g[k] || [0, 0]; return '<div class="stb"><b>' + g[1] + '/' + g[0] + '</b><small>' + gl[k] + '</small></div>' }).join('');
   d.innerHTML = '<div class="box prof"><div class="ph"><span class="pav big">' + avOf(p) + '</span><div class="pin"><h2>' + esc(myname || 'لاعب') + bdH(p.bd) + '</h2>' + (p.bd && p.bd.indexOf('f') >= 0 ? '<span class="fpill">مؤسس اللعبة</span> ' : '') + '<b>لفل ' + L.l + '</b><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div><small dir="ltr">' + L.a + ' / ' + L.n + ' XP</small></div><span class="pco">🪙 ' + p.c + '</span></div>'
-    + '<div class="sts"><div class="stb"><b>' + s.m + '</b><small>ماتشات</small></div><div class="stb"><b>' + s.w + '</b><small>فوز</small></div><div class="stb"><b>' + s.bs + '</b><small>أطول سلسلة</small></div><div class="stb"><b>' + s.p + '</b><small>نقط</small></div></div><h3>فوز/لعب لكل لعبة</h3><div class="sts">' + gs + '</div><h3>صورتك</h3><div class="row"><button class="btn y" onclick="photoPick()">📷 ارفع صورتك</button>' + (p.pk ? '<button class="btn" onclick="photoToggle()">' + (p.ap ? 'استخدم شخصية' : 'استخدم صورتي') + '</button>' : '') + '</div><h3>الشخصيات</h3><div class="avs">' + av + '</div><h3>الإنجازات</h3><div class="acs">' + ac + '</div><h3>حسابك</h3><div class="idb">' + (p.id ? 'الـID بتاعك: <b dir="ltr" class="idn">' + p.id + '</b> <button class="btn" onclick="copyId()">نسخ</button><br><small>احتفظ بيه، بيرجّعلك تقدمك لو غيرت تليفونك</small>' : 'بيتعمل لك ID...') + '<div class="row"><input id="rid" class="inp" inputmode="numeric" maxlength="6" placeholder="عندك ID قديم؟ اكتبه"><button class="btn t" onclick="recoverId()">استرجاع</button></div></div><div class="row"><button class="btn" onclick="profClose()">تمام</button></div></div>';
+    + '<div class="sts"><div class="stb"><b>' + s.m + '</b><small>ماتشات</small></div><div class="stb"><b>' + s.w + '</b><small>فوز</small></div><div class="stb"><b>' + s.bs + '</b><small>أطول سلسلة</small></div><div class="stb"><b>' + s.p + '</b><small>نقط</small></div></div><div class="dcpl">🔥 تحدي اليوم: سلسلة ' + (dcSt().s | 0) + ' أيام • أحسن سلسلة ' + (dcSt().b | 0) + '</div><h3>فوز/لعب لكل لعبة</h3><div class="sts">' + gs + '</div><h3>صورتك</h3><div class="row"><button class="btn y" onclick="photoPick()">📷 ارفع صورتك</button>' + (p.pk ? '<button class="btn" onclick="photoToggle()">' + (p.ap ? 'استخدم شخصية' : 'استخدم صورتي') + '</button>' : '') + '</div><h3>الشخصيات</h3><div class="avs">' + av + '</div><h3>الإنجازات</h3><div class="acs">' + ac + '</div><h3>حسابك</h3><div class="idb">' + (p.id ? 'الـID بتاعك: <b dir="ltr" class="idn">' + p.id + '</b> <button class="btn" onclick="copyId()">نسخ</button><br><small>احتفظ بيه، بيرجّعلك تقدمك لو غيرت تليفونك</small>' : 'بيتعمل لك ID...') + '<div class="row"><input id="rid" class="inp" inputmode="numeric" maxlength="6" placeholder="عندك ID قديم؟ اكتبه"><button class="btn t" onclick="recoverId()">استرجاع</button></div></div><div class="row"><button class="btn" onclick="profClose()">تمام</button></div></div>';
   document.body.appendChild(d);
 }
 function avPick(i) { var p = profLoad(); if (p.own.indexOf(i) < 0) { if (p.c < AVP[i]) return toast('محتاج ' + AVP[i] + ' 🪙 (بتاخدها من الماتشات)'); p.c -= AVP[i]; p.own.push(i); toast('اشتريت شخصية ' + CHN[i]) } p.av = i; p.ap = 0; profSave(); profSync(1); var m = document.getElementById('profm'); if (m) m.remove(); profOpen(); sendProf() }
