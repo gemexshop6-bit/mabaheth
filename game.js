@@ -326,12 +326,12 @@ function pNext() { var h = PQ.shift(); if (!h) { PQB = 0; return } PQB = 1; var 
 function confetti() { var f = document.createElement('div'); f.className = 'confetti'; var c = ['#ffd23f', '#ff5d8f', '#3ec9c0', '#7c5cff', '#4caf50'], h = ''; for (var i = 0; i < 28; i++) h += '<i style="left:' + Math.random() * 100 + '%;background:' + c[i % 5] + ';animation-delay:' + Math.random() * .4 + 's;animation-duration:' + (1.2 + Math.random()) + 's"></i>'; f.innerHTML = h; document.body.appendChild(f); setTimeout(function () { f.remove() }, 2600) }
 function addXP(n) { var p = profLoad(), a = lvOf(p.xp).l; p.xp += n; var b = lvOf(p.xp).l; if (b > a) { p.c += 25 * (b - a); pToast('⬆️ لفل ' + b + '!<small>+' + 25 * (b - a) + ' 🪙</small>'); try { SFX.win() } catch (e) { } } }
 function checkAch() { var p = profLoad(); ACH.forEach(function (a) { if (p.ac.indexOf(a[0]) < 0 && a[4](p)) { p.ac.push(a[0]); p.c += 20; pToast(a[1] + ' إنجاز: ' + a[2] + '<small>+20 🪙</small>') } }) }
-function matchEnd(game, won, pts) { var p = profLoad(), s = p.st; s.m++; var g = s.g[game] = s.g[game] || [0, 0]; g[0]++; if (won) { s.w++; g[1]++; s.cs++; if (s.cs > s.bs) s.bs = s.cs } else s.cs = 0; s.p += pts; p.c += 5 + (won ? 15 : 0); addXP(pts + 20 + (won ? 30 : 0)); checkAch(); profSave() }
+function matchEnd(game, won, pts) { var p = profLoad(), s = p.st; s.m++; var g = s.g[game] = s.g[game] || [0, 0]; g[0]++; if (won) { s.w++; g[1]++; s.cs++; if (s.cs > s.bs) s.bs = s.cs } else s.cs = 0; s.p += pts; p.c += 5 + (won ? 15 : 0); addXP(pts + 20 + (won ? 30 : 0)); checkAch(); profSave(); profSync(1) }
 var PPH = '', PSC = {}, PRM = '';
 function profState() {
   if (!S || !S.players) return; var p = profLoad(), me = S.players.find(function (x) { return x.id === S.you }); if (!me) return;
   if (PRM !== S.code) { PRM = S.code; PSC = { s: me.score }; PPH = '' }
-  if (me.score > PSC.s) { addXP(me.score - PSC.s); profSave() } PSC.s = me.score;
+  if (me.score > PSC.s) { var dl = me.score - PSC.s; addXP(dl); var w = wkN(); if (!p.wk || p.wk.w !== w) p.wk = { w: w, p: 0 }; p.wk.p += dl; profSave(); profSync() } PSC.s = me.score;
   var ph = S.phase, end = ph === 'result' || ph === 'sres' || ph === 'dchamp';
   if (end && PPH && PPH !== ph && !/^(result|sres|dchamp)$/.test(PPH)) {
     var g = 'who', won = false;
@@ -343,20 +343,53 @@ function profState() {
   PPH = ph;
 }
 var _rd = render; render = function () { profState(); return _rd.apply(this, arguments) };
-function profChip() { var e = document.querySelector('.home .panel'); if (!e || document.getElementById('pchip')) return; var p = profLoad(), L = lvOf(p.xp), d = document.createElement('div'); d.id = 'pchip'; d.className = 'pchip'; d.onclick = profOpen; d.innerHTML = '<span class="pav">' + avOf(p) + '</span><div class="pin"><b>لفل ' + L.l + '</b><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div></div><span class="pco">🪙 ' + p.c + '</span>'; e.insertBefore(d, e.firstChild) }
+function profChip() { var e = document.querySelector('.home .panel'); if (!e || document.getElementById('pchip')) return; var p = profLoad(), L = lvOf(p.xp), d = document.createElement('div'); d.id = 'pchip'; d.className = 'pchip'; d.onclick = profOpen; d.innerHTML = '<span class="pav">' + avOf(p) + '</span><div class="pin"><b>لفل ' + L.l + '</b><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div></div><span class="pco">🪙 ' + p.c + '</span><button class="lbb" onclick="event.stopPropagation();lbOpen()">🏆</button>'; e.insertBefore(d, e.firstChild) }
 var _hm = home; home = function () { _hm.apply(this, arguments); profChip() };
 function profClose() { var m = document.getElementById('profm'); if (m) m.remove(); if (!S) home() }
 function profOpen() {
-  if (document.getElementById('profm')) return; var p = profLoad(), L = lvOf(p.xp), s = p.st, d = document.createElement('div'); d.id = 'profm'; d.className = 'modal'; d.onclick = function (e) { if (e.target === d) profClose() };
+  if (document.getElementById('profm')) return; ensureId(myname); var p = profLoad(), L = lvOf(p.xp), s = p.st, d = document.createElement('div'); d.id = 'profm'; d.className = 'modal'; d.onclick = function (e) { if (e.target === d) profClose() };
   var gl = { who: 'اعرف مين معايا', spy: 'الجاسوس', duel: 'المبارزة' };
   var av = AVS.map(function (a, i) { var o = p.own.indexOf(i) >= 0; return '<button class="avb' + (p.av === i ? ' on' : '') + (o ? '' : ' lk') + '" onclick="avPick(' + i + ')">' + a + (o ? '' : '<small>🪙' + AVP[i] + '</small>') + '</button>' }).join('');
   var ac = ACH.map(function (a) { var o = p.ac.indexOf(a[0]) >= 0; return '<div class="acb' + (o ? ' on' : '') + '" title="' + a[3] + '"><span>' + (o ? a[1] : '🔒') + '</span><small>' + a[2] + '</small></div>' }).join('');
   var gs = Object.keys(gl).map(function (k) { var g = s.g[k] || [0, 0]; return '<div class="stb"><b>' + g[1] + '/' + g[0] + '</b><small>' + gl[k] + '</small></div>' }).join('');
-  d.innerHTML = '<div class="box prof"><div class="ph"><span class="pav big">' + avOf(p) + '</span><div class="pin"><h2>لفل ' + L.l + '</h2><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div><small>' + L.a + ' / ' + L.n + ' XP</small></div><span class="pco">🪙 ' + p.c + '</span></div>'
-    + '<div class="sts"><div class="stb"><b>' + s.m + '</b><small>ماتشات</small></div><div class="stb"><b>' + s.w + '</b><small>فوز</small></div><div class="stb"><b>' + s.bs + '</b><small>أطول سلسلة</small></div><div class="stb"><b>' + s.p + '</b><small>نقط</small></div></div><h3>فوز/لعب لكل لعبة</h3><div class="sts">' + gs + '</div><h3>الأفاتار</h3><div class="avs">' + av + '</div><h3>الإنجازات</h3><div class="acs">' + ac + '</div><div class="row"><button class="btn" onclick="profClose()">تمام</button></div></div>';
+  d.innerHTML = '<div class="box prof"><div class="ph"><span class="pav big">' + avOf(p) + '</span><div class="pin"><h2>لفل ' + L.l + '</h2><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div><small dir="ltr">' + L.a + ' / ' + L.n + ' XP</small></div><span class="pco">🪙 ' + p.c + '</span></div>'
+    + '<div class="sts"><div class="stb"><b>' + s.m + '</b><small>ماتشات</small></div><div class="stb"><b>' + s.w + '</b><small>فوز</small></div><div class="stb"><b>' + s.bs + '</b><small>أطول سلسلة</small></div><div class="stb"><b>' + s.p + '</b><small>نقط</small></div></div><h3>فوز/لعب لكل لعبة</h3><div class="sts">' + gs + '</div><h3>الأفاتار</h3><div class="avs">' + av + '</div><h3>الإنجازات</h3><div class="acs">' + ac + '</div><h3>حسابك</h3><div class="idb">' + (p.id ? 'الـID بتاعك: <b dir="ltr" class="idn">' + p.id + '</b> <button class="btn" onclick="copyId()">نسخ</button><br><small>احتفظ بيه، بيرجّعلك تقدمك لو غيرت تليفونك</small>' : 'بيتعمل لك ID...') + '<div class="row"><input id="rid" class="inp" inputmode="numeric" maxlength="6" placeholder="عندك ID قديم؟ اكتبه"><button class="btn t" onclick="recoverId()">استرجاع</button></div></div><div class="row"><button class="btn" onclick="profClose()">تمام</button></div></div>';
   document.body.appendChild(d);
 }
-function avPick(i) { var p = profLoad(); if (p.own.indexOf(i) < 0) { if (p.c < AVP[i]) return toast('محتاج ' + AVP[i] + ' 🪙 (بتاخدها من الماتشات)'); p.c -= AVP[i]; p.own.push(i); toast('اشتريت الأفاتار ' + AVS[i]) } p.av = i; profSave(); var m = document.getElementById('profm'); if (m) m.remove(); profOpen(); try { send({ t: 'prof', av: p.av, lv: lvOf(p.xp).l }) } catch (e) { } }
+function avPick(i) { var p = profLoad(); if (p.own.indexOf(i) < 0) { if (p.c < AVP[i]) return toast('محتاج ' + AVP[i] + ' 🪙 (بتاخدها من الماتشات)'); p.c -= AVP[i]; p.own.push(i); toast('اشتريت الأفاتار ' + AVS[i]) } p.av = i; profSave(); profSync(); var m = document.getElementById('profm'); if (m) m.remove(); profOpen(); try { send({ t: 'prof', av: p.av, lv: lvOf(p.xp).l }) } catch (e) { } }
+
+/* ===== account ID + server sync + leaderboard ===== */
+function wkN() { return Math.floor((Date.now() / 864e5 + 3) / 7) }
+function apiP(path, body) { return fetch(path, body === undefined ? {} : { method: 'POST', body: JSON.stringify(body) }).then(function (r) { return r.json().then(function (j) { j._s = r.status; return j }) }) }
+function profClean() { var p = profLoad(), o = {}; Object.keys(p).forEach(function (k) { if (k !== 'id') o[k] = p[k] }); return o }
+var PCR = 0, PST = 0, PSY = 0;
+function ensureId(name) {
+  var p = profLoad(); if (p.id || PCR) return; PCR = 1;
+  apiP('/api/p/new', { name: name || myname || 'لاعب', prof: profClean() }).then(function (j) { PCR = 0; if (j.id) { p.id = j.id; profSave(); profRefresh() } }).catch(function () { PCR = 0 })
+}
+function profSync(now) {
+  var p = profLoad(); if (!p.id) return; var d = Date.now();
+  if (!now && d - PSY < 20000) { clearTimeout(PST); PST = setTimeout(function () { profSync(1) }, 20000 - (d - PSY)); return }
+  PSY = d; apiP('/api/p/save', { id: p.id, name: myname || 'لاعب', lv: lvOf(p.xp).l, prof: profClean() }).catch(function () { })
+}
+function profPull() {
+  var p = profLoad(); if (!p.id) return;
+  apiP('/api/p/get', { id: p.id }).then(function (j) { if (j.prof) { if ((j.prof.xp | 0) > p.xp) { var id = p.id; PR = j.prof; PR.id = id; profNorm(); profSave(); profRefresh() } else profSync(1) } }).catch(function () { })
+}
+function profNorm() { var o = PR; o.xp = o.xp | 0; o.c = o.c | 0; o.av = o.av | 0; o.own = o.own || [0, 1, 2, 3, 4, 5]; o.ac = o.ac || []; o.st = o.st || {}; var s = o.st; s.m = s.m | 0; s.w = s.w | 0; s.bs = s.bs | 0; s.cs = s.cs | 0; s.p = s.p | 0; s.g = s.g || {} }
+function profRefresh() { var c = document.getElementById('pchip'); if (c) { c.remove(); profChip() } if (document.getElementById('profm')) { document.getElementById('profm').remove(); profOpen() } }
+function recoverId() {
+  var v = (document.getElementById('rid').value || '').trim(); if (!/^\d{6}$/.test(v)) return toast('اكتب الـID (٦ أرقام)');
+  apiP('/api/p/get', { id: v }).then(function (j) { if (!j.prof) return toast('الـID ده مش موجود'); var keep = profLoad().id; PR = j.prof; PR.id = v; profNorm(); profSave(); toast('رجّعنا حسابك ✔'); profRefresh() }).catch(function () { toast('مفيش اتصال، جرّب تاني') })
+}
+function copyId() { var p = profLoad(); try { navigator.clipboard.writeText(p.id) } catch (e) { } toast('اتنسخ الـID: ' + p.id) }
+function lbOpen(k) {
+  var m = document.getElementById('lbm'); if (!m) { m = document.createElement('div'); m.id = 'lbm'; m.className = 'modal'; m.onclick = function (e) { if (e.target === m) m.remove() }; document.body.appendChild(m) }
+  k = k || 'w'; m.innerHTML = '<div class="box prof"><h2>🏆 المتصدرين</h2><div class="row"><button class="btn ' + (k === 'w' ? 'y' : '') + '" onclick="lbOpen(\'w\')">الأسبوع ده</button><button class="btn ' + (k === 'all' ? 'y' : '') + '" onclick="lbOpen(\'all\')">كل الوقت</button></div><div id="lbl" class="lbl">جاري التحميل...</div><div class="row"><button class="btn" onclick="document.getElementById(\'lbm\').remove()">تمام</button></div></div>';
+  apiP('/api/lb?k=' + k).then(function (j) { var e = document.getElementById('lbl'); if (!e) return; var me = profLoad(); e.innerHTML = (j.rows || []).length ? j.rows.map(function (r, i) { return '<div class="lbr"><b>' + (i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1) + '</b><span>' + (AVS[r.av] || '🙂') + ' ' + esc(r.n) + ' <small>لفل ' + r.lv + '</small></span><b>' + r.s + '</b></div>' }).join('') : 'لسه مفيش حد، كون أول واحد!' }).catch(function () { var e = document.getElementById('lbl'); if (e) e.textContent = 'مش قادر أحمّل الترتيب دلوقتي' })
+}
+var _nm0 = nm; nm = function () { var v = _nm0.apply(this, arguments); ensureId(v); return v };
+setTimeout(function () { if (myname) ensureId(myname); profPull() }, 800);
 
 home();
 let _ses = null; try { _ses = JSON.parse(localStorage.mbSess || 'null') } catch (e) { }
