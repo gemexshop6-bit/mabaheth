@@ -129,6 +129,44 @@ button:disabled{opacity:1;cursor:default}
 .dcnt{text-align:center;font-size:12px;opacity:.7;margin:6px 0 10px}
 .cont{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);margin-top:8px;font-weight:800}
 .cont a{color:var(--v);text-decoration:none;border-bottom:2px dotted var(--v)}
+/* ===== السلم والتعبان ===== */
+.snc2{display:flex;align-items:center;gap:10px;margin:8px 0 2px;padding:10px 12px;border:3px solid var(--line);border-radius:18px;background:linear-gradient(100deg,#7BE0C8 0%,#54C8E8 55%,#9B8CFF 100%);box-shadow:0 4px 0 var(--line);cursor:pointer}
+.snc2:active{transform:translateY(2px);box-shadow:0 2px 0 var(--line)}
+.snc2 .e{font-size:28px;line-height:1}
+.snc2 .t{flex:1;min-width:0;text-align:right;color:#12202b}
+.snc2 .t b{display:block;font-size:16px}
+.snc2 .t small{display:block;font-size:11.5px;opacity:.8;margin-top:2px}
+.snc2 .g{flex:none;background:#2b2140;color:#7BE0C8;border-radius:12px;padding:7px 14px;font-weight:900;font-size:14px}
+.snwrap{display:flex;flex-direction:column;gap:8px;max-width:520px;margin:0 auto}
+.sntop{display:flex;gap:6px;align-items:stretch}
+.snps{flex:1;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+.snp{display:flex;align-items:center;gap:6px;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:5px 9px;font-size:13px;min-width:0}
+.snp.on{background:var(--y);box-shadow:0 2px 0 var(--line)}
+.snp i{font-style:normal;font-size:14px;line-height:1}
+.snp b{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px}
+.snp small{font-weight:900;opacity:.65;margin-inline-start:2px}
+.sndice{flex:none;width:52px;height:52px;border:3px solid var(--line);border-radius:12px;background:var(--card);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:2px;padding:7px;box-shadow:0 3px 0 var(--line);animation:dcpop .3s}
+.sdp{border-radius:50%;background:transparent;display:block}
+.sdp.on{background:var(--line)}
+.snm{display:inline-block;width:11px;height:11px;border-radius:50%;border:1.5px solid var(--line);vertical-align:-1px}
+.snt .snm{width:10px;height:10px;margin:0 -1px}
+.sndice.roll{animation:snshake .45s}
+@keyframes snshake{0%{transform:rotate(0)}25%{transform:rotate(-14deg) scale(1.1)}50%{transform:rotate(12deg) scale(1.12)}75%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
+.snb{width:100%;aspect-ratio:1/1;display:grid;grid-template-columns:repeat(10,1fr);grid-template-rows:repeat(10,1fr);gap:2px;background:var(--card);border:3px solid var(--line);border-radius:14px;padding:5px;box-shadow:0 4px 0 var(--line);direction:ltr}
+.snc{position:relative;border:1.5px solid var(--line);border-radius:5px;background:var(--s1);overflow:hidden;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px}
+.snc.lad{background:#c9f3dd}
+.snc.snk{background:#ffd3dd}
+.snc.fin{background:linear-gradient(135deg,#FFD75E,#FFB020)}
+.snc.st{background:#dfe4ff}
+.snn{position:absolute;top:0;left:2px;font-size:8px;opacity:.5;font-weight:800;line-height:1.3}
+.sni{position:absolute;top:1px;right:2px;font-size:12px;font-weight:900;line-height:1}
+.snc.lad .sni{color:#0a7d52}
+.snc.snk .sni{color:#c31c46}
+.snt{font-size:11px;line-height:1;margin:0 -2px;filter:drop-shadow(0 1px 0 #fff)}
+.snact{display:flex;flex-direction:column;gap:6px}
+.snw{text-align:center;font-size:16px;font-weight:900;background:var(--y);border:3px solid var(--line);border-radius:14px;padding:8px;animation:dcpop .4s;box-shadow:0 3px 0 var(--line)}
+.snlog{font-size:11.5px;opacity:.85;display:flex;flex-direction:column;gap:3px;max-height:104px;overflow:auto}
+.snl{background:var(--s1);border-radius:8px;padding:3px 7px}
 .dcpl{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--s1);border:2px solid var(--line);border-radius:12px;padding:7px 10px;margin:8px 0 2px;font-size:13.5px}
 .dcwin{position:fixed;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;background:#170f2ee8;overflow:hidden;animation:dcin .25s}
 .dcrain{position:absolute;inset:0;overflow:hidden;pointer-events:none}
