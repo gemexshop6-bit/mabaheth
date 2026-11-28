@@ -75,12 +75,12 @@ function card(sd, big) {
   return `<div class="pc ${turn ? 'turn' : ''} ${sd.done ? 'done' : ''} ${sd.id === S.you ? 'me' : ''}">
   <div class="img">${c ? `<img src="${esc(c.i)}" referrerpolicy="no-referrer" onerror="this.style.opacity=.15">` : '<div class="qm">❓</div>'}${sd.done && sd.rank ? `<span class="rk">#${sd.rank}</span>` : ''}${sd.miss ? '<span class="rk bad">يفوّت</span>' : ''}</div>
   <div class="cn">${c ? esc(c.n) : 'إنت مش شايف كارتك!'}</div>
-  <div class="who">${p.bot ? '🤖' : avOf(p)} ${esc(p.name)}${sd.id === S.you ? ' (إنت)' : ''} <b>${p.score}</b>${sd.gain && S.phase === 'result' ? ` <i>+${sd.gain}</i>` : ''}</div></div>`;
+  <div class="who">${p.bot ? '🤖 ' + esc(p.name) : PN(p)}${sd.id === S.you ? ' (إنت)' : ''} <b>${p.score}</b>${sd.gain && S.phase === 'result' ? ` <i>+${sd.gain}</i>` : ''}</div></div>`;
 }
-function board() { return `<div class="sb">${[...S.players].sort((a, b) => b.score - a.score).map((p, i) => `<span class="chip ${p.id === S.you ? 'me' : ''}">${i === 0 && p.score > 0 ? '👑' : ''}${p.bot ? '🤖' : ''}${esc(p.name)} <b>${p.score}</b></span>`).join('')}</div>` }
+function board() { return `<div class="sb">${[...S.players].sort((a, b) => b.score - a.score).map((p, i) => `<span class="chip ${p.id === S.you ? 'me' : ''}">${i === 0 && p.score > 0 ? '👑' : ''}${p.bot ? '🤖 ' + esc(p.name) : PN(p)} <b>${p.score}</b></span>`).join('')}</div>` }
 function plist() {
   const host = S.host === S.you, ph = S.phase === 'lobby' || S.phase === 'sres' || S.phase === 'dchamp';
-  return `<div class="pls">${S.players.map(p => `<div class="pr ${p.on ? '' : 'off'}"><span class="pn">${S.host === p.id ? '👑' : ''}${p.bot ? '🤖' : avOf(p)} ${esc(p.name)}${p.id === S.you ? ' <small>(إنت)</small>' : ''}</span><b class="sc" title="النقط">${p.score}</b><span class="st" title="${p.on ? 'موجود' : 'غايب'}">${p.on ? '🟢' : '⚪'}</span><span class="mc ${p.mic ? '' : 'moff'}" title="${p.mic === 1 ? 'المايك شغال' : p.mic === 2 ? 'المايك مكتوم' : 'المايك مقفول'}">${p.mic === 2 ? '🔇' : '🎙️'}</span>${ph && !p.bot ? `<span class="rd">${p.ready ? '✅' : '⏳'}</span>` : ''}${host && p.id !== S.you ? `<button class="ib" title="خليه هوست" ${p.bot || !p.on ? 'disabled' : ''} onclick="send({t:'host',id:'${p.id}'})">👑</button><button class="ib rd" title="اطرده" onclick="kick('${p.id}')">🚫</button>` : ''}</div>`).join('')}</div>`;
+  return `<div class="pls">${S.players.map(p => `<div class="pr ${p.on ? '' : 'off'}"><span class="pn">${S.host === p.id ? '👑' : ''}${p.bot ? '🤖 ' + esc(p.name) : PN(p)}${p.id === S.you ? ' <small>(إنت)</small>' : ''}</span><b class="sc" title="النقط">${p.score}</b><span class="st" title="${p.on ? 'موجود' : 'غايب'}">${p.on ? '🟢' : '⚪'}</span><span class="mc ${p.mic ? '' : 'moff'}" title="${p.mic === 1 ? 'المايك شغال' : p.mic === 2 ? 'المايك مكتوم' : 'المايك مقفول'}">${p.mic === 2 ? '🔇' : '🎙️'}</span>${ph && !p.bot ? `<span class="rd">${p.ready ? '✅' : '⏳'}</span>` : ''}${host && p.id !== S.you ? `<button class="ib" title="خليه هوست" ${p.bot || !p.on ? 'disabled' : ''} onclick="send({t:'host',id:'${p.id}'})">👑</button><button class="ib rd" title="اطرده" onclick="kick('${p.id}')">🚫</button>` : ''}</div>`).join('')}</div>`;
 }
 function rhist() {
   if (!S.rh.length) return '<p class="mut">لسه مفيش جولات اتلعبت</p>';
@@ -179,7 +179,7 @@ function spyBody() {
   if (ph === 'svote') {
     const voted = sp.voted;
     return `<div class="spy-g"><div class="spyl">${secret}</div><div class="spyr"><h3>🗳 مين الجاسوس؟ اتناقشوا وصوتوا (${sp.left}ث)</h3>
-    <div class="vts">${sp.order.map(id => `<div class="vt"><div class="vn">${pl(id).bot ? '🤖' : avOf(pl(id))} ${nameOf(id)} ${voted.includes(id) ? '<i>✔ صوّت</i>' : ''}</div><div class="vc">"${clueOf(id) || '—'}"</div>${id !== S.you && sp.order.includes(S.you) ? `<button class="chip ${sp.mine === id ? 'sel' : ''}" onclick="send({t:'svote',id:'${id}'})">${sp.mine === id ? '✅ ' : ''}هو الجاسوس</button>` : '<span class="mut">&nbsp;</span>'}</div>`).join('')}</div>
+    <div class="vts">${sp.order.map(id => `<div class="vt"><div class="vn">${pl(id).bot ? '🤖 ' + nameOf(id) : PN(pl(id))} ${voted.includes(id) ? '<i>✔ صوّت</i>' : ''}</div><div class="vc">"${clueOf(id) || '—'}"</div>${id !== S.you && sp.order.includes(S.you) ? `<button class="chip ${sp.mine === id ? 'sel' : ''}" onclick="send({t:'svote',id:'${id}'})">${sp.mine === id ? '✅ ' : ''}هو الجاسوس</button>` : '<span class="mut">&nbsp;</span>'}</div>`).join('')}</div>
     <p class="mut">لازم أغلبية تتفق على واحد عشان يتكشف. الجاسوس لو اتكشف بيخمّن الكلمة.</p></div></div>`;
   }
   if (ph === 'sguess') {
@@ -310,16 +310,192 @@ async function vmsg(m) {
   } catch (e) { }
 }
 
+/* ===== our own art: icons replace emoji, drawn characters, badges ===== */
+var EL = '#2b2140', EY = '#ffd23f', EP = '#ff5d8f', ET = '#3ec9c0', EV = '#7c5cff', EG = '#4caf50', EW = '#ffffff', ER = '#ff4b4b', EO = '#ff9f43';
+function eI(s) { return '<svg class="ei" viewBox="0 0 32 32" aria-hidden="true">' + s + '</svg>' }
+var _fb = '<circle cx="16" cy="16" r="12.5" fill="' + EY + '"/>', _ey = '<circle cx="11.5" cy="14" r="1.5" fill="' + EL + '" stroke="none"/><circle cx="20.5" cy="14" r="1.5" fill="' + EL + '" stroke="none"/>', _sm = '<path d="M10.5 19.5c2.5 3.5 8.5 3.5 11 0"/>';
+var ICON = {
+  camera: '<path d="M5 11h4l2-3h10l2 3h4v15H5z" fill="#fff"/><circle cx="16" cy="18" r="4.5" fill="#7c5cff"/>',
+  smile: _fb + _ey + _sm,
+  laugh: _fb + '<path d="M9.5 14.5q2-2.5 4 0M18.5 14.5q2-2.5 4 0"/><path d="M9.5 19h13q-1 6-6.5 6t-6.5-6z" fill="#fff"/>',
+  wow: _fb + _ey + '<ellipse cx="16" cy="21.5" rx="2.6" ry="3.4" fill="' + EL + '"/>',
+  wink: _fb + '<circle cx="11.5" cy="14" r="1.5" fill="' + EL + '" stroke="none"/><path d="M18.5 14.5q2-2.5 4 0"/>' + _sm,
+  cool: _fb + '<path d="M6.5 12.5h19v3.5a3 3 0 0 1-3 3h-3.5a3 3 0 0 1-3-3v-1h-3v1a3 3 0 0 1-3 3H9.5a3 3 0 0 1-3-3z" fill="' + EL + '"/>' + _sm.replace('19.5', '23').replace('c2.5 3.5 8.5 3.5 11 0', 'c2.5 3 8.5 3 11 0'),
+  think: _fb + _ey + '<path d="M11 21.5h8.5q2 0 2.5-2"/><path d="M9.5 10.5l4-1.5"/>',
+  clown: '<circle cx="6" cy="9" r="4" fill="' + EP + '"/><circle cx="26" cy="9" r="4" fill="' + EP + '"/><circle cx="16" cy="16" r="12.5" fill="#fff"/>' + _ey + '<circle cx="16" cy="18" r="3" fill="' + ER + '"/><path d="M10.5 22.5c2.5 3 8.5 3 11 0"/>',
+  hide: _fb + '<ellipse cx="10.5" cy="15" rx="4.5" ry="3.8" fill="' + EO + '"/><ellipse cx="21.5" cy="15" rx="4.5" ry="3.8" fill="' + EO + '"/><path d="M11 23c3 2.5 7 2.5 10 0"/>',
+  hand: '<path d="M8 17V9.5a2 2 0 0 1 4 0V15V6.5a2 2 0 0 1 4 0V15V7.5a2 2 0 0 1 4 0V16V10.5a2 2 0 0 1 4 0V20c0 6-3.5 9-8.5 9S8 25 8 21z" fill="' + EY + '"/>',
+  thumb: '<path d="M3 15h6v13H3z" fill="' + ET + '"/><path d="M9 15l5-10c3 0 4.5 2 3.5 5L16.5 14H26a2 2 0 0 1 2 2.5l-2 9a3 3 0 0 1-3 2.5H9z" fill="' + EY + '"/>',
+  heart: '<path d="M16 28S3 20 3 11a6.5 6.5 0 0 1 13-2 6.5 6.5 0 0 1 13 2c0 9-13 17-13 17z" fill="' + ER + '"/>',
+  skull: '<path d="M16 3C9 3 5 7.500 5 13c0 4 2 6 4 7v5h4v-2h6v2h4v-5c2-1 4-3 4-7 0-5.500-4-10-11-10z" fill="#fff"/><circle cx="11.500" cy="14" r="2.500" fill="' + EL + '"/><circle cx="20.500" cy="14" r="2.500" fill="' + EL + '"/>',
+  star: '<path d="M16 3l3.8 8 8.700 1-6.400 6 1.700 8.700L16 22.500 8.200 26.700 9.900 18 3.500 12l8.700-1z" fill="' + EY + '"/>',
+  moon: '<path d="M21 4a12 12 0 1 0 7 21A10 10 0 0 1 21 4z" fill="' + EY + '"/>',
+  sun: '<circle cx="16" cy="16" r="6" fill="' + EY + '"/><path d="M16 3v4M16 25v4M3 16h4M25 16h4M6.800 6.800l2.800 2.800M22.400 22.400l2.800 2.800M6.800 25.200l2.800-2.800M22.400 9.600l2.800-2.800"/>',
+  fire: '<path d="M16 3c1 5 8 8 8 16a8 8 0 0 1-16 0c0-4 2-6 3-8 1 3 2 3 3 1 0-3 1-6 2-9z" fill="' + EO + '"/><path d="M16 19c2 2 3 3 3 5a3 3 0 0 1-6 0c0-2 2-3 3-5z" fill="' + EY + '"/>',
+  bolt: '<path d="M18 2L6 18h8l-2 12 12-17h-8z" fill="' + EY + '"/>',
+  gift: '<rect x="5" y="13" width="22" height="15" rx="1" fill="' + EP + '"/><rect x="3" y="9" width="26" height="6" rx="1" fill="' + EY + '"/><path d="M16 9v19"/><path d="M16 9c-2-5-8-5-7-1 1 2 7 1 7 1zM16 9c2-5 8-5 7-1-1 2-7 1-7 1z" fill="' + ET + '"/>',
+  party: '<path d="M4 28L10 10l12 12z" fill="' + EY + '"/><path d="M17 4l1 4M25 9l-3 3M28 17l-4-1"/><circle cx="24" cy="4" r="1.500" fill="' + EP + '"/><circle cx="12" cy="4" r="1.500" fill="' + ET + '"/><circle cx="28" cy="10" r="1.500" fill="' + EV + '"/>',
+  ticket: '<path d="M3 9h26v5a3 3 0 0 0 0 6v5H3v-5a3 3 0 0 0 0-6z" fill="' + EP + '"/><path d="M20 10v14" stroke-dasharray="2 2.500"/>',
+  mask: '<path d="M3 6h14v9a7 7 0 0 1-14 0z" fill="' + EY + '"/><path d="M15 12h14v9a7 7 0 0 1-14 0z" fill="' + EP + '"/><circle cx="7" cy="10" r="1" fill="' + EL + '"/><circle cx="13" cy="10" r="1" fill="' + EL + '"/><circle cx="19" cy="17" r="1" fill="' + EL + '"/><circle cx="25" cy="17" r="1" fill="' + EL + '"/><path d="M6.500 14q3 3 6 0M18.500 22q3-3 6 0"/>',
+  game: '<path d="M8 9h16a6 6 0 0 1 6 6v4a4 4 0 0 1-7 2.500L21 19h-10l-2 2.500a4 4 0 0 1-7-2.500v-4a6 6 0 0 1 6-6z" fill="' + EV + '"/><path d="M9 12.500v4M7 14.500h4" stroke="#fff"/><circle cx="22" cy="13.500" r="1.300" fill="' + EY + '" stroke="none"/><circle cx="25" cy="16" r="1.300" fill="' + EP + '" stroke="none"/>',
+  target: '<circle cx="16" cy="16" r="12.500" fill="#fff"/><circle cx="16" cy="16" r="8" fill="' + ER + '"/><circle cx="16" cy="16" r="3.500" fill="#fff"/>',
+  flag: '<path d="M6 3v27"/><path d="M6 5h20v13H6z" fill="#fff"/><path d="M6 5h5v4.300H6zM16 5h5v4.300h-5zM11 9.300h5v4.300h-5zM21 9.300h5v4.300h-5zM6 13.600h5V18H6zM16 13.600h5V18h-5z" fill="' + EL + '" stroke="none"/>',
+  medal: '<path d="M10 3l6 11 6-11"/><circle cx="16" cy="20" r="8" fill="' + EY + '"/><path d="M16 15.500l1.500 3 3.300.4-2.400 2.300.6 3.300-3-1.600-3 1.600.6-3.300-2.400-2.300 3.300-.4z" fill="#fff" stroke-width="1.200"/>',
+  trophy: '<path d="M9 4h14v9a7 7 0 0 1-14 0z" fill="' + EY + '"/><path d="M9 7H4c0 5 2 7 5 7M23 7h5c0 5-2 7-5 7"/><path d="M16 20v5M10 28h12M12 25h8" /><path d="M13 8v5" stroke="#fff"/>',
+  stadium: '<ellipse cx="16" cy="13" rx="13" ry="6" fill="' + ET + '"/><path d="M3 13v8c0 3 6 5 13 5s13-2 13-5v-8" fill="' + EW + '"/><ellipse cx="16" cy="13" rx="7" ry="2.500" fill="' + EG + '"/>',
+  home: '<path d="M4 15L16 4l12 11z" fill="' + ER + '"/><path d="M7 14v14h18V14" fill="#fff"/><rect x="13" y="19" width="6" height="9" fill="' + EY + '"/>',
+  people: '<circle cx="11" cy="10" r="4.500" fill="' + ET + '"/><path d="M3 27c0-7 4-10 8-10s8 3 8 10z" fill="' + ET + '"/><circle cx="22" cy="11" r="4" fill="' + EP + '"/><path d="M17 27c0-6 2.500-9 6-9s6 3 6 9z" fill="' + EP + '"/>',
+  crown: '<path d="M4 25L3 10l8 6 5-10 5 10 8-6-1 15z" fill="' + EY + '"/><path d="M4 28.500h24"/><circle cx="16" cy="19" r="1.800" fill="' + ER + '" stroke-width="1.200"/>',
+  bulb: '<path d="M16 3a9 9 0 0 0-5 16.500V23h10v-3.500A9 9 0 0 0 16 3z" fill="' + EY + '"/><path d="M12 27h8M13.500 30h5"/>',
+  chat: '<path d="M5 5h22a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H15l-6 6v-6H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" fill="#fff"/><circle cx="10" cy="13.500" r="1.300" fill="' + EL + '"/><circle cx="16" cy="13.500" r="1.300" fill="' + EL + '"/><circle cx="22" cy="13.500" r="1.300" fill="' + EL + '"/>',
+  hund: '<text x="16" y="21" text-anchor="middle" font-size="12" font-weight="900" fill="' + ER + '" stroke="none" font-family="Cairo,sans-serif">100</text><path d="M5 25h22M7 28h18" stroke="' + ER + '"/>',
+  ten: '<rect x="3" y="3" width="26" height="26" rx="6" fill="' + ET + '"/><text x="16" y="22" text-anchor="middle" font-size="14" font-weight="900" fill="' + EL + '" stroke="none" font-family="Cairo,sans-serif">10</text>',
+  book: '<path d="M3 6c5-2 10-1 13 2v20c-3-3-8-4-13-2zM29 6c-5-2-10-1-13 2v20c3-3 8-4 13-2z" fill="' + ET + '"/><path d="M16 8v20"/>',
+  scroll: '<path d="M8 4h16a3 3 0 0 1 3 3v3h-3v15a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-3h3z" fill="#fff6d8"/><path d="M12 10h8M12 15h8M12 20h8" stroke-width="1.600"/>',
+  mail: '<rect x="3" y="7" width="26" height="19" rx="3" fill="#fff"/><path d="M3 9l13 10L29 9"/>',
+  phone: '<rect x="8" y="3" width="16" height="26" rx="4" fill="' + EV + '"/><rect x="11" y="7" width="10" height="14" rx="1" fill="#fff" stroke-width="1.400"/><circle cx="16" cy="25" r="1.200" fill="#fff" stroke="none"/>',
+  nophone: '<rect x="8" y="3" width="16" height="26" rx="4" fill="' + EV + '"/><rect x="11" y="7" width="10" height="14" rx="1" fill="#fff" stroke-width="1.400"/><path d="M4 4l24 24" stroke="' + ER + '" stroke-width="3"/>',
+  repeat: '<path d="M26 12A10 10 0 0 0 7 11M6 20a10 10 0 0 0 19 1"/><path d="M26 5v7h-7M6 27v-7h7"/>',
+  mute: '<path d="M4 12h5l7-6v20l-7-6H4z" fill="' + EY + '"/><path d="M21 12l7 8M28 12l-7 8" stroke="' + ER + '" stroke-width="2.500"/>',
+  mic: '<rect x="11" y="3" width="10" height="16" rx="5" fill="' + EP + '"/><path d="M6 15a10 10 0 0 0 20 0M16 25v4M11 29h10"/>',
+  lock: '<rect x="6" y="14" width="20" height="14" rx="3" fill="' + EY + '"/><path d="M10 14V10a6 6 0 0 1 12 0v4"/><circle cx="16" cy="21" r="2" fill="' + EL + '"/>',
+  link: '<path d="M13 19a5 5 0 0 0 7 0l5-5a5 5 0 0 0-7-7l-2 2M19 13a5 5 0 0 0-7 0l-5 5a5 5 0 0 0 7 7l2-2"/>',
+  eyes: '<ellipse cx="9" cy="16" rx="6" ry="8" fill="#fff"/><ellipse cx="23" cy="16" rx="6" ry="8" fill="#fff"/><circle cx="10.500" cy="17" r="2.500" fill="' + EL + '"/><circle cx="21.500" cy="17" r="2.500" fill="' + EL + '"/>',
+  spy: '<path d="M4 14h24l-4-3-2-7H10L8 11z" fill="' + EL + '"/><path d="M9 14h14" stroke="' + EY + '"/><circle cx="13" cy="22" r="5" fill="#fff"/><path d="M17 26l8 5"/>',
+  speak: '<circle cx="11" cy="15" r="7.500" fill="' + EY + '"/><circle cx="9" cy="13" r="1.200" fill="' + EL + '" stroke="none"/><path d="M8 18q3 2 6 0M22 9q4 6 0 12M26 5q7 11 0 22"/>',
+  ballot: '<path d="M3 17h26v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="' + EV + '"/><path d="M9 17V5h14v12" fill="#fff"/><path d="M12 9h8M12 13h8" stroke-width="1.600"/><path d="M11 22h10" stroke="#fff"/>',
+  rocket: '<path d="M16 3c5 3 7 9 6 16H10C9 12 11 6 16 3z" fill="#fff"/><circle cx="16" cy="12" r="2.500" fill="' + ET + '"/><path d="M10 15l-5 5 2 4 4-3M22 15l5 5-2 4-4-3" fill="' + ER + '"/><path d="M13 22l3 7 3-7z" fill="' + EO + '"/>',
+  door: '<path d="M7 3h18v26H7z" fill="' + EO + '"/><circle cx="21" cy="17" r="1.600" fill="' + EY + '"/><path d="M4 29h24"/>',
+  no: '<circle cx="16" cy="16" r="12" stroke="' + ER + '" stroke-width="3"/><path d="M7.500 7.500l17 17" stroke="' + ER + '" stroke-width="3"/>',
+  dg: '<circle cx="16" cy="16" r="9" fill="' + EG + '"/>', dr: '<circle cx="16" cy="16" r="9" fill="' + ER + '"/>', dw: '<circle cx="16" cy="16" r="9" fill="#fff"/>',
+  coin: '<circle cx="16" cy="16" r="12.500" fill="' + EY + '"/><circle cx="16" cy="16" r="8" fill="' + EO + '" stroke-width="1.600"/><path d="M16 11v10M12.500 14.500h7" stroke="' + EL + '" stroke-width="2"/>',
+  m1: '<path d="M10 3l6 10 6-10"/><circle cx="16" cy="20" r="9" fill="' + EY + '"/><text x="16" y="25" text-anchor="middle" font-size="12" font-weight="900" fill="' + EL + '" stroke="none" font-family="Cairo,sans-serif">1</text>',
+  m2: '<path d="M10 3l6 10 6-10"/><circle cx="16" cy="20" r="9" fill="#cfd8dc"/><text x="16" y="25" text-anchor="middle" font-size="12" font-weight="900" fill="' + EL + '" stroke="none" font-family="Cairo,sans-serif">2</text>',
+  m3: '<path d="M10 3l6 10 6-10"/><circle cx="16" cy="20" r="9" fill="#e0955a"/><text x="16" y="25" text-anchor="middle" font-size="12" font-weight="900" fill="' + EL + '" stroke="none" font-family="Cairo,sans-serif">3</text>',
+  hour: '<path d="M7 3h18M7 29h18M9 3c0 8 7 9 7 13s-7 5-7 13M23 3c0 8-7 9-7 13s7 5 7 13" /><path d="M11 26c1-3 4-4 5-4s4 1 5 4z" fill="' + EY + '"/>',
+  stop: '<circle cx="16" cy="18" r="11" fill="#fff"/><path d="M16 18V11M12 3h8M16 3v4"/>',
+  alarm: '<circle cx="16" cy="17" r="10" fill="#fff"/><path d="M16 17v-6M16 17l4 3M4 8l5-4M28 8l-5-4"/>',
+  left: '<path d="M26 16H6M14 8l-8 8 8 8"/>', next: '<path d="M7 6l12 10L7 26z" fill="' + EL + '"/><path d="M24 6v20"/>', up: '<path d="M16 28V6M7 14l9-9 9 9" stroke-width="3"/>', minus: '<path d="M7 16h18" stroke-width="3.500"/>',
+  full: '<path d="M4 12V4h8M20 4h8v8M28 20v8h-8M12 28H4v-8" stroke-width="2.500"/>',
+  ok: '<circle cx="16" cy="16" r="12.500" fill="' + EG + '"/><path d="M9.500 16.500l4.500 4.500 8.500-9" stroke="#fff" stroke-width="3"/>',
+  tick: '<path d="M6 17l7 7 13-15" stroke="' + EG + '" stroke-width="4"/>',
+  x: '<path d="M8 8l16 16M24 8L8 24" stroke="' + ER + '" stroke-width="4"/>',
+  xr: '<circle cx="16" cy="16" r="12.500" fill="' + ER + '"/><path d="M10.500 10.500l11 11M21.500 10.500l-11 11" stroke="#fff" stroke-width="3"/>',
+  q: '<circle cx="16" cy="16" r="12.500" fill="' + EV + '"/><path d="M11.500 12.500a4.500 4.500 0 1 1 6.500 4c-1.500 1-2 1.500-2 3" stroke="#fff" stroke-width="3"/><circle cx="16" cy="25" r="1.800" fill="#fff" stroke="none"/>',
+  warn: '<path d="M16 4L29 27H3z" fill="' + EY + '"/><path d="M16 12v7" stroke-width="3"/><circle cx="16" cy="23.500" r="1.500" fill="' + EL + '" stroke="none"/>',
+  swords: '<path d="M5 5l14 14M27 5L13 19" stroke-width="3"/><path d="M4 22l6 6M28 22l-6 6M3 29l4-4M29 29l-4-4" stroke="' + EO + '" stroke-width="3"/>',
+  ball: '<circle cx="16" cy="16" r="12.500" fill="#fff"/><path d="M16 10l5 4-2 6h-6l-2-6z" fill="' + EL + '"/><path d="M16 10V4M21 14l6-2M19 20l4 6M13 20l-4 6M11 14L5 12" stroke-width="1.600"/>',
+  pot: '<path d="M4 14h24v3a12 12 0 0 1-24 0z" fill="' + EO + '"/><path d="M11 4c-2 3 2 4 0 7M17 4c-2 3 2 4 0 7M23 4c-2 3 2 4 0 7" stroke-width="1.800"/>',
+  clap: '<path d="M3 12h26v16H3z" fill="' + EL + '"/><path d="M3 12l3-8 6 2 3-4 6 2 3-4 6 2-3 8z" fill="#fff"/><path d="M9 12l3-6M17 12l3-6M25 12l3-6" stroke-width="1.800"/>',
+  globe: '<circle cx="16" cy="16" r="12.500" fill="' + ET + '"/><path d="M7 11c4-2 6 2 9 1s3-5 7-3M9 22c3-3 5 0 8-1s5 1 6 3" fill="' + EG + '"/>',
+  dice: '<rect x="4" y="4" width="24" height="24" rx="5" fill="#fff"/><circle cx="11" cy="11" r="2" fill="' + EL + '"/><circle cx="21" cy="11" r="2" fill="' + EL + '"/><circle cx="16" cy="16" r="2" fill="' + EL + '"/><circle cx="11" cy="21" r="2" fill="' + EL + '"/><circle cx="21" cy="21" r="2" fill="' + EL + '"/>',
+  temple: '<path d="M3 11L16 4l13 7z" fill="' + EY + '"/><path d="M6 14v11M12 14v11M20 14v11M26 14v11M3 28h26" stroke-width="2.600"/>',
+  puzzle: '<path d="M5 9h7a3 3 0 1 1 6 0h7v7a3 3 0 1 0 0 6v7H5V22a3 3 0 1 0 0-6z" fill="' + EV + '"/>',
+  pop: '<path d="M6 12h20l-3 17H9z" fill="#fff"/><path d="M11 12l1 17M16 12v17M21 12l-1 17" stroke="' + ER + '"/><circle cx="10" cy="9" r="4" fill="#fff6d8"/><circle cx="16" cy="7" r="4.500" fill="#fff6d8"/><circle cx="22" cy="9" r="4" fill="#fff6d8"/>',
+  tv: '<rect x="3" y="7" width="26" height="17" rx="3" fill="' + ET + '"/><rect x="6" y="10" width="20" height="11" rx="1" fill="#fff" stroke-width="1.400"/><path d="M11 28h10M12 7l-3-4M20 7l3-4"/>',
+  burger: '<path d="M5 14c0-7 6-10 11-10s11 3 11 10z" fill="' + EO + '"/><path d="M4 18h24" stroke="' + EG + '" stroke-width="3.500"/><path d="M5 22h22v1a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z" fill="' + EO + '"/><path d="M4 18.500h24" stroke="' + ER + '" stroke-width="1.500"/>',
+  map: '<path d="M3 7l8-3 10 3 8-3v21l-8 3-10-3-8 3z" fill="#fff6d8"/><path d="M11 4v21M21 7v21"/><path d="M14 13l4 3" stroke="' + ER + '" stroke-width="2.500"/>',
+  note: '<path d="M12 24V6l14-3v18"/><circle cx="9" cy="24" r="4" fill="' + EV + '"/><circle cx="23" cy="21" r="4" fill="' + EV + '"/>',
+  robot: '<rect x="5" y="10" width="22" height="17" rx="4" fill="#cfd8dc"/><path d="M16 10V5"/><circle cx="16" cy="4" r="2" fill="' + ER + '"/><circle cx="11" cy="17" r="2.500" fill="' + EY + '"/><circle cx="21" cy="17" r="2.500" fill="' + EY + '"/><path d="M11 23h10"/>',
+  dot: '<circle cx="16" cy="16" r="9" fill="' + EV + '"/>'
+};
+var EMAP = {
+  '📷': 'camera',
+  '🙂': 'smile', '😂': 'laugh', '😮': 'wow', '😲': 'wow', '😉': 'wink', '😎': 'cool', '🤔': 'think', '🤷': 'think', '🤡': 'clown', '🙈': 'hide', '🥳': 'smile', '🙋': 'hand', '👏': 'hand', '👍': 'thumb', '❤': 'heart', '💀': 'skull', '⭐': 'star', '🌙': 'moon', '☀': 'sun', '🔥': 'fire', '⚡': 'bolt', '🎁': 'gift', '🎉': 'party', '🎫': 'ticket', '🎭': 'mask', '🎮': 'game', '🎯': 'target', '🏁': 'flag', '🏅': 'medal', '🏆': 'trophy', '🏟': 'stadium', '🏠': 'home', '👥': 'people', '👑': 'crown', '💡': 'bulb', '💬': 'chat', '💯': 'hund', '🔟': 'ten', '📖': 'book', '📜': 'scroll', '📩': 'mail', '📱': 'phone', '📲': 'phone', '📵': 'nophone', '🔁': 'repeat', '🔄': 'repeat', '♻': 'repeat', '🔇': 'mute', '🎙': 'mic', '🎤': 'mic', '🔒': 'lock', '🔗': 'link', '👀': 'eyes', '🕵': 'spy', '🗣': 'speak', '🗳': 'ballot', '🚀': 'rocket', '🚪': 'door', '🚫': 'no', '🟢': 'dg', '🔴': 'dr', '⚪': 'dw', '🪙': 'coin', '🥇': 'm1', '🥈': 'm2', '🥉': 'm3', '⏳': 'hour', '⌛': 'hour', '⏱': 'stop', '⏰': 'alarm', '←': 'left', '⏭': 'next', '⬆': 'up', '➖': 'minus', '⛶': 'full', '✅': 'ok', '✔': 'tick', '✖': 'x', '❌': 'xr', '❓': 'q', '⚠': 'warn', '⚔': 'swords', '⚽': 'ball', '🍲': 'pot', '🎬': 'clap', '🌍': 'globe', '🎲': 'dice', '🏛': 'temple', '🧩': 'puzzle', '🍿': 'pop', '📺': 'tv', '🍔': 'burger', '🗺': 'map', '🎵': 'note', '🤖': 'robot', '🧞': 'smile', '🦁': 'smile', '🐯': 'smile', '🦊': 'smile', '🐼': 'smile', '🐸': 'smile', '🦄': 'smile', '👽': 'smile', '👻': 'smile', '🐲': 'smile', '🤠': 'smile'
+};
+var EMRX = /(?:[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}])(?:\uFE0F|[\u{1F3FB}-\u{1F3FF}]|\u200D[\u{1F000}-\u{1FAFF}\u2640\u2642]\uFE0F?)*/gu;
+function emKey(s) { var c = s.replace(/\uFE0F/g, ''); var f = String.fromCodePoint(c.codePointAt(0)); return EMAP[f] ? f : '' }
+function emSplit(txt) {
+  EMRX.lastIndex = 0; var out = [], last = 0, m, hit = 0;
+  while ((m = EMRX.exec(txt))) { var k = emKey(m[0]); if (!k) continue; hit = 1; if (m.index > last) out.push(document.createTextNode(txt.slice(last, m.index))); var s = document.createElement('i'); s.className = 'em'; s.innerHTML = eI(ICON[EMAP[k]]); out.push(s); last = m.index + m[0].length }
+  if (!hit) return null; if (last < txt.length) out.push(document.createTextNode(txt.slice(last))); return out
+}
+function deem(root) {
+  if (!root) return; var t = root.nodeType;
+  if (t === 3) { var p = root.parentNode; if (!p || /^(SCRIPT|STYLE|TEXTAREA|INPUT|OPTION|TITLE)$/.test(p.nodeName) || (p.closest && p.closest('svg,.nodeem'))) return; var r = emSplit(root.nodeValue); if (r) { var f = document.createDocumentFragment(); r.forEach(function (n) { f.appendChild(n) }); p.replaceChild(f, root) } return }
+  if (t !== 1 || /^(SCRIPT|STYLE|TEXTAREA|SVG|svg)$/.test(root.nodeName)) return;
+  var w = document.createTreeWalker(root, 4, null), a = [], n; while ((n = w.nextNode())) { if (n.nodeValue && EMRX.test(n.nodeValue)) a.push(n); EMRX.lastIndex = 0 }
+  a.forEach(deem)
+}
+try { new MutationObserver(function (ms) { ms.forEach(function (m) { if (m.type === 'characterData') deem(m.target); else m.addedNodes.forEach(deem) }) }).observe(document.documentElement, { childList: true, subtree: true, characterData: true }); deem(document.body) } catch (e) { }
+/* characters: drawn, one style */
+var CH = [
+  { b: EY, s: '#f1c27d', h: EL, hs: 'short', sh: ET, m: 's' },
+  { b: EP, s: '#e0ac69', h: '#5b3a1e', hs: 'short', sh: EV, a: 'shades', m: 's' },
+  { b: ET, s: '#f1c27d', h: '#5b3a1e', hs: 'short', sh: EP, a: 'cowboy', m: 'o' },
+  { b: EV, s: '#f1c27d', h: EL, hs: 'long', sh: EY, m: 's', ch: 1 },
+  { b: EG, s: '#e0ac69', h: EL, hs: 'none', sh: '#fff', a: 'tarb,must', m: 's' },
+  { b: EY, s: '#f1c27d', hs: 'none', a: 'hijab', hc: ET, sh: ET, m: 's', ch: 1 },
+  { b: ET, s: '#c68642', hs: 'none', a: 'nemes', sh: EY, m: 's' },
+  { b: EV, s: '#e0ac69', h: '#8a8a8a', hs: 'short', a: 'crown,beard', sh: EP, m: 's' },
+  { b: EY, s: '#f1c27d', h: EL, hs: 'curly', a: 'glasses', sh: '#fff', m: 's' },
+  { b: EP, s: '#c68642', h: EL, hs: 'short', a: 'phones', sh: EL, m: 'o' },
+  { b: EG, s: '#f1c27d', h: '#8b5a2b', hs: 'short', a: 'party', sh: EP, m: 'o', ch: 1 },
+  { b: '#cfd8dc', s: '#e0ac69', h: '#e6e6e6', hs: 'none', a: 'glasses,must', sh: EV, m: 's', mc: '#e6e6e6' },
+  { b: EY, s: '#f1c27d', h: '#8b5a2b', hs: 'bun', a: 'glasses', sh: EP, m: 's', ch: 1 },
+  { b: EV, s: '#8d5524', h: EL, hs: 'curly', a: 'phones', sh: ET, m: 'o' },
+  { b: ET, s: '#e0ac69', h: EL, hs: 'short', a: 'glasses,beard', sh: EL, m: 's' },
+  { b: EP, s: '#ffffff', h: EP, hs: 'curly', a: 'nose', sh: EV, m: 'o' },
+  { sp: 'alien', b: EV }, { sp: 'robot', b: EY },
+  { b: EG, s: '#f1c27d', h: EO, hs: 'long', a: 'crown', sh: EV, m: 's', ch: 1 },
+  { sp: 'ninja', b: EP }
+];
+var CHN = ['كابتن', 'كول', 'كاوبوي', 'مدلعة', 'أبو شنب', 'محجبة شيك', 'فرعون', 'الملك', 'دكتور', 'دي جي', 'عيل', 'جدّو', 'سمر', 'جيمر', 'أستاذ', 'مهرج', 'فضائي', 'روبوت', 'الملكة', 'نينجا'];
+var AVP = [0, 0, 0, 0, 0, 0, 40, 60, 40, 80, 40, 60, 80, 100, 60, 120, 150, 150, 200, 300];
+var _cs = {};
+function chSvg(i) {
+  if (_cs[i]) return _cs[i]; var c = CH[i] || CH[0], o = ['<svg viewBox="0 0 64 64" aria-hidden="true" stroke="' + EL + '" stroke-width="2.500" stroke-linejoin="round" stroke-linecap="round"><rect width="64" height="64" fill="' + c.b + '" stroke="none"/>'], a = (c.a || '').split(','), has = function (x) { return a.indexOf(x) >= 0 };
+  if (c.sp === 'alien') o.push('<path d="M6 64c1-12 11-16 26-16s25 4 26 16z" fill="#7c5cff"/><path d="M26 12l-5-8M38 12l5-8"/><circle cx="20" cy="4" r="3" fill="' + EY + '"/><circle cx="44" cy="4" r="3" fill="' + EY + '"/><ellipse cx="32" cy="32" rx="18" ry="20" fill="#9be564"/><ellipse cx="23" cy="31" rx="5.500" ry="8" fill="' + EL + '" transform="rotate(15 23 31)"/><ellipse cx="41" cy="31" rx="5.500" ry="8" fill="' + EL + '" transform="rotate(-15 41 31)"/><path d="M27 46q5 3 10 0" fill="none"/>');
+  else if (c.sp === 'robot') o.push('<path d="M6 64c1-12 11-14 26-14s25 2 26 14z" fill="#9aa5b1"/><path d="M32 12V5"/><circle cx="32" cy="4" r="3.500" fill="' + ER + '"/><rect x="13" y="12" width="38" height="34" rx="8" fill="#cfd8dc"/><rect x="19" y="23" width="9" height="9" rx="2" fill="' + EY + '"/><rect x="36" y="23" width="9" height="9" rx="2" fill="' + EY + '"/><path d="M22 40h20M27 38v4M32 38v4M37 38v4" stroke-width="2"/>');
+  else if (c.sp === 'ninja') o.push('<path d="M6 64c1-14 11-18 26-18s25 4 26 18z" fill="' + EL + '"/><circle cx="32" cy="30" r="19" fill="' + EL + '"/><path d="M16 27h32v10H16z" fill="#f1c27d"/><circle cx="25" cy="32" r="2.300" fill="' + EL + '" stroke="none"/><circle cx="39" cy="32" r="2.300" fill="' + EL + '" stroke="none"/><path d="M13 21h38v6H13z" fill="' + ER + '"/><path d="M51 22l8 5-8 3" fill="' + ER + '"/>');
+  else {
+    o.push('<path d="M6 64c1-14 11-19 26-19s25 5 26 19z" fill="' + c.sh + '"/>');
+    if (c.hs === 'long') o.push('<path d="M13 32c-3-17 5-25 19-25s22 8 19 25l2 24H11z" fill="' + c.h + '"/>');
+    if (has('hijab')) o.push('<path d="M10 38c-3-23 5-33 22-33s25 10 22 33c0 8 4 14 6 26H4c2-12 6-18 6-26z" fill="' + c.hc + '"/>');
+    if (has('nemes')) o.push('<path d="M12 32C11 14 19 6 32 6s21 8 20 26l3 18H9z" fill="' + EY + '"/><path d="M13 22h8M12 29h8M43 22h8M44 29h8M12 36h8M44 36h8" stroke="' + ET + '"/>');
+    o.push('<path d="M26 40h12v9q-6 4-12 0z" fill="' + c.s + '"/>');
+    if (!has('hijab')) o.push('<circle cx="17" cy="32" r="3.500" fill="' + c.s + '"/><circle cx="47" cy="32" r="3.500" fill="' + c.s + '"/>');
+    o.push('<ellipse cx="32" cy="31" rx="' + (has('hijab') ? 13 : 15) + '" ry="' + (has('hijab') ? 15.500 : 17) + '" fill="' + c.s + '"/>');
+    if (has('beard')) o.push('<path d="M17 35c0 14 8 19 15 19s15-5 15-19c-3 6-7 8-15 8s-12-2-15-8z" fill="' + (c.h || EL) + '"/>');
+    if (c.hs === 'short' || c.hs === 'bun' || c.hs === 'long') o.push('<path d="M17 29c-2-14 6-20 15-20s17 6 15 20c-3-7-8-10-15-10s-12 3-15 10z" fill="' + c.h + '"/>');
+    if (c.hs === 'bun') o.push('<circle cx="32" cy="7" r="6" fill="' + c.h + '"/>');
+    if (c.hs === 'curly') o.push('<g fill="' + c.h + '"><circle cx="19" cy="22" r="7"/><circle cx="27" cy="14" r="7.500"/><circle cx="38" cy="14" r="7.500"/><circle cx="46" cy="22" r="7"/><circle cx="32" cy="18" r="6"/></g>');
+    o.push('<circle cx="25.500" cy="31" r="2.300" fill="' + EL + '" stroke="none"/><circle cx="38.500" cy="31" r="2.300" fill="' + EL + '" stroke="none"/>');
+    if (c.ch) o.push('<circle cx="21" cy="37" r="3" fill="#ff9fb7" stroke="none"/><circle cx="43" cy="37" r="3" fill="#ff9fb7" stroke="none"/>');
+    if (has('nose')) o.push('<circle cx="32" cy="36" r="4" fill="' + ER + '"/>');
+    o.push(c.m === 'o' ? '<path d="M25 40h14q-1 7-7 7t-7-7z" fill="#fff"/>' : '<path d="M25 40q7 7 14 0" fill="none"/>');
+    if (has('must')) o.push('<path d="M23 38c4-3 6 0 9 0s5-3 9 0c-2 4-6 2-9 2s-7 2-9-2z" fill="' + (c.mc || EL) + '"/>');
+    if (has('shades')) o.push('<path d="M18 28h28v4a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4h-4a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4z" fill="' + EL + '"/>');
+    if (has('glasses')) o.push('<circle cx="25.500" cy="31" r="6" fill="#ffffff66"/><circle cx="38.500" cy="31" r="6" fill="#ffffff66"/><path d="M31.500 31h1"/>');
+    if (has('tarb')) o.push('<path d="M19 19c0-9 5-14 13-14s13 5 13 14z" fill="' + ER + '"/><path d="M32 5c7-3 12 0 13 7" fill="none"/>');
+    if (has('nemes')) o.push('<path d="M16 22c2-8 8-11 16-11s14 3 16 11c-5-3-10-4-16-4s-11 1-16 4z" fill="' + ET + '"/>');
+    if (has('crown')) o.push('<path d="M19 17l-2-12 9 6 6-9 6 9 9-6-2 12z" fill="' + EY + '"/>');
+    if (has('phones')) o.push('<path d="M15 31c-2-19 8-24 17-24s19 5 17 24" fill="none" stroke-width="3.500"/><rect x="10" y="27" width="7" height="13" rx="3" fill="' + EP + '"/><rect x="47" y="27" width="7" height="13" rx="3" fill="' + EP + '"/>');
+    if (has('party')) o.push('<path d="M23 15l9-14 9 14z" fill="' + EP + '"/><circle cx="32" cy="2" r="2.500" fill="' + EY + '"/>');
+    if (has('cowboy')) o.push('<ellipse cx="32" cy="18" rx="25" ry="5" fill="#8b5a2b"/><path d="M21 18c0-10 3-13 11-13s11 3 11 13z" fill="#a0692f"/>');
+  }
+  o.push('</svg>'); return _cs[i] = o.join('')
+}
+function avOf(o) {
+  o = o || {}; var k = o.pk && o.ap !== 0 ? o.pk : '', fnd = o.bd && o.bd.indexOf('f') >= 0;
+  return '<span class="av' + (fnd ? ' fnd' : '') + '">' + (k ? '<img alt="" src="/api/ph/' + k + '.jpg">' : chSvg((o.av | 0) % 20)) + '</span>'
+}
+function bdH(bd) {
+  if (!bd) return ''; var h = '';
+  if (bd.indexOf('v') >= 0) h += '<i class="bdg" title="موثّق"><svg viewBox="0 0 24 24"><path d="M12 1l3 2.500 3.800-.3 1 3.700 3.200 2.100-1.400 3.600 1.400 3.600-3.200 2.100-1 3.700-3.800-.3L12 23l-3-2.500-3.800.3-1-3.700L1 14.900l1.400-3.600L1 7.700l3.200-2.100 1-3.700 3.800.3z" fill="#2f9bff"/><path d="M7 12.500l3.300 3.200L17 9" stroke="#fff" stroke-width="2.600" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></i>';
+  if (bd.indexOf('f') >= 0) h += '<i class="bdg" title="مؤسس اللعبة"><svg viewBox="0 0 24 24"><path d="M12 1l9 3v7c0 6-4 10-9 12C7 21 3 17 3 11V4z" fill="#ffd23f" stroke="#2b2140" stroke-width="1.800" stroke-linejoin="round"/><path d="M6.500 15L5.500 8l4 3L12 6l2.500 5 4-3-1 7z" fill="#ff5d8f" stroke="#2b2140" stroke-width="1.400" stroke-linejoin="round"/></svg></i>';
+  return h
+}
+function PN(p) { var f = p.bd && p.bd.indexOf('f') >= 0; return avOf(p) + ' <span class="' + (f ? 'fnm' : '') + '">' + esc(p.name) + '</span>' + bdH(p.bd) }
+
 /* ===== profile: XP, levels, coins, avatars, stats, achievements (saved on the phone) ===== */
-var AVS = ['🙂', '😎', '🤠', '🥳', '🦁', '🐯', '🦊', '🐼', '🐸', '🦄', '👽', '🤖', '👻', '🐲', '🧞', '👑', '🔥'];
-var AVP = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 40, 7: 40, 8: 60, 9: 80, 10: 100, 11: 100, 12: 120, 13: 150, 14: 200, 15: 300, 16: 400 };
 var ACH = [['first', '🎮', 'أول ماتش', 'خلّص أول ماتش', p => p.st.m >= 1], ['w1', '🏅', 'أول فوز', 'اكسب ماتش', p => p.st.w >= 1], ['w10', '🏆', 'عشرة فوز', 'اكسب ١٠ ماتشات', p => p.st.w >= 10], ['m10', '🔟', 'لاعب ثابت', 'العب ١٠ ماتشات', p => p.st.m >= 10], ['str3', '🔥', 'سلسلة ٣', 'اكسب ٣ ورا بعض', p => p.st.bs >= 3], ['sp', '🕵️', 'عميل', 'اكسب كجاسوس أو كاشف جاسوس', p => (p.st.g.spy || [0, 0])[1] >= 1], ['du', '⚔️', 'مبارز', 'اكسب مبارزة', p => (p.st.g.duel || [0, 0])[1] >= 1], ['lv5', '⭐', 'لفل ٥', 'وصّل لفل ٥', p => lvOf(p.xp).l >= 5], ['pt500', '💯', '٥٠٠ نقطة', 'اجمع ٥٠٠ نقطة في المجموع', p => p.st.p >= 500]];
 function lvOf(x) { var l = 1; while (x >= 30 * (l + 1) * l) l++; var a = 30 * l * (l - 1), b = 30 * (l + 1) * l; return { l: l, a: x - a, n: b - a } }
 var PR = null;
 function profLoad() { if (PR) return PR; var o = null; try { o = JSON.parse(localStorage.mbProf || 'null') } catch (e) { } o = o || {}; o.xp = o.xp | 0; o.c = o.c | 0; o.av = o.av | 0; o.own = o.own || [0, 1, 2, 3, 4, 5]; o.ac = o.ac || []; o.st = o.st || {}; var s = o.st; s.m = s.m | 0; s.w = s.w | 0; s.bs = s.bs | 0; s.cs = s.cs | 0; s.p = s.p | 0; s.g = s.g || {}; return PR = o }
 function profSave() { try { localStorage.mbProf = JSON.stringify(PR) } catch (e) { } }
-function avOf(p) { return AVS[(p && p.av) | 0] || '🙂' }
-function profInfo() { var p = profLoad(); return { av: p.av, lv: lvOf(p.xp).l } }
+function profInfo() { var p = profLoad(); return { av: p.av, lv: lvOf(p.xp).l, pid: p.id || '', ap: p.ap ? 1 : 0, pk: p.pk || '' } }
+function sendProf() { try { send(Object.assign({ t: 'prof' }, profInfo())) } catch (e) { } }
 var PQ = [], PQB = 0;
 function pToast(h) { PQ.push(h); if (!PQB) pNext() }
 function pNext() { var h = PQ.shift(); if (!h) { PQB = 0; return } PQB = 1; var d = document.createElement('div'); d.className = 'ptoast'; d.innerHTML = h; document.body.appendChild(d); confetti(); setTimeout(function () { d.remove(); pNext() }, 2600) }
@@ -338,30 +514,32 @@ function profState() {
     if (ph === 'sres' && S.sp && S.sp.res) { g = 'spy'; var r = S.sp.res, ms = r.spies.indexOf(S.you) >= 0; won = ms ? r.winner === 'spy' : r.winner !== 'spy' }
     else if (ph === 'dchamp') { g = 'duel'; won = !!(S.du && S.du.champ === S.you) }
     else { var sd = (S.seats || []).find(function (x) { return x.id === S.you }); won = !!(sd && sd.rank === 1) }
-    matchEnd(g, won, 0); try { send({ t: 'prof', av: p.av, lv: lvOf(p.xp).l }) } catch (e) { }
+    matchEnd(g, won, 0); sendProf()
   }
   PPH = ph;
 }
 var _rd = render; render = function () { profState(); return _rd.apply(this, arguments) };
-function profChip() { var e = document.querySelector('.home .panel'); if (!e || document.getElementById('pchip')) return; var p = profLoad(), L = lvOf(p.xp), d = document.createElement('div'); d.id = 'pchip'; d.className = 'pchip'; d.onclick = profOpen; d.innerHTML = '<span class="pav">' + avOf(p) + '</span><div class="pin"><b>لفل ' + L.l + '</b><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div></div><span class="pco">🪙 ' + p.c + '</span><button class="lbb" onclick="event.stopPropagation();lbOpen()">🏆</button>'; e.insertBefore(d, e.firstChild) }
+function profChip() { var e = document.querySelector('.home .panel'); if (!e || document.getElementById('pchip')) return; var p = profLoad(), L = lvOf(p.xp), d = document.createElement('div'); d.id = 'pchip'; d.className = 'pchip'; d.onclick = profOpen; d.innerHTML = '<span class="pav">' + avOf(p) + '</span><div class="pin"><b>' + esc(myname || '') + bdH(p.bd) + ' لفل ' + L.l + '</b><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div></div><span class="pco">🪙 ' + p.c + '</span><button class="lbb" onclick="event.stopPropagation();lbOpen()">🏆</button>'; e.insertBefore(d, e.firstChild) }
 var _hm = home; home = function () { _hm.apply(this, arguments); profChip() };
 function profClose() { var m = document.getElementById('profm'); if (m) m.remove(); if (!S) home() }
 function profOpen() {
   if (document.getElementById('profm')) return; ensureId(myname); var p = profLoad(), L = lvOf(p.xp), s = p.st, d = document.createElement('div'); d.id = 'profm'; d.className = 'modal'; d.onclick = function (e) { if (e.target === d) profClose() };
   var gl = { who: 'اعرف مين معايا', spy: 'الجاسوس', duel: 'المبارزة' };
-  var av = AVS.map(function (a, i) { var o = p.own.indexOf(i) >= 0; return '<button class="avb' + (p.av === i ? ' on' : '') + (o ? '' : ' lk') + '" onclick="avPick(' + i + ')">' + a + (o ? '' : '<small>🪙' + AVP[i] + '</small>') + '</button>' }).join('');
+  var av = CH.map(function (a, i) { var o = p.own.indexOf(i) >= 0; return '<button class="avb' + (p.av === i && !p.ap ? ' on' : '') + (o ? '' : ' lk') + '" title="' + CHN[i] + '" onclick="avPick(' + i + ')"><span class="av">' + chSvg(i) + '</span>' + (o ? '' : '<small>🪙' + AVP[i] + '</small>') + '</button>' }).join('');
   var ac = ACH.map(function (a) { var o = p.ac.indexOf(a[0]) >= 0; return '<div class="acb' + (o ? ' on' : '') + '" title="' + a[3] + '"><span>' + (o ? a[1] : '🔒') + '</span><small>' + a[2] + '</small></div>' }).join('');
   var gs = Object.keys(gl).map(function (k) { var g = s.g[k] || [0, 0]; return '<div class="stb"><b>' + g[1] + '/' + g[0] + '</b><small>' + gl[k] + '</small></div>' }).join('');
-  d.innerHTML = '<div class="box prof"><div class="ph"><span class="pav big">' + avOf(p) + '</span><div class="pin"><h2>لفل ' + L.l + '</h2><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div><small dir="ltr">' + L.a + ' / ' + L.n + ' XP</small></div><span class="pco">🪙 ' + p.c + '</span></div>'
-    + '<div class="sts"><div class="stb"><b>' + s.m + '</b><small>ماتشات</small></div><div class="stb"><b>' + s.w + '</b><small>فوز</small></div><div class="stb"><b>' + s.bs + '</b><small>أطول سلسلة</small></div><div class="stb"><b>' + s.p + '</b><small>نقط</small></div></div><h3>فوز/لعب لكل لعبة</h3><div class="sts">' + gs + '</div><h3>الأفاتار</h3><div class="avs">' + av + '</div><h3>الإنجازات</h3><div class="acs">' + ac + '</div><h3>حسابك</h3><div class="idb">' + (p.id ? 'الـID بتاعك: <b dir="ltr" class="idn">' + p.id + '</b> <button class="btn" onclick="copyId()">نسخ</button><br><small>احتفظ بيه، بيرجّعلك تقدمك لو غيرت تليفونك</small>' : 'بيتعمل لك ID...') + '<div class="row"><input id="rid" class="inp" inputmode="numeric" maxlength="6" placeholder="عندك ID قديم؟ اكتبه"><button class="btn t" onclick="recoverId()">استرجاع</button></div></div><div class="row"><button class="btn" onclick="profClose()">تمام</button></div></div>';
+  d.innerHTML = '<div class="box prof"><div class="ph"><span class="pav big">' + avOf(p) + '</span><div class="pin"><h2>' + esc(myname || 'لاعب') + bdH(p.bd) + '</h2>' + (p.bd && p.bd.indexOf('f') >= 0 ? '<span class="fpill">مؤسس اللعبة</span> ' : '') + '<b>لفل ' + L.l + '</b><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div><small dir="ltr">' + L.a + ' / ' + L.n + ' XP</small></div><span class="pco">🪙 ' + p.c + '</span></div>'
+    + '<div class="sts"><div class="stb"><b>' + s.m + '</b><small>ماتشات</small></div><div class="stb"><b>' + s.w + '</b><small>فوز</small></div><div class="stb"><b>' + s.bs + '</b><small>أطول سلسلة</small></div><div class="stb"><b>' + s.p + '</b><small>نقط</small></div></div><h3>فوز/لعب لكل لعبة</h3><div class="sts">' + gs + '</div><h3>صورتك</h3><div class="row"><button class="btn y" onclick="photoPick()">📷 ارفع صورتك</button>' + (p.pk ? '<button class="btn" onclick="photoToggle()">' + (p.ap ? 'استخدم شخصية' : 'استخدم صورتي') + '</button>' : '') + '</div><h3>الشخصيات</h3><div class="avs">' + av + '</div><h3>الإنجازات</h3><div class="acs">' + ac + '</div><h3>حسابك</h3><div class="idb">' + (p.id ? 'الـID بتاعك: <b dir="ltr" class="idn">' + p.id + '</b> <button class="btn" onclick="copyId()">نسخ</button><br><small>احتفظ بيه، بيرجّعلك تقدمك لو غيرت تليفونك</small>' : 'بيتعمل لك ID...') + '<div class="row"><input id="rid" class="inp" inputmode="numeric" maxlength="6" placeholder="عندك ID قديم؟ اكتبه"><button class="btn t" onclick="recoverId()">استرجاع</button></div></div><div class="row"><button class="btn" onclick="profClose()">تمام</button></div></div>';
   document.body.appendChild(d);
 }
-function avPick(i) { var p = profLoad(); if (p.own.indexOf(i) < 0) { if (p.c < AVP[i]) return toast('محتاج ' + AVP[i] + ' 🪙 (بتاخدها من الماتشات)'); p.c -= AVP[i]; p.own.push(i); toast('اشتريت الأفاتار ' + AVS[i]) } p.av = i; profSave(); profSync(); var m = document.getElementById('profm'); if (m) m.remove(); profOpen(); try { send({ t: 'prof', av: p.av, lv: lvOf(p.xp).l }) } catch (e) { } }
+function avPick(i) { var p = profLoad(); if (p.own.indexOf(i) < 0) { if (p.c < AVP[i]) return toast('محتاج ' + AVP[i] + ' 🪙 (بتاخدها من الماتشات)'); p.c -= AVP[i]; p.own.push(i); toast('اشتريت شخصية ' + CHN[i]) } p.av = i; p.ap = 0; profSave(); profSync(1); var m = document.getElementById('profm'); if (m) m.remove(); profOpen(); sendProf() }
 
+
+function photoToggle() { var p = profLoad(); p.ap = p.ap ? 0 : 1; profSave(); profSync(1); sendProf(); profRefresh() }
 /* ===== account ID + server sync + leaderboard ===== */
 function wkN() { return Math.floor((Date.now() / 864e5 + 3) / 7) }
 function apiP(path, body) { return fetch(path, body === undefined ? {} : { method: 'POST', body: JSON.stringify(body) }).then(function (r) { return r.json().then(function (j) { j._s = r.status; return j }) }) }
-function profClean() { var p = profLoad(), o = {}; Object.keys(p).forEach(function (k) { if (k !== 'id') o[k] = p[k] }); return o }
+function profClean() { var p = profLoad(), o = {}; Object.keys(p).forEach(function (k) { if (k !== 'id' && k !== 'bd') o[k] = p[k] }); return o }
 var PCR = 0, PST = 0, PSY = 0;
 function ensureId(name) {
   var p = profLoad(); if (p.id || PCR) return; PCR = 1;
@@ -374,22 +552,34 @@ function profSync(now) {
 }
 function profPull() {
   var p = profLoad(); if (!p.id) return;
-  apiP('/api/p/get', { id: p.id }).then(function (j) { if (j.prof) { if ((j.prof.xp | 0) > p.xp) { var id = p.id; PR = j.prof; PR.id = id; profNorm(); profSave(); profRefresh() } else profSync(1) } }).catch(function () { })
+  apiP('/api/p/get', { id: p.id }).then(function (j) { if (j.prof) { if (j.prof.bd !== p.bd) { p.bd = j.prof.bd || ''; profSave(); profRefresh() } if ((j.prof.xp | 0) > p.xp) { var id = p.id; PR = j.prof; PR.id = id; profNorm(); profSave(); sendProf(); profRefresh() } else profSync(1) } }).catch(function () { })
 }
 function profNorm() { var o = PR; o.xp = o.xp | 0; o.c = o.c | 0; o.av = o.av | 0; o.own = o.own || [0, 1, 2, 3, 4, 5]; o.ac = o.ac || []; o.st = o.st || {}; var s = o.st; s.m = s.m | 0; s.w = s.w | 0; s.bs = s.bs | 0; s.cs = s.cs | 0; s.p = s.p | 0; s.g = s.g || {} }
 function profRefresh() { var c = document.getElementById('pchip'); if (c) { c.remove(); profChip() } if (document.getElementById('profm')) { document.getElementById('profm').remove(); profOpen() } }
 function recoverId() {
   var v = (document.getElementById('rid').value || '').trim(); if (!/^\d{6}$/.test(v)) return toast('اكتب الـID (٦ أرقام)');
-  apiP('/api/p/get', { id: v }).then(function (j) { if (!j.prof) return toast('الـID ده مش موجود'); var keep = profLoad().id; PR = j.prof; PR.id = v; profNorm(); profSave(); toast('رجّعنا حسابك ✔'); profRefresh() }).catch(function () { toast('مفيش اتصال، جرّب تاني') })
+  apiP('/api/p/get', { id: v }).then(function (j) { if (!j.prof) return toast('الـID ده مش موجود'); var keep = profLoad().id; PR = j.prof; PR.id = v; profNorm(); profSave(); sendProf(); toast('رجّعنا حسابك ✔'); profRefresh() }).catch(function () { toast('مفيش اتصال، جرّب تاني') })
 }
 function copyId() { var p = profLoad(); try { navigator.clipboard.writeText(p.id) } catch (e) { } toast('اتنسخ الـID: ' + p.id) }
 function lbOpen(k) {
   var m = document.getElementById('lbm'); if (!m) { m = document.createElement('div'); m.id = 'lbm'; m.className = 'modal'; m.onclick = function (e) { if (e.target === m) m.remove() }; document.body.appendChild(m) }
   k = k || 'w'; m.innerHTML = '<div class="box prof"><h2>🏆 المتصدرين</h2><div class="row"><button class="btn ' + (k === 'w' ? 'y' : '') + '" onclick="lbOpen(\'w\')">الأسبوع ده</button><button class="btn ' + (k === 'all' ? 'y' : '') + '" onclick="lbOpen(\'all\')">كل الوقت</button></div><div id="lbl" class="lbl">جاري التحميل...</div><div class="row"><button class="btn" onclick="document.getElementById(\'lbm\').remove()">تمام</button></div></div>';
-  apiP('/api/lb?k=' + k).then(function (j) { var e = document.getElementById('lbl'); if (!e) return; var me = profLoad(); e.innerHTML = (j.rows || []).length ? j.rows.map(function (r, i) { return '<div class="lbr"><b>' + (i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1) + '</b><span>' + (AVS[r.av] || '🙂') + ' ' + esc(r.n) + ' <small>لفل ' + r.lv + '</small></span><b>' + r.s + '</b></div>' }).join('') : 'لسه مفيش حد، كون أول واحد!' }).catch(function () { var e = document.getElementById('lbl'); if (e) e.textContent = 'مش قادر أحمّل الترتيب دلوقتي' })
+  apiP('/api/lb?k=' + k).then(function (j) { var e = document.getElementById('lbl'); if (!e) return; var me = profLoad(); e.innerHTML = (j.rows || []).length ? j.rows.map(function (r, i) { return '<div class="lbr"><b>' + (i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1) + '</b><span>' + avOf(r) + ' <span class="' + (r.bd && r.bd.indexOf('f') >= 0 ? 'fnm' : '') + '">' + esc(r.n) + '</span>' + bdH(r.bd) + ' <small>لفل ' + r.lv + '</small></span><b>' + r.s + '</b></div>' }).join('') : 'لسه مفيش حد، كون أول واحد!' }).catch(function () { var e = document.getElementById('lbl'); if (e) e.textContent = 'مش قادر أحمّل الترتيب دلوقتي' })
 }
 var _nm0 = nm; nm = function () { var v = _nm0.apply(this, arguments); ensureId(v); return v };
 setTimeout(function () { if (myname) ensureId(myname); profPull() }, 800);
+
+function photoPick() { var f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*'; f.onchange = function () { if (f.files && f.files[0]) photoUp(f.files[0]) }; f.click() }
+function photoUp(file) {
+  var p = profLoad(); if (!p.id) { ensureId(myname); return toast('استنى ثانية لحد ما حسابك يتجهز وجرّب تاني') }
+  var go = function (img, w, h) {
+    var c = document.createElement('canvas'); c.width = c.height = 160; var x = c.getContext('2d'), s = Math.min(w, h); x.fillStyle = '#fff'; x.fillRect(0, 0, 160, 160); x.drawImage(img, (w - s) / 2, (h - s) / 2, s, s, 0, 0, 160, 160);
+    var q = .85, u; do { u = c.toDataURL('image/jpeg', q); q -= .1 } while (u.length > 40000 && q > .25);
+    toast('بنرفع صورتك...'); apiP('/api/p/photo', { id: p.id, img: u.split(',')[1] }).then(function (j) { if (j.pk) { p.pk = j.pk; p.ap = 1; profSave(); profSync(1); sendProf(); profRefresh(); toast('اتغيرت صورتك ✔') } else toast('الصورة مترفعتش، جرّب صورة تانية') }).catch(function () { toast('مفيش اتصال، جرّب تاني') })
+  };
+  var fb = function () { var im = new Image(); im.onload = function () { go(im, im.naturalWidth, im.naturalHeight) }; im.onerror = function () { toast('مش قادر أقرا الصورة دي') }; im.src = URL.createObjectURL(file) };
+  if (window.createImageBitmap) createImageBitmap(file, { imageOrientation: 'from-image' }).then(function (b) { go(b, b.width, b.height) }).catch(fb); else fb()
+}
 
 home();
 let _ses = null; try { _ses = JSON.parse(localStorage.mbSess || 'null') } catch (e) { }
