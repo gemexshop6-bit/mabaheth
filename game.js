@@ -259,26 +259,35 @@ function helpOpen() {
 }
 function helpClose() { const d = $('helpm'); if (d) d.remove() }
 // ================= الشات الصوتي =================
-const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }] };
-let vStream = null, vOn = false, vMuted = false; const vPc = {};
+let ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }] };
+let vStream = null, vOn = false, vMuted = false; const vPc = {}, vSt = {};
+function vstat() {
+  const e = $('vstat'); if (!e) return; if (!vOn) { e.textContent = ''; return }
+  const v = Object.values(vSt); let t = '⏳ مستني حد تاني يدخل الصوت', c = '#aaa';
+  if (v.length) { if (v.includes('fail')) { t = '❌ الصوت مش واصل لواحد منكم (النت عنده ممنوع). جرب تخرج وتدخل تاني'; c = '#ff8a80' } else if (v.includes('c')) { t = '⏳ بيتوصل بالصوت...'; c = '#ffd54f' } else { t = v.includes('relay') ? '✅ الصوت متصل (عن طريق سيرفر وسيط)' : '✅ الصوت متصل'; c = '#69f0ae' } }
+  e.textContent = t; e.style.color = c
+}
+async function vkind(id) { const o = vPc[id]; if (!o) return; let k = 'ok'; try { const st = await o.pc.getStats(); st.forEach(r => { if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded') { const l = st.get(r.localCandidateId); if (l && l.candidateType === 'relay') k = 'relay' } }) } catch (e) { } if (vSt[id]) { vSt[id] = k; vstat() } }
 function vui() {
   const b = $('vslot'); if (!b) return;
-  b.innerHTML = vOn ? `<button class="ib ${vMuted ? '' : 'on'}" onclick="vmute()">${vMuted ? '🔇 مكتوم' : '🎙️ شغال'}</button> <button class="ib rd" onclick="vstop()">اخرج</button>` : `<button class="ib" style="background:#1565c0" onclick="vstart()">🎙️ شات صوتي</button>`;
+  setTimeout(vstat, 0);
+  b.innerHTML = vOn ? `<button class="ib ${vMuted ? '' : 'on'}" onclick="vmute()">${vMuted ? '🔇 مكتوم' : '🎙️ شغال'}</button> <button class="ib rd" onclick="vstop()">اخرج</button><div id="vstat" style="font-size:12px;margin-top:4px"></div>` : `<button class="ib" style="background:#1565c0" onclick="vstart()">🎙️ شات صوتي</button>`;
 }
 async function vstart() {
   try { vStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }) } catch (e) { return toast('مش قادر أفتح المايك. اسمح للمتصفح بالمايك وجرب تاني. على الآيفون: إعدادات ← Safari ← المايك ← اسأل أو سماح، وبعدها حدّث الصفحة', 9000) }
+  try { const r = await fetch('/ice', { cache: 'no-store' }); const j = await r.json(); if (j && j.iceServers) ICE = { iceServers: j.iceServers } } catch (e) { }
   vOn = true; vMuted = false; vui(); send({ t: 'vjoin' });
 }
 function vmute() { vMuted = !vMuted; if (vStream) vStream.getAudioTracks().forEach(t => t.enabled = !vMuted); send({ t: 'vmute', m: vMuted ? 1 : 0 }); vui() }
-function vstop() { send({ t: 'vleave' }); for (const k in vPc) vclose(k); if (vStream) vStream.getTracks().forEach(t => t.stop()); vStream = null; vOn = false; vui() }
-function vclose(id) { const o = vPc[id]; if (!o) return; try { o.pc.close() } catch (e) { }; if (o.el) o.el.remove(); delete vPc[id] }
+function vstop() { for (const k in vSt) delete vSt[k]; send({ t: 'vleave' }); for (const k in vPc) vclose(k); if (vStream) vStream.getTracks().forEach(t => t.stop()); vStream = null; vOn = false; vui() }
+function vclose(id) { delete vSt[id]; vstat(); const o = vPc[id]; if (!o) return; try { o.pc.close() } catch (e) { }; if (o.el) o.el.remove(); delete vPc[id] }
 function vmk(id) {
   if (vPc[id]) return vPc[id];
-  const pc = new RTCPeerConnection(ICE), o = { pc, el: null, q: [] }; vPc[id] = o;
+  const pc = new RTCPeerConnection(ICE), o = { pc, el: null, q: [] }; vPc[id] = o; vSt[id] = 'c'; vstat();
   vStream.getTracks().forEach(t => pc.addTrack(t, vStream));
   pc.onicecandidate = e => { if (e.candidate) send({ t: 'rtc', to: id, d: { c: e.candidate } }) };
   pc.ontrack = e => { if (!o.el) { o.el = document.createElement('audio'); o.el.autoplay = true; o.el.playsInline = true; document.body.appendChild(o.el) } o.el.srcObject = e.streams[0]; o.el.play().catch(() => { }) };
-  pc.onconnectionstatechange = () => { if (pc.connectionState === 'failed' || pc.connectionState === 'closed') vclose(id) };
+  pc.onconnectionstatechange = () => { const cs = pc.connectionState; if (cs === 'connected') { vSt[id] = 'ok'; vstat(); vkind(id) } else if (cs === 'failed') { vSt[id] = 'fail'; vstat() } else if (cs === 'connecting' || cs === 'new') { if (vSt[id] !== 'fail') { vSt[id] = 'c'; vstat() } } else if (cs === 'closed') vclose(id) };
   return o;
 }
 async function voff(id) { vclose(id); const o = vmk(id); const off = await o.pc.createOffer(); await o.pc.setLocalDescription(off); send({ t: 'rtc', to: id, d: { s: o.pc.localDescription } }) }
