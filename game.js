@@ -51,7 +51,7 @@ const pl = id => S.players.find(p => p.id === id) || { name: '؟', score: 0 };
 // ---------- home
 function home() {
   S = null; const iv = inv || '';
-  A.innerHTML = `<div class="home"><div class="logo"><div class="big">🎭</div><h1>لمّة</h1><p>اعمل غرفة وكمّلوا ماتش تلات ألعاب: اعرف مين معايا والجاسوس والمبارزة</p><div class="promo" aria-hidden="true"><div class="sl s1"><div class="tx"><b>استمتع إنت وأصحابك</b><small>افتح غرفة وادعي شلتك والعبوا مع بعض</small></div><div class="faces"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#fff" stroke="#2b2140" stroke-width="3"/><circle cx="14" cy="17" r="2.6" fill="#2b2140"/><circle cx="26" cy="17" r="2.6" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#FF6B9D" stroke="#2b2140" stroke-width="3"/><path d="M10 17l7-2M30 17l-7-2" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/><path d="M10 25Q20 38 30 25z" fill="#fff" stroke="#2b2140" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#2EC4B6" stroke="#2b2140" stroke-width="3"/><circle cx="14" cy="17" r="2.6" fill="#2b2140"/><circle cx="26" cy="17" r="2.6" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#fff" stroke="#2b2140" stroke-width="3"/><path d="M7 15h26v6H7z" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg></div></div><div class="sl s2"><div class="tx"><span class="soon">جديد 🔥</span><b>المبارزة: تحدي الأسئلة</b><small>واحد يسأل وواحد يجاوب بصوته، والفايز يكمل لحد البطل</small></div><div class="sw">⚔️</div></div><div class="sl s3"><div class="tx"><b>أربع ألعاب في غرفة واحدة</b><small>اعرف مين معايا • الجاسوس • المبارزة • السلم والتعبان</small></div><div class="tri"><span>🎭</span><span>🕵️</span><span>⚔️</span><span>🐍</span></div></div></div></div>
+  A.innerHTML = `<div class="home"><div class="logo"><div class="big">🎭</div><h1>لمّة</h1><p>اعمل غرفة وكمّلوا ماتش تلات ألعاب: اعرف مين معايا والجاسوس والمبارزة</p><div class="promo" aria-hidden="true"><div class="sl s1"><div class="tx"><b>استمتع إنت وأصحابك</b><small>افتح غرفة وادعي شلتك والعبوا مع بعض</small></div><div class="faces"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#fff" stroke="#2b2140" stroke-width="3"/><circle cx="14" cy="17" r="2.6" fill="#2b2140"/><circle cx="26" cy="17" r="2.6" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#FF6B9D" stroke="#2b2140" stroke-width="3"/><path d="M10 17l7-2M30 17l-7-2" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/><path d="M10 25Q20 38 30 25z" fill="#fff" stroke="#2b2140" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#2EC4B6" stroke="#2b2140" stroke-width="3"/><circle cx="14" cy="17" r="2.6" fill="#2b2140"/><circle cx="26" cy="17" r="2.6" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#fff" stroke="#2b2140" stroke-width="3"/><path d="M7 15h26v6H7z" fill="#2b2140"/><path d="M11 25Q20 34 29 25" fill="none" stroke="#2b2140" stroke-width="3" stroke-linecap="round"/></svg></div></div><div class="sl s2"><div class="tx"><span class="soon">جديد 🔥</span><b>المبارزة: تحدي الأسئلة</b><small>واحد يسأل وواحد يجاوب بصوته، والفايز يكمل لحد البطل</small></div><div class="sw">⚔️</div></div><div class="sl s3"><div class="tx"><b>أربع ألعاب في غرفة واحدة</b><small>اعرف مين معايا • الجاسوس • المبارزة • السلم والتعبان</small></div><div class="tri"><span>🎭</span><span>🕵️</span><span>⚔️</span><span>⬆</span></div></div></div></div>
   <div class="panel">${iv ? `<div class="inv">📩 اتدعيت لغرفة <b>${esc(iv)}</b>، اكتب اسمك وادخل</div>` : ''}<input id="nm" class="inp" maxlength="20" placeholder="اسمك" value="${esc(myname)}">
   ${iv ? '' : `<div class="row"><button class="btn y" onclick="mk()">🎉 اعمل غرفة</button></div>`}
   <div class="row"><input id="cd" class="inp" inputmode="numeric" maxlength="4" placeholder="كود الغرفة" value="${esc(iv)}"><button class="btn t" onclick="jn()">ادخل غرفة</button></div>
@@ -86,7 +86,7 @@ function rhist() {
   if (!S.rh.length) return '<p class="mut">لسه مفيش جولات اتلعبت</p>';
   return `<div class="rhs">${[...S.rh].reverse().map(r => { const c = cfg.cats.find(x => x.id === r.cat) || {}; return `<div class="rh"><b>#${r.n}</b> ${r.g === 'spy' ? '🕵️' : r.g === 'duel' ? '⚔️' : '🎭'} ${r.g === 'duel' ? '' : c.emoji || ''} <span>${r.w.length ? '🏆 ' + r.w.map(esc).join('، ') : esc(r.note || '—')}</span>${r.w.length && r.note ? ` <small>${esc(r.note)}</small>` : ''}</div>` }).join('')}</div>`;
 }
-const GAMES = [['who', '🎭', 'اعرف مين معايا'], ['spy', '🕵️', 'الجاسوس'], ['duel', '⚔️', 'المبارزة'], ['snake', '🐍', 'السلم والتعبان']];
+const GAMES = [['who', '🎭', 'اعرف مين معايا'], ['spy', '🕵️', 'الجاسوس'], ['duel', '⚔️', 'المبارزة'], ['snake', '⬆', 'السلم والتعبان']];
 function lobby() {
   const host = S.host === S.you, me = pl(S.you), spy = S.game === 'spy', duel = S.game === 'duel', n = S.players.length, hum = S.players.filter(p => !p.bot && p.on), rd = hum.filter(p => p.ready).length;
   const opt = (arr, cur, key, fmtf) => `<div class="row wrap">${arr.map(v => `<button class="chip ${cur === v ? 'sel' : ''}" ${host ? `onclick="send({t:'set',${key}:${v}})"` : 'disabled'}>${fmtf(v)}</button>`).join('')}</div>`;
@@ -110,7 +110,7 @@ function snLobby() {
   var host = S.host === S.you, me = pl(S.you), hum = S.players.filter(function (p) { return !p.bot && p.on }), rd = hum.filter(function (p) { return p.ready }).length;
   var d = (S.sn && S.sn.diff) || S.sdiff || 2;
   var dif = [1, 2, 3].map(function (v) { return '<button class="chip ' + (d === v ? 'sel' : '') + '" ' + (host ? 'onclick="send({t:\'sndiff\',v:' + v + '})"' : 'disabled') + '>' + ['😴 سهل', '🙂 متوسط', '😈 صعب'][v - 1] + '</button>' }).join('');
-  return '<div class="lob"><div class="card"><h3>🐍 السلم والتعبان • كود الغرفة <span class="code">' + S.code + '</span></h3>' + plist() +
+  return '<div class="lob"><div class="card"><h3>السلم والتعبان • كود الغرفة <span class="code">' + S.code + '</span></h3>' + plist() +
     '<div class="row wrap"><button class="chip" onclick="shareLink()">🔗 لينك الدعوة</button><button class="chip" onclick="frOpen(\'f\')">👥 ادعو صديق</button>' + (host ? '<button class="chip" onclick="send({t:\'addbot\'})">🤖 ضيف بوت</button><button class="chip" onclick="send({t:\'rmbot\'})">➖ شيل بوت</button>' : '') + '</div>' +
     '<p class="mut">اللعبة دي لاتنين: إنت وصاحبك (بالكود فوق) أو إنت وبوت. اللي يوصل ١٠٠ الأول يكسب.</p>' +
     (host ? '<h3>🤖 صعوبة البوت</h3><div class="row wrap">' + dif + '</div>' : '') +
@@ -132,7 +132,7 @@ function snBoard() {
   return '<div class="snb">' + h + '</div>'
 }
 var SNFP = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
-function snFace(d) { var on = SNFP[d] || [], h = ''; for (var i = 0; i < 9; i++) h += '<b class="sdp' + (on.indexOf(i) >= 0 ? ' on' : '') + '"></b>'; return h }
+function snFace(d) { if (!d) return '<b class="sdpq">?</b>'; var on = SNFP[d] || [], h = ''; for (var i = 0; i < 9; i++) h += '<b class="sdp' + (on.indexOf(i) >= 0 ? ' on' : '') + '"></b>'; return h }
 function snBody() {
   var sn = S.sn, me = S.you, host = S.host === S.you, my = sn.turn === me, won = sn.win;
   var who = sn.order.map(function (id) {
@@ -141,9 +141,15 @@ function snBody() {
   }).join('');
   var dice = '<div class="sndice" id="snd">' + snFace(sn.dice) + '</div>';
   var act;
-  if (won) act = '<div class="snw">🏆 ' + esc(pl(won).name) + ' كسب!</div>' + (host ? '<button class="btn y big2" onclick="send({t:\'snre\'})">🔄 العبوا تاني</button>' : '<p class="mut">مستني الهوست يبدأ جولة جديدة</p>');
-  else if (my) act = '<button class="btn y big2" onclick="send({t:\'roll\'})">🎲 ارمي الزهر</button>';
-  else act = '<p class="mut" style="text-align:center;margin:4px 0">⏳ دور ' + esc(pl(sn.turn).name) + '…</p>';
+  var left = sn.left | 0;
+  if (won) {
+    var stand = sn.order.slice().sort(function (a, b) { return (sn.pos[b] | 0) - (sn.pos[a] | 0) }).map(function (id, i) {
+      return '<div class="snrow' + (id === won ? ' w' : '') + '"><i>' + (i === 0 ? '🏆' : (i + 1) + '.') + '</i><b>' + esc(pl(id).name) + '</b><span>' + (sn.pos[id] | 0) + '</span></div>'
+    }).join('');
+    act = '<div class="snw">🏆 ' + esc(pl(won).name) + ' كسب!</div><div class="snst">' + stand + '</div>' + (host ? '<button class="btn y big2" onclick="send({t:\'snre\'})">🔄 العبوا تاني</button>' : '<p class="mut">مستني الهوست يبدأ جولة جديدة</p>');
+  }
+  else if (my) act = '<button class="btn y big2" onclick="send({t:\'roll\'})">🎲 ارمي الزهر</button><p class="mut sntip">⏳ فاضل ' + left + ' ث — لو مجرّبتش هنجيب الزهر بدالك</p>';
+  else act = '<p class="mut" style="text-align:center;margin:4px 0">⏳ دور ' + esc(pl(sn.turn).name) + '… فاضل ' + left + ' ث</p>';
   var log = (sn.log || []).slice(-4).map(function (t) { return '<div class="snl">' + esc(t) + '</div>' }).join('');
   return '<div class="snwrap"><div class="sntop"><div class="snps">' + who + '</div>' + dice + '</div>' + snBoard() + '<div class="snact">' + act + '</div><div class="snlog">' + log + '</div></div>'
 }
@@ -151,7 +157,7 @@ function snClose() { var m = document.getElementById('snm'); if (m) m.remove() }
 function snOpen() {
   if (document.getElementById('snm')) return;
   var d = document.createElement('div'); d.id = 'snm'; d.className = 'modal'; d.onclick = function (e) { if (e.target === d) snClose() };
-  d.innerHTML = '<div class="dcb"><div class="dchd"><span class="dcfl sm">🐍</span><b>السلم والتعبان</b></div>' +
+  d.innerHTML = '<div class="dcb"><div class="dchd"><span class="dcfl sm">⬆</span><b>السلم والتعبان</b></div>' +
     '<p class="dcq" style="min-height:0;font-size:15px">اللي يوصل ١٠٠ الأول يكسب. في سلالم بتطلعك وتعبانات بتنزّلك.</p>' +
     '<button class="btn y big2" onclick="snSolo(1)">😴 العب لوحدك — بوت سهل</button>' +
     '<button class="btn t big2" onclick="snSolo(2)">🙂 العب لوحدك — بوت متوسط</button>' +
@@ -321,7 +327,7 @@ function renderNow() {
   const keep = {}; ['fq', 'gs', 'ci', 'cl'].forEach(id => { const e = $(id); if (e) keep[id] = [e.value, document.activeElement === e] });
   const sc = $('msgs') ? $('msgs').scrollTop : 0, bot = $('msgs') ? ($('msgs').scrollHeight - $('msgs').scrollTop - $('msgs').clientHeight < 40) : true;
   const tl = S.phase === 'play' ? S.left : (S.sp && 'sclue svote sguess'.includes(S.phase) ? S.sp.left : (S.du && S.phase === 'dplay' && S.du.cur && !S.du.cur.sd ? S.du.tl : null)), timer = tl != null ? `<span class="tm" id="tm">⏱ ${fmt(tl)}</span>` : '';
-  A.innerHTML = `<div class="hd"><b class="ttl">${S.game === 'spy' ? '🕵️' : S.game === 'duel' ? '⚔️' : S.game === 'snake' ? '🐍' : '🎭'} ${S.game === 'duel' ? '' : esc((cfg.cats.find(c => c.id === S.cat) || {}).emoji || '')} ${S.code}</b><span class="chip me myp" title="نقطك في الغرفة">⭐ ${pl(S.you).score}</span>${timer}<span class="sp"></span><span id="vslot"></span><button class="ib" title="لينك دعوة" onclick="shareLink()">🔗</button><button class="ib" onclick="side=!side;render()">💬</button><button class="ib" onclick="helpOpen()">📖</button><button class="ib" onclick="theme()">${document.documentElement.dataset.theme === 'dark' ? '☀️' : '🌙'}</button><button class="ib" onclick="fsToggle()">⛶</button><button class="ib rd" onclick="leaveRoom()">🚪</button></div>
+  A.innerHTML = `<div class="hd"><b class="ttl">${S.game === 'spy' ? '🕵️' : S.game === 'duel' ? '⚔️' : S.game === 'snake' ? '⬆' : '🎭'} ${S.game === 'duel' ? '' : esc((cfg.cats.find(c => c.id === S.cat) || {}).emoji || '')} ${S.code}</b><span class="chip me myp" title="نقطك في الغرفة">⭐ ${pl(S.you).score}</span>${timer}<span class="sp"></span><span id="vslot"></span><button class="ib" title="لينك دعوة" onclick="shareLink()">🔗</button><button class="ib" onclick="side=!side;render()">💬</button><button class="ib" onclick="helpOpen()">📖</button><button class="ib" onclick="theme()">${document.documentElement.dataset.theme === 'dark' ? '☀️' : '🌙'}</button><button class="ib" onclick="fsToggle()">⛶</button><button class="ib rd" onclick="leaveRoom()">🚪</button></div>
   <div class="main ${side ? '' : 'noside'}"><div class="mid">${body()}</div>${side ? sidebar() : ''}</div>`;
   for (const id in keep) { const e = $(id); if (e) { e.value = keep[id][0]; if (keep[id][1]) e.focus() } }
   const mg = $('msgs'); if (mg) mg.scrollTop = bot ? mg.scrollHeight : sc;
