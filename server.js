@@ -25,6 +25,26 @@ async function backupDay() {
     await rc([['SET', 'bk:' + day, JSON.stringify({ day, n: keys.length, all, info }), 'EX', '691200']]);
   } catch (e) { BKD = '' }
 }
+
+const INF = new Map();
+async function infoOf(pid) { const c = INF.get(pid); if (c && Date.now() - c.t < 300000) return c.v; const [v] = await rc([['HGET', 'info', pid]]); let o = null; try { o = v ? JSON.parse(v) : null } catch (e) { } if (INF.size > 500) INF.clear(); INF.set(pid, { t: Date.now(), v: o }); return o }
+function applyProf(room, q, m) {
+  q.av = Math.max(0, Math.min(19, m.av | 0)); q.lv = Math.max(1, Math.min(999, m.lv | 0));
+  const pid = String(m.pid || ''); if (!UR || !UTK || !/^\d{6}$/.test(pid)) { q.bd = ''; q.ap = 0; q.pk = ''; return }
+  q.pid = pid; if (m.t === 'prof') INF.delete(pid);
+  const pk = /^[a-z0-9]{8}$/.test(String(m.pk || '')) && m.ap ? m.pk : '';
+  Promise.all([infoOf(pid), pk ? rc([['HGET', 'pko', pk]]) : null]).then(([i, o]) => { q.bd = (i && i.bd) || ''; if (pk && o && o[0] === pid) { q.pk = pk; q.ap = 1 } else { q.pk = ''; q.ap = 0 } bcast(room) }).catch(() => { })
+}
+
+const PHC = new Map();
+async function photo(q, r, u) {
+  const m = /^\/api\/ph\/([a-z0-9]{8})\.jpg$/.exec(u); if (!m || !UR || !UTK) { r.writeHead(404); return r.end() }
+  const send = b => { r.writeHead(200, { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=31536000, immutable' }); r.end(b) };
+  const c = PHC.get(m[1]); if (c) return send(c);
+  const ip = (q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',')[0].trim(), now = Date.now(), b = RL['p' + ip] = RL['p' + ip] && now - RL['p' + ip].t < 60000 ? RL['p' + ip] : { t: now, n: 0 };
+  if (++b.n > 120) { r.writeHead(429); return r.end() }
+  try { const [v] = await rc([['GET', 'ph:' + m[1]]]); if (!v) { r.writeHead(404, { 'cache-control': 'no-store' }); return r.end() } const buf = Buffer.from(v, 'base64'); if (PHC.size > 300) PHC.clear(); PHC.set(m[1], buf); send(buf) } catch (e) { r.writeHead(500); r.end() }
+}
 function jr(r, c, o) { r.writeHead(c, { 'content-type': 'application/json', 'cache-control': 'no-store' }); r.end(JSON.stringify(o)) }
 function api(q, r, u) {
   if (!UR || !UTK) return jr(r, 503, { e: 'db off' });
@@ -34,32 +54,43 @@ function api(q, r, u) {
   const run = async body => {
     const nm = s => String(s || '').replace(/[<>&"]/g, '').slice(0, 20) || 'لاعب';
     if (u === '/api/p/new') {
-      const p = okProf(body.prof); if (!p) return jr(r, 400, { e: 'bad' });
-      for (let i = 0; i < 6; i++) { const id = String(100000 + Math.floor(Math.random() * 900000)); const [s] = await rc([['SET', 'p:' + id, JSON.stringify(p), 'NX']]); if (s === 'OK') { await rc([['HSET', 'info', id, JSON.stringify({ n: nm(body.name), av: p.av | 0, lv: 1 })]]); return jr(r, 200, { id }) } }
+      const p = okProf(body.prof); if (!p) return jr(r, 400, { e: 'bad' }); delete p.bd; delete p.pk; delete p.ap;
+      for (let i = 0; i < 6; i++) { const id = String(100000 + Math.floor(Math.random() * 900000)); const [s] = await rc([['SET', 'p:' + id, JSON.stringify(p), 'NX']]); if (s === 'OK') { await rc([['HSET', 'info', id, JSON.stringify({ n: nm(body.name), av: Math.max(0, Math.min(19, p.av | 0)), lv: 1 })]]); return jr(r, 200, { id }) } }
       return jr(r, 500, { e: 'full' })
     }
     if (u === '/api/p/save') {
       const id = String(body.id || ''), p = okProf(body.prof); if (!/^\d{6}$/.test(id) || !p) return jr(r, 400, { e: 'bad' });
       const w = WKN(), xp = Math.max(0, +p.xp | 0), wp = p.wk && p.wk.w === w ? Math.max(0, +p.wk.p | 0) : 0, lv = Math.max(1, Math.min(999, +body.lv | 0));
+      const pk = typeof p.pk === 'string' && /^[a-z0-9]{8}$/.test(p.pk) ? p.pk : '', cs = [['HGET', 'bd', id]]; if (pk) cs.push(['HGET', 'pko', pk]);
+      const rr = await rc(cs), bd = rr[0] || '', own = !!pk && rr[1] === id;
+      if (own) p.ap = p.ap ? 1 : 0; else { delete p.pk; p.ap = 0 } if (bd) p.bd = bd; else delete p.bd; p.av = Math.max(0, Math.min(19, p.av | 0));
       const [s] = await rc([['SET', 'p:' + id, JSON.stringify(p), 'XX']]); if (s !== 'OK') return jr(r, 404, { e: 'none' });
-      const c = [['HSET', 'info', id, JSON.stringify({ n: nm(body.name), av: p.av | 0, lv })], ['ZADD', 'lb:all', String(xp), id]];
+      const c = [['HSET', 'info', id, JSON.stringify({ n: nm(body.name), av: p.av, lv, pk: own ? p.pk : '', ap: own && p.ap ? 1 : 0, bd })], ['ZADD', 'lb:all', String(xp), id]];
       if (wp > 0) { c.push(['ZADD', 'lb:w:' + w, String(wp), id], ['EXPIRE', 'lb:w:' + w, '1300000']) }
-      await rc(c); return jr(r, 200, { ok: 1 })
+      await rc(c); INF.delete(id); return jr(r, 200, { ok: 1 })
     }
-    if (u === '/api/p/get') { const id = String(body.id || ''); if (!/^\d{6}$/.test(id)) return jr(r, 400, { e: 'bad' }); const [v] = await rc([['GET', 'p:' + id]]); if (!v) return jr(r, 404, { e: 'none' }); return jr(r, 200, { prof: JSON.parse(v) }) }
+    if (u === '/api/p/photo') {
+      const id = String(body.id || ''), im = String(body.img || ''); if (!/^\d{6}$/.test(id) || im.length < 200 || im.length > 45000 || !/^[A-Za-z0-9+\/=]+$/.test(im) || !im.startsWith('/9j/')) return jr(r, 400, { e: 'bad' });
+      const [v] = await rc([['GET', 'p:' + id]]); if (!v) return jr(r, 404, { e: 'none' }); let o; try { o = JSON.parse(v) } catch (e) { return jr(r, 500, { e: 'db' }) }
+      const pk = Array.from({ length: 8 }, () => 'abcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 36)]).join(''), old = typeof o.pk === 'string' && /^[a-z0-9]{8}$/.test(o.pk) ? o.pk : '';
+      o.pk = pk; o.ap = 1; const c = [['SET', 'ph:' + pk, im], ['HSET', 'pko', pk, id], ['SET', 'p:' + id, JSON.stringify(o), 'XX']]; if (old) c.push(['DEL', 'ph:' + old], ['HDEL', 'pko', old]);
+      await rc(c); INF.delete(id); return jr(r, 200, { pk })
+    }
+    if (u === '/api/p/get') { const id = String(body.id || ''); if (!/^\d{6}$/.test(id)) return jr(r, 400, { e: 'bad' }); const [v, bd] = await rc([['GET', 'p:' + id], ['HGET', 'bd', id]]); if (!v) return jr(r, 404, { e: 'none' }); const pf = JSON.parse(v); if (bd) pf.bd = bd; else delete pf.bd; return jr(r, 200, { prof: pf }) }
     if (u === '/api/lb') {
       const k = body.k === 'all' ? 'lb:all' : 'lb:w:' + WKN(), c = LBC[k]; if (c && now - c.t < 120000) return jr(r, 200, c.d);
       const [z] = await rc([['ZREVRANGE', k, '0', '19', 'WITHSCORES']]), ids = [], sc = []; for (let i = 0; i < (z || []).length; i += 2) { ids.push(z[i]); sc.push(+z[i + 1]) }
       let inf = ids.length ? (await rc([['HMGET', 'info', ...ids]]))[0] : [];
-      const d = { rows: ids.map((id, i) => { let o = {}; try { o = JSON.parse(inf[i] || '{}') } catch (e) { } return { n: o.n || 'لاعب', av: o.av | 0, lv: o.lv || 1, s: sc[i] } }) }; LBC[k] = { t: now, d }; return jr(r, 200, d)
+      const d = { rows: ids.map((id, i) => { let o = {}; try { o = JSON.parse(inf[i] || '{}') } catch (e) { } return { n: o.n || 'لاعب', av: o.av | 0, lv: o.lv || 1, s: sc[i], pk: o.ap ? o.pk || '' : '', bd: o.bd || '' } }) }; LBC[k] = { t: now, d }; return jr(r, 200, d)
     }
     jr(r, 404, { e: 'no' })
   };
   if (q.method === 'GET') return run({ k: new URL(q.url, 'http://x').searchParams.get('k') }).catch(() => jr(r, 500, { e: 'db' }));
-  let raw = ''; q.on('data', d => { raw += d; if (raw.length > 8000) q.destroy() }); q.on('end', () => { let b; try { b = JSON.parse(raw || '{}') } catch (e) { return jr(r, 400, { e: 'json' }) } run(b).catch(() => jr(r, 500, { e: 'db' })) })
+  let raw = ''; q.on('data', d => { raw += d; if (raw.length > (u === '/api/p/photo' ? 70000 : 8000)) q.destroy() }); q.on('end', () => { let b; try { b = JSON.parse(raw || '{}') } catch (e) { return jr(r, 400, { e: 'json' }) } run(b).catch(() => jr(r, 500, { e: 'db' })) })
 }
 const srv = http.createServer((q, r) => {
   const u = q.url.split('?')[0];
+  if (u.startsWith('/api/ph/')) { photo(q, r, u); return }
   if (u.startsWith('/api/')) { api(q, r, u); return }
   if (u === '/health') { r.end('ok'); return }
   if (u === '/ice') {
@@ -100,7 +131,7 @@ function state(room, p) {
   const o = {
     t: 'state', code: room.code, phase: room.phase, you: p.id, host: room.host, cat: room.cat, dur: room.dur, round: room.round,
     game: room.game, rh: room.rh.slice(-20), spies: room.spies, clueT: room.clueT, voteT: room.voteT,
-    players: Object.values(room.players).map(x => ({ id: x.id, name: x.name, bot: !!x.bot, on: !!x.ws || !!x.bot, score: x.score, av: x.av|0, lv: x.lv|0, ready: !!x.ready, mic: x.mic ? (x.mm ? 2 : 1) : 0 })),
+    players: Object.values(room.players).map(x => ({ id: x.id, name: x.name, bot: !!x.bot, on: !!x.ws || !!x.bot, score: x.score, av: x.av|0, lv: x.lv|0, pk: x.ap && x.pk ? x.pk : '', bd: x.bd || '', ready: !!x.ready, mic: x.mic ? (x.mm ? 2 : 1) : 0 })),
     ln: room.logn || 0, chat: room.chat.slice(-60), log: room.log.slice(-40), q: cat.q.map((x, i) => ({ i, t: x.t }))
   };
   if (room.game === 'spy' && room.sp && room.phase[0] === 's') o.sp = spyView(room, p);
@@ -535,7 +566,7 @@ function leaveRoom(room, p, ws) {
   bcast(room);
 }
 function msg(ws, m) {
-  if (m.t === 'prof') { const r = ws.room, q = r && r.players[ws.pid]; if (q) { q.av = Math.max(0, Math.min(16, m.av | 0)); q.lv = Math.max(1, Math.min(999, m.lv | 0)); bcast(r) } return }
+  if (m.t === 'prof') { const r = ws.room, q = r && r.players[ws.pid]; if (q) applyProf(r, q, m); return }
   if (m.t === 'create' || m.t === 'join') {
     let room, p; const name = clean(m.name, 20) || 'لاعب';
     if (m.t === 'create') { room = newRoom(); rooms[room.code] = room }
@@ -548,7 +579,7 @@ function msg(ws, m) {
       }
     }
     if (!p) { const id = rid(); p = room.players[id] = { id, name, score: 0 }; if (!room.host) room.host = id; sys(room, name + ' دخل الغرفة') }
-    p.av = Math.max(0, Math.min(16, m.av | 0)); p.lv = Math.max(1, Math.min(999, m.lv | 0));
+    applyProf(room, p, m);
     p.ws = ws; ws.room = room; ws.pid = p.id;
     send(ws, { t: 'hello', cats: DATA.map(c => ({ id: c.id, name: c.name, emoji: c.emoji, n: c.items.length })), dcats: DB.cats, token: p.id, code: room.code }); bcast(room); return;
   }
