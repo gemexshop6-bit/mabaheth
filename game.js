@@ -144,7 +144,7 @@ function snBody() {
   var left = sn.left | 0;
   if (won) {
     var stand = sn.order.slice().sort(function (a, b) { return (sn.pos[b] | 0) - (sn.pos[a] | 0) }).map(function (id, i) {
-      return '<div class="snrow' + (id === won ? ' w' : '') + '"><i>' + (i === 0 ? '🏆' : (i + 1) + '.') + '</i><b>' + esc(pl(id).name) + '</b><span>' + (sn.pos[id] | 0) + '</span></div>'
+      return '<div class="snrow' + (id === won ? ' w' : '') + '"><i>' + (i === 0 ? '🏆' : String(i + 1)) + '</i><b>' + esc(pl(id).name) + '</b><span>' + (sn.pos[id] | 0) + '</span></div>'
     }).join('');
     act = '<div class="snw">🏆 ' + esc(pl(won).name) + ' كسب!</div><div class="snst">' + stand + '</div>' + (host ? '<button class="btn y big2" onclick="send({t:\'snre\'})">🔄 العبوا تاني</button>' : '<p class="mut">مستني الهوست يبدأ جولة جديدة</p>');
   }
@@ -583,7 +583,7 @@ function bdH(bd) {
 function PN(p) { var f = p.bd && p.bd.indexOf('f') >= 0; return avOf(p) + ' <span class="' + (f ? 'fnm' : '') + '">' + esc(p.name) + '</span>' + bdH(p.bd) }
 
 /* ===== profile: XP, levels, coins, avatars, stats, achievements (saved on the phone) ===== */
-var ACH = [['first', '🎮', 'أول ماتش', 'خلّص أول ماتش', p => p.st.m >= 1], ['w1', '🏅', 'أول فوز', 'اكسب ماتش', p => p.st.w >= 1], ['w10', '🏆', 'عشرة فوز', 'اكسب ١٠ ماتشات', p => p.st.w >= 10], ['m10', '🔟', 'لاعب ثابت', 'العب ١٠ ماتشات', p => p.st.m >= 10], ['str3', '🔥', 'سلسلة ٣', 'اكسب ٣ ورا بعض', p => p.st.bs >= 3], ['sp', '🕵️', 'عميل', 'اكسب كجاسوس أو كاشف جاسوس', p => (p.st.g.spy || [0, 0])[1] >= 1], ['du', '⚔️', 'مبارز', 'اكسب مبارزة', p => (p.st.g.duel || [0, 0])[1] >= 1], ['lv5', '⭐', 'لفل ٥', 'وصّل لفل ٥', p => lvOf(p.xp).l >= 5], ['pt500', '💯', '٥٠٠ نقطة', 'اجمع ٥٠٠ نقطة في المجموع', p => p.st.p >= 500], ['dc1', '📅', 'أول تحدي', 'خلّص تحدي اليوم', p => !!(p.dc && (p.dc.n | 0) >= 1)], ['dc7', '🔥', '٧ أيام', 'سلسلة ٧ أيام في تحدي اليوم', p => !!(p.dc && (p.dc.b | 0) >= 7)]];
+var ACH = [['first', '🎮', 'أول ماتش', 'خلّص أول ماتش', p => p.st.m >= 1], ['w1', '🏅', 'أول فوز', 'اكسب ماتش', p => p.st.w >= 1], ['w10', '🏆', 'عشرة فوز', 'اكسب ١٠ ماتشات', p => p.st.w >= 10], ['m10', '🔟', 'لاعب ثابت', 'العب ١٠ ماتشات', p => p.st.m >= 10], ['str3', '🔥', 'سلسلة ٣', 'اكسب ٣ ورا بعض', p => p.st.bs >= 3], ['sp', '🕵️', 'عميل', 'اكسب كجاسوس أو كاشف جاسوس', p => (p.st.g.spy || [0, 0])[1] >= 1], ['du', '⚔️', 'مبارز', 'اكسب مبارزة', p => (p.st.g.duel || [0, 0])[1] >= 1], ['lv5', '⭐', 'لفل ٥', 'وصّل لفل ٥', p => lvOf(p.xp).l >= 5], ['pt500', '💯', '٥٠٠ نقطة', 'اجمع ٥٠٠ نقطة في المجموع', p => p.st.p >= 500], ['dc1', '⏰', 'أول تحدي', 'خلّص تحدي اليوم', p => !!(p.dc && (p.dc.n | 0) >= 1)], ['dc7', '🔥', '٧ أيام', 'سلسلة ٧ أيام في تحدي اليوم', p => !!(p.dc && (p.dc.b | 0) >= 7)]];
 function lvOf(x) { var l = 1; while (x >= 30 * (l + 1) * l) l++; var a = 30 * l * (l - 1), b = 30 * (l + 1) * l; return { l: l, a: x - a, n: b - a } }
 var PR = null;
 function profLoad() { if (PR) return PR; var o = null; try { o = JSON.parse(localStorage.mbProf || 'null') } catch (e) { } o = o || {}; o.xp = o.xp | 0; o.c = o.c | 0; o.av = o.av | 0; o.own = o.own || [0, 1, 2, 3, 4, 5]; o.ac = o.ac || []; o.st = o.st || {}; var s = o.st; s.m = s.m | 0; s.w = s.w | 0; s.bs = s.bs | 0; s.cs = s.cs | 0; s.p = s.p | 0; s.g = s.g || {}; return PR = o }
@@ -680,7 +680,7 @@ function dcPick(k) {
   setTimeout(function () { DCI++; dcRender() }, 240)
 }
 function dcSend() {
-  var b = document.getElementById('dcb'); if (b) b.innerHTML = '<div class="dcld">بنحسب نتيجتك… 🧮</div>';
+  var b = document.getElementById('dcb'); if (b) b.innerHTML = '<div class="dcld">بنحسب نتيجتك… ⏳</div>';
   var p = profLoad();
   apiP('/api/dc', { id: p.id || '', sub: 1, d: DCD.d, picks: DCA }).then(function (R) {
     if (!R || R.e) throw new Error('bad');
@@ -703,7 +703,7 @@ function dcCount(id, to, ms) {
   f()
 }
 function dcWin(R) {
-  var lit = Math.max(1, Math.min(7, R.streak | 0)), dots = '', rain = '', cols = ['🪙', '✨', '🪙', '⭐', '🪙', '💫'], i;
+  var lit = Math.max(1, Math.min(7, R.streak | 0)), dots = '', rain = '', cols = ['🪙', '⭐', '🪙', '⭐', '🪙', '⭐'], i;
   for (i = 0; i < 7; i++) dots += '<i class="' + (i < lit ? 'on' : '') + '"></i>';
   for (i = 0; i < 18; i++) rain += '<span class="dcf" style="left:' + (3 + Math.random() * 92).toFixed(1) + '%;animation-delay:' + (Math.random() * 1.5).toFixed(2) + 's;animation-duration:' + (1.7 + Math.random() * 1.6).toFixed(2) + 's">' + cols[i % cols.length] + '</span>';
   var d = document.createElement('div'); d.id = 'dcwin'; d.className = 'dcwin';
@@ -748,7 +748,7 @@ function profOpen() {
   var ac = ACH.map(function (a) { var o = p.ac.indexOf(a[0]) >= 0; return '<div class="acb' + (o ? ' on' : '') + '" title="' + a[3] + '"><span>' + (o ? a[1] : '🔒') + '</span><small>' + a[2] + '</small></div>' }).join('');
   var gs = Object.keys(gl).map(function (k) { var g = s.g[k] || [0, 0]; return '<div class="stb"><b>' + g[1] + '/' + g[0] + '</b><small>' + gl[k] + '</small></div>' }).join('');
   d.innerHTML = '<div class="box prof"><div class="ph"><span class="pav big">' + avOf(p) + '</span><div class="pin"><h2>' + esc(myname || 'لاعب') + bdH(p.bd) + '</h2>' + (p.bd && p.bd.indexOf('f') >= 0 ? '<span class="fpill">مؤسس اللعبة</span> ' : '') + '<b>لفل ' + L.l + '</b><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div><small dir="ltr">' + L.a + ' / ' + L.n + ' XP</small></div><span class="pco">🪙 ' + p.c + '</span></div>'
-    + '<div class="sts"><div class="stb"><b>' + s.m + '</b><small>ماتشات</small></div><div class="stb"><b>' + s.w + '</b><small>فوز</small></div><div class="stb"><b>' + s.bs + '</b><small>أطول سلسلة</small></div><div class="stb"><b>' + s.p + '</b><small>نقط</small></div></div><div class="dcpl">🔥 تحدي اليوم: سلسلة ' + (dcSt().s | 0) + ' أيام • أحسن سلسلة ' + (dcSt().b | 0) + '</div><h3>فوز/لعب لكل لعبة</h3><div class="sts">' + gs + '</div><h3>صورتك</h3><div class="row"><button class="btn y" onclick="photoPick()">📷 ارفع صورتك</button>' + (p.pk ? '<button class="btn" onclick="photoToggle()">' + (p.ap ? 'استخدم شخصية' : 'استخدم صورتي') + '</button>' : '') + '</div><h3>الشخصيات</h3><div class="avs">' + av + '</div><h3>الإنجازات</h3><div class="acs">' + ac + '</div><h3>حسابك</h3><div class="idb">' + (p.id ? 'الـID بتاعك: <b dir="ltr" class="idn">' + p.id + '</b> <button class="btn" onclick="copyId()">نسخ</button><br><small>احتفظ بيه، بيرجّعلك تقدمك لو غيرت تليفونك</small>' : 'بيتعمل لك ID...') + '<div class="row"><input id="rid" class="inp" inputmode="numeric" maxlength="6" placeholder="عندك ID قديم؟ اكتبه"><button class="btn t" onclick="recoverId()">استرجاع</button></div></div><div class="cont">📮 للتواصل: <a href="mailto:lamhgame23@gmail.com" dir="ltr">lamhgame23@gmail.com</a></div><div class="row"><button class="btn" onclick="profClose()">تمام</button></div></div>';
+    + '<div class="sts"><div class="stb"><b>' + s.m + '</b><small>ماتشات</small></div><div class="stb"><b>' + s.w + '</b><small>فوز</small></div><div class="stb"><b>' + s.bs + '</b><small>أطول سلسلة</small></div><div class="stb"><b>' + s.p + '</b><small>نقط</small></div></div><div class="dcpl">🔥 تحدي اليوم: سلسلة ' + (dcSt().s | 0) + ' أيام • أحسن سلسلة ' + (dcSt().b | 0) + '</div><h3>فوز/لعب لكل لعبة</h3><div class="sts">' + gs + '</div><h3>صورتك</h3><div class="row"><button class="btn y" onclick="photoPick()">📷 ارفع صورتك</button>' + (p.pk ? '<button class="btn" onclick="photoToggle()">' + (p.ap ? 'استخدم شخصية' : 'استخدم صورتي') + '</button>' : '') + '</div><h3>الشخصيات</h3><div class="avs">' + av + '</div><h3>الإنجازات</h3><div class="acs">' + ac + '</div><h3>حسابك</h3><div class="idb">' + (p.id ? 'الـID بتاعك: <b dir="ltr" class="idn">' + p.id + '</b> <button class="btn" onclick="copyId()">نسخ</button><br><small>احتفظ بيه، بيرجّعلك تقدمك لو غيرت تليفونك</small>' : 'بيتعمل لك ID...') + '<div class="row"><input id="rid" class="inp" inputmode="numeric" maxlength="6" placeholder="عندك ID قديم؟ اكتبه"><button class="btn t" onclick="recoverId()">استرجاع</button></div></div><div class="cont">✉️ للتواصل: <a href="mailto:lamhgame23@gmail.com" dir="ltr">lamhgame23@gmail.com</a></div><div class="row"><button class="btn" onclick="profClose()">تمام</button></div></div>';
   document.body.appendChild(d);
 }
 function avPick(i) { var p = profLoad(); if (p.own.indexOf(i) < 0) { if (p.c < AVP[i]) return toast('محتاج ' + AVP[i] + ' 🪙 (بتاخدها من الماتشات)'); p.c -= AVP[i]; p.own.push(i); toast('اشتريت شخصية ' + CHN[i]) } p.av = i; p.ap = 0; profSave(); profSync(1); var m = document.getElementById('profm'); if (m) m.remove(); profOpen(); sendProf() }
