@@ -7,8 +7,46 @@ const CATS = {}; for (const c of DATA) CATS[c.id] = c;
 const HTML = read('index.html'), JS = read('game.js'), SWJS = read('sw.js'), MANI = read('manifest.webmanifest');
 const T = () => Date.now() * SP;
 const MAXSEATS = 8, PTS = [100, 70, 50, 30, 20, 10], HINT = 10, TURN = 30000;
+/* ===== player profiles + leaderboard in Upstash Redis (free tier) ===== */
+const UR = process.env.UPSTASH_URL, UTK = process.env.UPSTASH_TOKEN, RL = {}, LBC = {};
+const WKN = () => Math.floor((Date.now() / 864e5 + 3) / 7);
+async function rc(cmds) { const x = await fetch(UR + '/pipeline', { method: 'POST', headers: { Authorization: 'Bearer ' + UTK, 'content-type': 'application/json' }, body: JSON.stringify(cmds), signal: AbortSignal.timeout(6000) }); const j = await x.json(); if (!Array.isArray(j)) throw new Error('db'); return j.map(a => a.result) }
+function okProf(p) { if (!p || typeof p !== 'object' || Array.isArray(p)) return null; const s = JSON.stringify(p); if (s.length > 4000) return null; return p }
+function jr(r, c, o) { r.writeHead(c, { 'content-type': 'application/json', 'cache-control': 'no-store' }); r.end(JSON.stringify(o)) }
+function api(q, r, u) {
+  if (!UR || !UTK) return jr(r, 503, { e: 'db off' });
+  const ip = (q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',')[0].trim(), now = Date.now(), b = RL[ip] = RL[ip] && now - RL[ip].t < 60000 ? RL[ip] : { t: now, n: 0 };
+  if (++b.n > 40) return jr(r, 429, { e: 'slow down' });
+  const run = async body => {
+    const nm = s => String(s || '').replace(/[<>&"]/g, '').slice(0, 20) || 'لاعب';
+    if (u === '/api/p/new') {
+      const p = okProf(body.prof); if (!p) return jr(r, 400, { e: 'bad' });
+      for (let i = 0; i < 6; i++) { const id = String(100000 + Math.floor(Math.random() * 900000)); const [s] = await rc([['SET', 'p:' + id, JSON.stringify(p), 'NX']]); if (s === 'OK') { await rc([['HSET', 'info', id, JSON.stringify({ n: nm(body.name), av: p.av | 0, lv: 1 })]]); return jr(r, 200, { id }) } }
+      return jr(r, 500, { e: 'full' })
+    }
+    if (u === '/api/p/save') {
+      const id = String(body.id || ''), p = okProf(body.prof); if (!/^\d{6}$/.test(id) || !p) return jr(r, 400, { e: 'bad' });
+      const w = WKN(), xp = Math.max(0, +p.xp | 0), wp = p.wk && p.wk.w === w ? Math.max(0, +p.wk.p | 0) : 0, lv = Math.max(1, Math.min(999, +body.lv | 0));
+      const [s] = await rc([['SET', 'p:' + id, JSON.stringify(p), 'XX']]); if (s !== 'OK') return jr(r, 404, { e: 'none' });
+      const c = [['HSET', 'info', id, JSON.stringify({ n: nm(body.name), av: p.av | 0, lv })], ['ZADD', 'lb:all', String(xp), id]];
+      if (wp > 0) { c.push(['ZADD', 'lb:w:' + w, String(wp), id], ['EXPIRE', 'lb:w:' + w, '1300000']) }
+      await rc(c); return jr(r, 200, { ok: 1 })
+    }
+    if (u === '/api/p/get') { const id = String(body.id || ''); if (!/^\d{6}$/.test(id)) return jr(r, 400, { e: 'bad' }); const [v] = await rc([['GET', 'p:' + id]]); if (!v) return jr(r, 404, { e: 'none' }); return jr(r, 200, { prof: JSON.parse(v) }) }
+    if (u === '/api/lb') {
+      const k = body.k === 'all' ? 'lb:all' : 'lb:w:' + WKN(), c = LBC[k]; if (c && now - c.t < 120000) return jr(r, 200, c.d);
+      const [z] = await rc([['ZREVRANGE', k, '0', '19', 'WITHSCORES']]), ids = [], sc = []; for (let i = 0; i < (z || []).length; i += 2) { ids.push(z[i]); sc.push(+z[i + 1]) }
+      let inf = ids.length ? (await rc([['HMGET', 'info', ...ids]]))[0] : [];
+      const d = { rows: ids.map((id, i) => { let o = {}; try { o = JSON.parse(inf[i] || '{}') } catch (e) { } return { n: o.n || 'لاعب', av: o.av | 0, lv: o.lv || 1, s: sc[i] } }) }; LBC[k] = { t: now, d }; return jr(r, 200, d)
+    }
+    jr(r, 404, { e: 'no' })
+  };
+  if (q.method === 'GET') return run({ k: new URL(q.url, 'http://x').searchParams.get('k') }).catch(() => jr(r, 500, { e: 'db' }));
+  let raw = ''; q.on('data', d => { raw += d; if (raw.length > 8000) q.destroy() }); q.on('end', () => { let b; try { b = JSON.parse(raw || '{}') } catch (e) { return jr(r, 400, { e: 'json' }) } run(b).catch(() => jr(r, 500, { e: 'db' })) })
+}
 const srv = http.createServer((q, r) => {
   const u = q.url.split('?')[0];
+  if (u.startsWith('/api/')) { api(q, r, u); return }
   if (u === '/health') { r.end('ok'); return }
   if (u === '/ice') {
     const f = [{ urls: 'stun:stun.l.google.com:19302' }, { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }];
