@@ -262,19 +262,19 @@ function helpClose() { const d = $('helpm'); if (d) d.remove() }
 let ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }] };
 let vStream = null, vOn = false, vMuted = false; const vPc = {}, vSt = {};
 function vstat() {
-  const e = $('vstat'); if (!e) return; if (!vOn) { e.textContent = ''; return }
+  let e = $('vstat'); if (!e) { e = document.createElement('div'); e.id = 'vstat'; e.style.cssText = 'position:fixed;left:6px;bottom:6px;z-index:60;max-width:70vw;font-size:11px;line-height:1.3;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.65);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:none'; document.body.appendChild(e) } if (!vOn) { e.style.display = 'none'; return }
   const v = Object.values(vSt); let t = '⏳ مستني حد تاني يدخل الصوت', c = '#aaa';
-  if (v.length) { if (v.includes('fail')) { t = '❌ الصوت مش واصل لواحد منكم (النت عنده ممنوع). جرب تخرج وتدخل تاني'; c = '#ff8a80' } else if (v.includes('c')) { t = '⏳ بيتوصل بالصوت...'; c = '#ffd54f' } else { t = v.includes('relay') ? '✅ الصوت متصل (عن طريق سيرفر وسيط)' : '✅ الصوت متصل'; c = '#69f0ae' } }
-  e.textContent = t; e.style.color = c
+  if (v.length) { if (v.includes('fail')) { t = '❌ الصوت مش واصل، اخرج وادخل تاني'; c = '#ff8a80' } else if (v.includes('c')) { t = '⏳ بيتوصل بالصوت...'; c = '#ffd54f' } else { t = v.includes('relay') ? '✅ متصل (عبر وسيط)' : '✅ الصوت متصل'; c = '#69f0ae' } }
+  e.textContent = t; e.style.color = c; e.style.display = 'block'
 }
 async function vkind(id) { const o = vPc[id]; if (!o) return; let k = 'ok'; try { const st = await o.pc.getStats(); st.forEach(r => { if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded') { const l = st.get(r.localCandidateId); if (l && l.candidateType === 'relay') k = 'relay' } }) } catch (e) { } if (vSt[id]) { vSt[id] = k; vstat() } }
 function vui() {
   const b = $('vslot'); if (!b) return;
   setTimeout(vstat, 0);
-  b.innerHTML = vOn ? `<button class="ib ${vMuted ? '' : 'on'}" onclick="vmute()">${vMuted ? '🔇 مكتوم' : '🎙️ شغال'}</button> <button class="ib rd" onclick="vstop()">اخرج</button><div id="vstat" style="font-size:12px;margin-top:4px"></div>` : `<button class="ib" style="background:#1565c0" onclick="vstart()">🎙️ شات صوتي</button>`;
+  b.innerHTML = vOn ? `<button class="ib ${vMuted ? '' : 'on'}" onclick="vmute()">${vMuted ? '🔇 مكتوم' : '🎙️ شغال'}</button> <button class="ib rd" onclick="vstop()">اخرج</button>` : `<button class="ib" style="background:#1565c0" onclick="vstart()">🎙️ شات صوتي</button>`;
 }
 async function vstart() {
-  try { vStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }) } catch (e) { return toast('مش قادر أفتح المايك. اسمح للمتصفح بالمايك وجرب تاني. على الآيفون: إعدادات ← Safari ← المايك ← اسأل أو سماح، وبعدها حدّث الصفحة', 9000) }
+  try { vStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1, sampleRate: 48000 } }) } catch (e) { return toast('مش قادر أفتح المايك. اسمح للمتصفح بالمايك وجرب تاني. على الآيفون: إعدادات ← Safari ← المايك ← اسأل أو سماح، وبعدها حدّث الصفحة', 9000) }
   try { const r = await fetch('/ice', { cache: 'no-store' }); const j = await r.json(); if (j && j.iceServers) ICE = { iceServers: j.iceServers } } catch (e) { }
   vOn = true; vMuted = false; vui(); send({ t: 'vjoin' });
 }
@@ -287,10 +287,12 @@ function vmk(id) {
   vStream.getTracks().forEach(t => pc.addTrack(t, vStream));
   pc.onicecandidate = e => { if (e.candidate) send({ t: 'rtc', to: id, d: { c: e.candidate } }) };
   pc.ontrack = e => { if (!o.el) { o.el = document.createElement('audio'); o.el.autoplay = true; o.el.playsInline = true; document.body.appendChild(o.el) } o.el.srcObject = e.streams[0]; o.el.play().catch(() => { }) };
-  pc.onconnectionstatechange = () => { const cs = pc.connectionState; if (cs === 'connected') { vSt[id] = 'ok'; vstat(); vkind(id) } else if (cs === 'failed') { vSt[id] = 'fail'; vstat() } else if (cs === 'connecting' || cs === 'new') { if (vSt[id] !== 'fail') { vSt[id] = 'c'; vstat() } } else if (cs === 'closed') vclose(id) };
+  pc.onconnectionstatechange = () => { const cs = pc.connectionState; if (cs === 'connected') { vSt[id] = 'ok'; vstat(); vkind(id); vbr(pc) } else if (cs === 'failed') { vSt[id] = 'fail'; vstat() } else if (cs === 'connecting' || cs === 'new') { if (vSt[id] !== 'fail') { vSt[id] = 'c'; vstat() } } else if (cs === 'closed') vclose(id) };
   return o;
 }
-async function voff(id) { vclose(id); const o = vmk(id); const off = await o.pc.createOffer(); await o.pc.setLocalDescription(off); send({ t: 'rtc', to: id, d: { s: o.pc.localDescription } }) }
+function vsdp(s) { const m = /a=rtpmap:(\d+) opus\/48000/i.exec(s); if (!m) return s; const pt = m[1], f = 'a=fmtp:' + pt + ' minptime=10;useinbandfec=1;stereo=0;sprop-stereo=0;maxaveragebitrate=48000;maxplaybackrate=48000;cbr=0'; const re = new RegExp('a=fmtp:' + pt + ' [^\\r\\n]*'); return re.test(s) ? s.replace(re, f) : s.replace(m[0], m[0] + '\r\n' + f) }
+function vbr(pc) { try { pc.getSenders().forEach(s => { if (s.track && s.track.kind === 'audio') { const p = s.getParameters(); if (!p.encodings || !p.encodings.length) p.encodings = [{}]; p.encodings[0].maxBitrate = 48000; s.setParameters(p).catch(() => { }) } }) } catch (e) { } }
+async function voff(id) { vclose(id); const o = vmk(id); const off = await o.pc.createOffer(); await o.pc.setLocalDescription({ type: off.type, sdp: vsdp(off.sdp) }); send({ t: 'rtc', to: id, d: { s: o.pc.localDescription } }) }
 async function vmsg(m) {
   if (m.t === 'vleave') { vclose(m.from); return }
   if (!vOn) return;
@@ -303,7 +305,7 @@ async function vmsg(m) {
       if (d.s.type === 'offer' && o.pc.signalingState !== 'stable') { vclose(m.from); return vmsg(m) }
       await o.pc.setRemoteDescription(d.s);
       for (const c of o.q) await o.pc.addIceCandidate(c).catch(() => { }); o.q = [];
-      if (d.s.type === 'offer') { const a = await o.pc.createAnswer(); await o.pc.setLocalDescription(a); send({ t: 'rtc', to: m.from, d: { s: o.pc.localDescription } }) }
+      if (d.s.type === 'offer') { const a = await o.pc.createAnswer(); await o.pc.setLocalDescription({ type: a.type, sdp: vsdp(a.sdp) }); send({ t: 'rtc', to: m.from, d: { s: o.pc.localDescription } }) }
     } else if (d.c) { if (o.pc.remoteDescription) await o.pc.addIceCandidate(d.c).catch(() => { }); else o.q.push(d.c) }
   } catch (e) { }
 }
