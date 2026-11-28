@@ -237,7 +237,33 @@ const norm = s => String(s).toLowerCase().replace(/[\u064B-\u065F\u0640]/g, '').
 const BOTN = ['بوت زيزو', 'بوت فريدة', 'بوت حودة', 'بوت نانا', 'بوت كيمو', 'بوت ميمي'];
 const BOTC = [];
 function send(ws, m) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(m)) }
-const yes = (it, q) => q.a.split('').some(ch => (it.f || '').includes(ch));
+const yes = (it, q) => q.fn ? !!q.fn(it) : q.a.split('').some(ch => (it.f || '').includes(ch));
+// أسئلة إضافية بتتولد من الأسماء نفسها، عشان الجولة تبقى فيها معلومات كفاية (مش سؤالين وخلاص)
+const QCACHE = {};
+function qsOf(cat) {
+  if (QCACHE[cat.id]) return QCACHE[cat.id];
+  const words = it => String(it.n || '').trim().split(/\s+/).filter(Boolean);
+  const people = ['singers', 'actors', 'football', 'tiktok'].includes(cat.id);
+  const extra = [
+    { t: 'اسمي أكتر من كلمة؟', fn: it => words(it).length >= 2 },
+    { t: 'اسمي ٣ كلمات أو أكتر؟', fn: it => words(it).length >= 3 }
+  ];
+  if (people) extra.push(
+    { t: "اسمي فيه كلمة 'محمد'؟", fn: it => words(it).includes('محمد') },
+    { t: "اسمي فيه كلمة 'أحمد'؟", fn: it => words(it).includes('أحمد') },
+    { t: "اسمي فيه كلمة 'عبد'؟", fn: it => words(it).includes('عبد') }
+  );
+  else extra.push({ t: "اسمي بيبدأ بـ'ال'؟", fn: it => /^ال/.test(String(it.n || '').trim()) });
+  const byLetter = {};
+  for (const it of cat.items) { const w = words(it)[0] || '', ch = w[0]; if (ch) byLetter[ch] = (byLetter[ch] || 0) + 1 }
+  const n = cat.items.length;
+  if (people) {
+    const letters = Object.keys(byLetter).filter(ch => byLetter[ch] >= Math.max(2, n * .08) && byLetter[ch] <= n * .6).sort((a, b) => byLetter[b] - byLetter[a]).slice(0, 4);
+    for (const ch of letters) extra.push({ t: 'اسمي بيبدأ بحرف ' + ch + '؟', fn: it => ((words(it)[0] || '')[0] === ch) });
+  }
+  const all = cat.q.map(q => ({ t: q.t, a: q.a })).concat(extra).filter(q => { const y = cat.items.filter(it => yes(it, q)).length; return y > 0 && y < n });
+  QCACHE[cat.id] = all; return all;
+}
 function newRoom() {
   return { code: mkcode(), phase: 'lobby', players: {}, host: null, chat: [], log: [], cat: 'singers', dur: 300, seats: [], turn: 0, round: 0, pend: null, bp: {}, br: {}, vote: null, game: 'who', rh: [], sp: null, du: null, dcat: 'mixed', dT: 180, spies: 1, clueT: 30, voteT: 60 }
 }
@@ -250,7 +276,7 @@ function state(room, p) {
     t: 'state', code: room.code, phase: room.phase, you: p.id, host: room.host, cat: room.cat, dur: room.dur, round: room.round,
     game: room.game, rh: room.rh.slice(-20), spies: room.spies, clueT: room.clueT, voteT: room.voteT,
     players: Object.values(room.players).map(x => ({ id: x.id, name: x.name, bot: !!x.bot, on: !!x.ws || !!x.bot, score: x.score, av: x.av|0, lv: x.lv|0, pk: x.ap && x.pk ? x.pk : '', bd: x.bd || '', ready: !!x.ready, mic: x.mic ? (x.mm ? 2 : 1) : 0 })),
-    ln: room.logn || 0, chat: room.chat.slice(-60), log: room.log.slice(-40), q: cat.q.map((x, i) => ({ i, t: x.t }))
+    ln: room.logn || 0, chat: room.chat.slice(-60), log: room.log.slice(-40), q: qsOf(cat).map((x, i) => ({ i, t: x.t }))
   };
   o.sdiff = Math.max(1, Math.min(3, +room.sdiff || 2));
   if (room.game === 'snake' && room.sn) o.sn = { pos: room.sn.pos, order: room.sn.order, turn: room.sn.order[room.sn.turn] || null, dice: room.sn.dice, seq: room.sn.seq, win: room.sn.win, diff: room.sn.diff, log: room.sn.log.slice(-6) };
@@ -304,7 +330,7 @@ function nextTurn(room) {
     if (sd.done) continue;
     if (sd.miss > 0) { sd.miss--; lg(room, '⏭ ' + pl.name + ' بيفوّت دوره (غلط في التخمين)', 'miss'); continue }
     if (!pl.bot && !pl.ws) { lg(room, '📵 ' + pl.name + ' مش متصل، دوره عدّى'); continue }
-    room.turnEnd = T() + TURN; room.botAt = pl.bot ? T() + (2500 + Math.random() * 2500) : 0; room.pend = null; bcast(room); return;
+    room.turnEnd = T() + TURN; room.botAt = pl.bot ? T() + (1600 + Math.random() * 1600) : 0; room.pend = null; bcast(room); return;
   }
   finish(room);
 }
@@ -333,7 +359,7 @@ function checkVote(room) {
   return false;
 }
 function ask(room, sd, qi) {
-  const q = CATS[room.cat].q[qi]; if (!q) return; const it = itemOf(room, sd), a = yes(it, q), p = room.players[sd.id];
+  const q = qsOf(CATS[room.cat])[qi]; if (!q) return; const it = itemOf(room, sd), a = yes(it, q), p = room.players[sd.id];
   sd.asked[qi] = a; lg(room, '❓ ' + p.name + ': ' + q.t + ' ← ' + (a ? 'أيوه ✅' : 'لأ ❌'), 'q');
   if (p.bot) { sd.cand = sd.cand.filter(i => yes(CATS[room.cat].items[i], q) === a) }
   nextTurn(room);
@@ -352,13 +378,26 @@ function resolvePend(room) {
   lg(room, '❓ ' + room.players[pe.by].name + ': "' + pe.text + '" ← ' + r, 'q'); room.pend = null; nextTurn(room);
 }
 function botPlay(room, sd) {
-  const cat = CATS[room.cat], c = sd.cand, p = room.players[sd.id];
-  const qs = cat.q.map((q, i) => i).filter(i => !(i in sd.asked));
+  const cat = CATS[room.cat], p = room.players[sd.id];
+  let c = sd.cand && sd.cand.length ? sd.cand : cat.items.map((_, i) => i);
+  sd.cand = c;
+  if (c.length <= 1) {
+    const k = c.length ? c[0] : Math.floor(Math.random() * cat.items.length);
+    sd.guessing = k; lg(room, '🤔 ' + p.name + ' بيخمّن...', 'q');
+    return guess(room, sd, cat.items[k].n);
+  }
+  const qs = qsOf(cat);
   let best = -1, bs = 1e9;
-  for (const i of qs) { const y = c.filter(k => yes(cat.items[k], cat.q[i])).length, s = Math.abs(y - c.length / 2); if (y > 0 && y < c.length && s < bs) { bs = s; best = i } }
-  const reckless = Math.random() < .08 && c.length < 12;
-  if (c.length <= 2 || best < 0 || reckless || (c.length <= 4 && Math.random() < .6)) {
-    const k = pick(c.length ? c : cat.items.map((_, i) => i)); sd.guessing = k; lg(room, '🤔 ' + p.name + ' بيخمّن...', 'q');
+  for (let i = 0; i < qs.length; i++) {
+    if (i in sd.asked) continue;
+    const y = c.filter(k => yes(cat.items[k], qs[i])).length;
+    if (y <= 0 || y >= c.length) continue;
+    const sc = Math.min(y, c.length - y);
+    if (sc < bs) { bs = sc; best = i }
+  }
+  const hunch = c.length <= 3 && Math.random() < .1;
+  if (best < 0 || hunch) {
+    const k = pick(c); sd.guessing = k; lg(room, '🤔 ' + p.name + ' بيخمّن...', 'q');
     return guess(room, sd, cat.items[k].n);
   }
   ask(room, sd, best);
@@ -471,22 +510,33 @@ function nextClue(room) {
     const id = sp.order[sp.ti], pl = room.players[id];
     if (!pl) continue;
     if (!pl.bot && !pl.ws) { sp.clues.push({ id, text: '📵' }); lg(room, '📵 ' + pl.name + ' مش متصل، دوره عدّى'); continue }
-    sp.tEnd = T() + room.clueT * 1000; sp.botAt = pl.bot ? T() + 2000 + Math.random() * 2500 : 0; bcast(room); return;
+    sp.tEnd = T() + room.clueT * 1000; sp.botAt = pl.bot ? T() + 1300 + Math.random() * 1500 : 0; bcast(room); return;
   }
   startVote(room);
 }
 function startVote(room) {
   const sp = room.sp; room.phase = 'svote'; sp.ti = sp.order.length; sp.votes = {}; sp.tEnd = T() + room.voteT * 1000;
-  for (const id of sp.order) { const p = room.players[id]; if (p && p.bot) sp.bv[id] = T() + 3000 + Math.random() * Math.min(6000, room.voteT * 400) }
+  for (const id of sp.order) { const p = room.players[id]; if (p && p.bot) sp.bv[id] = T() + 2200 + Math.random() * Math.min(4500, room.voteT * 320) }
   lg(room, '🗳 كل واحد قال كلمته. اتناقشوا وصوتوا مين الجاسوس!', 'sys'); bcast(room);
 }
 function botClue(room, id) {
   const sp = room.sp, cat = CATS[room.cat], it = cat.items[sp.secret], isSpy = sp.spies.includes(id), said = sp.clues.map(c => c.text);
   let w;
   if (!isSpy) {
-    const A = attrs(cat, it), nm = it.n.split(' '), pool = [...A.y, ...A.n.filter(() => Math.random() < .25)];
-    pool.push(nm.length === 2 ? 'اسمه كلمتين' : nm.length === 3 ? 'اسمه تلات كلمات' : 'اسمه كلمة واحدة', 'أول حرف ' + it.n[0], 'مشهور');
-    const fresh = pool.filter(x => !said.includes(x)); w = pick(fresh.length ? fresh : pool);
+    const A = attrs(cat, it), nm = it.n.split(' '), cand = [];
+    const total = cat.items.length;
+    for (const word of A.y) {
+      const hits = cat.items.filter(x => attrs(cat, x).y.includes(word)).length;
+      // كلمة وصفها صح وبتميّز شوية من غير ما تبقى واضحة أوي
+      cand.push({ w: word, s: hits <= 1 ? 1.1 : hits <= Math.max(3, Math.round(total * .4)) ? 2.6 : .5 });
+    }
+    for (const word of A.n) cand.push({ w: word, s: 1.2 });
+    cand.push({ w: nm.length === 2 ? 'اسمه كلمتين' : nm.length === 3 ? 'اسمه تلات كلمات' : 'اسمه كلمة واحدة', s: 1.5 });
+    cand.push({ w: 'أول حرف ' + it.n[0], s: 1.1 });
+    const fresh = cand.filter(x => !said.includes(x.w));
+    const pool = fresh.length ? fresh : cand;
+    pool.sort((x, y2) => (y2.s + Math.random() * .9) - (x.s + Math.random() * .9));
+    w = pool[0].w;
   } else {
     // جاسوس: بيدوّر على أكتر صفة متكررة في كلام الباقيين عشان يداري نفسه
     const real = sp.clues.filter(c => c.text && c.text.length > 1 && !'⌛📵—'.includes(c.text));
@@ -497,13 +547,28 @@ function botClue(room, id) {
   }
   sp.clues.push({ id, text: w }); lg(room, '🗣 ' + room.players[id].name + ': ' + w, 'q'); nextClue(room);
 }
+function wordsOf(t) { return norm(t || '').split(/\s+/).filter(x => x.length > 1) }
 function botVoteFor(room, id) {
   const sp = room.sp, cat = CATS[room.cat], it = cat.items[sp.secret], others = sp.order.filter(x => x !== id && room.players[x]);
   if (sp.spies.includes(id)) {
-    // الجاسوس بيصوّت على اللي كلامه شبه غريب بالنسبة لأحسن تخمين
-    const sc = others.map(o => ({ o, s: Math.random() })); sc.sort((a, b) => a.s - b.s); return sc[0].o;
+    // الجاسوس ميعرفش الكلمة، فبيصوّت مع الكلام الغريب: اللي كلامه أقل تشابه مع كلام الباقيين
+    const pool = others.filter(o => !sp.spies.includes(o));
+    const sc = (pool.length ? pool : others).map(o => {
+      const mine = wordsOf(sp.clues.filter(x => x.id === o).map(x => x.text).join(' '));
+      let sim = 0;
+      for (const q of sp.clues) { if (q.id === o) continue; const w2 = wordsOf(q.text); sim += mine.filter(x => w2.includes(x)).length }
+      return { o, s: sim + Math.random() * .7 };
+    });
+    sc.sort((a, b) => a.s - b.s); return sc[0].o;
   }
-  const sc = others.map(o => { const c = sp.clues.filter(x => x.id === o).map(x => x.text).join(' '); return { o, s: fit(cat, it, c) + Math.random() * .8 } });
+  const sc = others.map(o => {
+    const list = sp.clues.filter(x => x.id === o).map(x => x.text);
+    let s = fit(cat, it, list.join(' ')) + Math.random() * .7;
+    // الكلام العام ("مشهور") مش دليل، والجاسوس بيلجأ ليه
+    if (list.some(t => /^مشهور$/.test(t.trim()))) s -= 1.4;
+    if (!list.filter(Boolean).length) s -= 1;
+    return { o, s };
+  });
   sc.sort((a, b) => a.s - b.s); return sc[0].o;
 }
 function voteDone(room) {
