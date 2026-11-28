@@ -109,6 +109,38 @@ async function fapi(u, b, r) {
   }
   jr(r, 404, { e: 'no' })
 }
+
+/* ===== تحدي اليوم: ٥ أسئلة كل يوم بتوقيت القاهرة + سلسلة أيام + جوايز عملات ===== */
+const DCTZ = 'Africa/Cairo', DCN = 5, DCC = new Map();
+function dcDay(o) { try { return new Intl.DateTimeFormat('en-CA', { timeZone: DCTZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(o || new Date()) } catch (e) { return (o || new Date()).toISOString().slice(0, 10) } }
+function dcPrev(day) { const d = new Date(day + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10) }
+function dcSeed(day) { let h = 2166136261; for (let i = 0; i < day.length; i++) { h ^= day.charCodeAt(i); h = Math.imul(h, 16777619) } return h >>> 0 }
+function dcRng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296 } }
+let DCPL = null;
+function dcPool() {
+  if (DCPL) return DCPL;
+  const seen = new Set(); DCPL = [];
+  for (const x of DB.L) { if (!x || !x.q || !x.a) continue; const k = x.q + '|' + x.a; if (seen.has(k)) continue; if (x.a.length > 26 || x.q.length > 90) continue; seen.add(k); DCPL.push(x) }
+  return DCPL
+}
+function dcMake(day) {
+  const c = DCC.get(day); if (c) return c;
+  const r = dcRng(dcSeed(day)), sh = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t } return a };
+  const pool = sh(dcPool().slice()), picked = [], cats = new Set();
+  for (const x of pool) { if (picked.length >= DCN) break; if (cats.has(x.c)) continue; cats.add(x.c); picked.push(x) }
+  for (const x of pool) { if (picked.length >= DCN) break; if (!picked.some(p => p.q === x.q)) picked.push(x) }
+  const qs = [], ks = [];
+  for (const x of picked) {
+    const opts = [x.a], near = sh(dcPool().filter(z => z.c === x.c && z.a !== x.a)).sort((a, b) => Math.abs(a.a.length - x.a.length) - Math.abs(b.a.length - x.a.length));
+    for (const y of near) { if (opts.length >= 4) break; if (opts.indexOf(y.a) < 0 && y.a.indexOf(x.a) < 0 && x.a.indexOf(y.a) < 0) opts.push(y.a) }
+    for (const y of sh(dcPool().slice())) { if (opts.length >= 4) break; if (opts.indexOf(y.a) < 0) opts.push(y.a) }
+    sh(opts); qs.push({ q: x.q, o: opts }); ks.push(opts.indexOf(x.a))
+  }
+  const v = { d: day, qs, ks };
+  if (DCC.size > 30) DCC.clear(); DCC.set(day, v); return v
+}
+const dcCoins = (s, ok) => 10 * ok + 15 * Math.min(Math.max(s, 1), 5);
+
 function api(q, r, u) {
   if (!UR || !UTK) return jr(r, 503, { e: 'db off' });
   const isF = u.startsWith('/api/f/'); if (!isF) backupDay();
@@ -143,6 +175,26 @@ function api(q, r, u) {
       await rc(c); INF.delete(id); return jr(r, 200, { pk })
     }
     if (u === '/api/p/get') { const id = String(body.id || ''); if (!/^\d{6}$/.test(id)) return jr(r, 400, { e: 'bad' }); const [v, bd] = await rc([['GET', 'p:' + id], ['HGET', 'bd', id]]); if (!v) return jr(r, 404, { e: 'none' }); const pf = JSON.parse(v); if (bd) pf.bd = bd; else delete pf.bd; return jr(r, 200, { prof: pf }) }
+    if (u === '/api/dc') {
+      const day = dcDay(), ch = dcMake(day), pid = String(body.id || '');
+      if (body.sub) {
+        if (!/^\d{6}$/.test(pid)) return jr(r, 400, { e: 'bad' });
+        if (String(body.d || '') !== day) return jr(r, 400, { e: 'old' });
+        const picks = Array.isArray(body.picks) ? body.picks : [];
+        const ok = ch.ks.reduce((n, k, i) => n + (picks[i] === k ? 1 : 0), 0);
+        const [pv] = await rc([['GET', 'p:' + pid]]); if (!pv) return jr(r, 404, { e: 'none' });
+        let st = null; try { const [sv] = await rc([['HGET', 'dcs', pid]]); st = sv ? JSON.parse(sv) : null } catch (e) { st = null }
+        const [lk] = await rc([['SET', 'dcl:' + pid + ':' + day, '1', 'NX', 'EX', '172800']]);
+        if (lk !== 'OK') return jr(r, 200, { already: 1, correct: ok, n: DCN, streak: (st && st.s) | 0, best: (st && st.b) | 0, coins: 0, xp: 0, ans: ch.ks });
+        const s = st && st.d === dcPrev(day) ? Math.max(1, st.s | 0) + 1 : 1, best = Math.max(s, (st && st.b) | 0);
+        const coins = dcCoins(s, ok), xp = 20 + 5 * ok;
+        await rc([['HSET', 'dcs', pid, JSON.stringify({ s, b: best, d: day })]]);
+        return jr(r, 200, { ok: 1, correct: ok, n: DCN, streak: s, best, coins, xp, ans: ch.ks })
+      }
+      const out = { d: day, qs: ch.qs, n: DCN };
+      if (/^\d{6}$/.test(pid)) { try { const [sv] = await rc([['HGET', 'dcs', pid]]); const st = sv ? JSON.parse(sv) : null; if (st) out.st = { s: st.s | 0, b: st.b | 0, done: st.d === day } } catch (e) { } }
+      return jr(r, 200, out)
+    }
     if (u === '/api/lb') {
       const k = body.k === 'all' ? 'lb:all' : 'lb:w:' + WKN(), c = LBC[k]; if (c && now - c.t < 120000) return jr(r, 200, c.d);
       const [z] = await rc([['ZREVRANGE', k, '0', '19', 'WITHSCORES']]), ids = [], sc = []; for (let i = 0; i < (z || []).length; i += 2) { ids.push(z[i]); sc.push(+z[i + 1]) }
