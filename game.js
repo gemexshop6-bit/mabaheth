@@ -56,7 +56,7 @@ function home() {
   ${iv ? '' : `<div class="row"><button class="btn y" onclick="mk()">🎉 اعمل غرفة</button></div>`}
   <div class="row"><input id="cd" class="inp" inputmode="numeric" maxlength="4" placeholder="كود الغرفة" value="${esc(iv)}"><button class="btn t" onclick="jn()">ادخل غرفة</button></div>
   <div id="rl" class="rl"></div>
-  <div class="row"><button class="btn p" onclick="helpOpen()">📖 إزاي تلعب</button><button class="btn" onclick="fsToggle()">⛶ ملء الشاشة</button><button class="btn" onclick="theme()">${document.documentElement.dataset.theme==='dark'?'☀️ فاتح':'🌙 غامق'}</button></div></div><div class="snc2" onclick="snOpen()"><span class="e"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="7.6" y="3" width="3.6" height="26" rx="1.8" fill="#fff" stroke="#2b2140" stroke-width="2.4"/><rect x="20.8" y="3" width="3.6" height="26" rx="1.8" fill="#fff" stroke="#2b2140" stroke-width="2.4"/><path d="M9.8 9.5h12.4M9.8 16h12.4M9.8 22.5h12.4" stroke="#2b2140" stroke-width="2.4" stroke-linecap="round"/></svg></span><div class="t"><b>السلم والتعبان</b><small>العب لوحدك مع بوت بدرجة صعوبة، أو اعمل غرفة لصاحبك</small></div><span class="g">العب</span></div><div class="snc2 upd" onclick="helpOpen()"><span class="e"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.6l3.4 9.6 9.6 3.4-9.6 3.4L16 28.6l-3.4-9.6L3 15.6l9.6-3.4z" fill="#FFD75E" stroke="#2b2140" stroke-width="2.4" stroke-linejoin="round"/></svg></span><div class="t"><b>تحديث جديد</b><small>بوتات أذكى وأسئلة أكتر في "اعرف مين معايا" و"الجاسوس"</small></div><span class="g">اعرف</span></div><div class="cont"><svg viewBox="0 0 32 32" aria-hidden="true" style="width:18px;height:18px;flex:none"><rect x="3" y="7" width="26" height="18" rx="3" fill="#fff" stroke="#2b2140" stroke-width="2.4"/><path d="M4 9l12 9 12-9" fill="none" stroke="#2b2140" stroke-width="2.4" stroke-linejoin="round"/></svg> للتواصل والاقتراحات: <a href="mailto:lamhgame23@gmail.com" dir="ltr">lamhgame23@gmail.com</a></div><div class="dev">تطوير: elnaholy</div></div>`;
+  <div class="row"><button class="btn p" onclick="helpOpen()">📖 إزاي تلعب</button><button class="btn" onclick="stOpen()">إحصائياتي</button><button class="btn" onclick="fsToggle()">⛶ ملء الشاشة</button><button class="btn" onclick="theme()">${document.documentElement.dataset.theme==='dark'?'☀️ فاتح':'🌙 غامق'}</button></div></div><div class="snc2" onclick="snOpen()"><span class="e"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="7.6" y="3" width="3.6" height="26" rx="1.8" fill="#fff" stroke="#2b2140" stroke-width="2.4"/><rect x="20.8" y="3" width="3.6" height="26" rx="1.8" fill="#fff" stroke="#2b2140" stroke-width="2.4"/><path d="M9.8 9.5h12.4M9.8 16h12.4M9.8 22.5h12.4" stroke="#2b2140" stroke-width="2.4" stroke-linecap="round"/></svg></span><div class="t"><b>السلم والتعبان</b><small>العب لوحدك مع بوت بدرجة صعوبة، أو اعمل غرفة لصاحبك</small></div><span class="g">العب</span></div><div class="snc2 upd" onclick="helpOpen()"><span class="e"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.6l3.4 9.6 9.6 3.4-9.6 3.4L16 28.6l-3.4-9.6L3 15.6l9.6-3.4z" fill="#FFD75E" stroke="#2b2140" stroke-width="2.4" stroke-linejoin="round"/></svg></span><div class="t"><b>تحديث جديد</b><small>بوتات أذكى وأسئلة أكتر في "اعرف مين معايا" و"الجاسوس"</small></div><span class="g">اعرف</span></div><div class="cont"><svg viewBox="0 0 32 32" aria-hidden="true" style="width:18px;height:18px;flex:none"><rect x="3" y="7" width="26" height="18" rx="3" fill="#fff" stroke="#2b2140" stroke-width="2.4"/><path d="M4 9l12 9 12-9" fill="none" stroke="#2b2140" stroke-width="2.4" stroke-linejoin="round"/></svg> للتواصل والاقتراحات: <a href="mailto:lamhgame23@gmail.com" dir="ltr">lamhgame23@gmail.com</a></div><div class="dev">تطوير: elnaholy</div></div>`;
   fetch('/rooms').then(r => r.json()).then(l => { const e = $('rl'); if (!e || S) return; e.innerHTML = l.length ? '<b>غرف مفتوحة:</b> ' + l.map(r => `<button class="chip" onclick="$('cd').value='${r.code}';jn()">${r.code} • ${esc(r.host)} (${r.n})</button>`).join('') : '' }).catch(() => { });
 }
 function mk() { const n = nm(); const f = () => send({ t: 'create', name: n, ...profInfo() }); if (ws && ws.readyState === 1) f(); else conn(f) }
@@ -148,12 +148,80 @@ function snBody() {
     var stand = sn.order.slice().sort(function (a, b) { return (sn.pos[b] | 0) - (sn.pos[a] | 0) }).map(function (id, i) {
       return '<div class="snrow' + (id === won ? ' w' : '') + '"><i>' + (i === 0 ? '🏆' : String(i + 1)) + '</i><b>' + esc(pl(id).name) + '</b><span>' + (sn.pos[id] | 0) + '</span></div>'
     }).join('');
-    act = '<div class="snw">🏆 ' + esc(pl(won).name) + ' كسب!</div><div class="snst">' + stand + '</div><button class="btn t big2" onclick="snShare()">📲 شارك نتيجتك</button>' + (host ? '<button class="btn y big2" onclick="send({t:\'snre\'})">🔄 العبوا تاني</button>' : '<p class="mut">مستني الهوست يبدأ جولة جديدة</p>');
+    act = '<div class="snw">🏆 ' + esc(pl(won).name) + ' كسب!</div><div class="snst">' + stand + '</div><button class="btn t big2" onclick="snCardOpen()">كارت النتيجة (صورة)</button><button class="btn big2" onclick="snShare()">📲 شارك نتيجتك</button>' + (host ? '<button class="btn y big2" onclick="send({t:\'snre\'})">🔄 العبوا تاني</button>' : '<p class="mut">مستني الهوست يبدأ جولة جديدة</p>');
   }
   else if (my) act = '<button class="btn y big2" onclick="send({t:\'roll\'})">🎲 ارمي الزهر</button><p class="mut sntip">⏳ فاضل ' + left + ' ث — لو مجرّبتش هنجيب الزهر بدالك</p>';
   else act = '<p class="mut" style="text-align:center;margin:4px 0">⏳ دور ' + esc(pl(sn.turn).name) + '… فاضل ' + left + ' ث</p>';
   var log = (sn.log || []).slice(-4).map(function (t) { return '<div class="snl">' + esc(t) + '</div>' }).join('');
   return '<div class="snwrap"><div class="sntop"><div class="snps">' + who + '</div>' + dice + '</div>' + snBoard() + '<div class="snact">' + act + '</div><div class="snlog">' + log + '</div></div>'
+}
+function snCardCanvas() {
+  var sn = S.sn, me = S.you, win = sn.win === me, W = 720;
+  var order0 = sn.order.length, H = 400 + order0 * 108 + 150;
+  var c = document.createElement('canvas'); c.width = W; c.height = H; var x = c.getContext('2d');
+  function rr(x0, y0, w, h, r, fill) { x.beginPath(); x.moveTo(x0 + r, y0); x.arcTo(x0 + w, y0, x0 + w, y0 + h, r); x.arcTo(x0 + w, y0 + h, x0, y0 + h, r); x.arcTo(x0, y0 + h, x0, y0, r); x.arcTo(x0, y0, x0 + w, y0, r); x.closePath(); x.fillStyle = fill; x.fill(); x.lineWidth = 8; x.strokeStyle = '#2b2140'; x.stroke() }
+  x.fillStyle = '#FFF4D6'; x.fillRect(0, 0, W, H);
+  x.fillStyle = '#FFE29A';
+  for (var i = 26; i < W; i += 52) for (var j = 26; j < H; j += 52) { x.beginPath(); x.arc(i, j, 4, 0, 7); x.fill() }
+  x.direction = 'rtl'; x.textAlign = 'center';
+  rr(48, 60, W - 96, 300, 40, '#7B5CFF');
+  x.fillStyle = '#fff'; x.font = '900 92px Cairo, Tahoma, sans-serif'; x.fillText('لمّة', W / 2, 190);
+  x.font = '700 40px Cairo, Tahoma, sans-serif'; x.fillText('السلم والتعبان', W / 2, 254);
+  x.font = '900 46px Cairo, Tahoma, sans-serif'; x.fillStyle = '#FFD75E';
+  x.fillText(win ? 'كسبت الماتش!' : 'خسرت الماتش', W / 2, 326);
+  var order = sn.order.slice().sort(function (a, b) { return (sn.pos[b] | 0) - (sn.pos[a] | 0) });
+  var y0 = 400;
+  order.forEach(function (id, k) {
+    var nm = pl(id).name, pos = sn.pos[id] | 0, w = W - 120, h = 92;
+    rr(60, y0 + k * 108, w, h, 24, k === 0 ? '#FFC93C' : '#FFFFFF');
+    x.fillStyle = '#2b2140'; x.textAlign = 'right';
+    x.font = '900 40px Cairo, Tahoma, sans-serif';
+    x.fillText((k + 1) + '. ' + nm, W - 100, y0 + k * 108 + 60);
+    x.textAlign = 'left'; x.font = '900 40px Cairo, Tahoma, sans-serif';
+    x.fillText(String(pos), 100, y0 + k * 108 + 60);
+    x.textAlign = 'center';
+  });
+  var fy = y0 + order.length * 108 + 60;
+  x.textAlign = 'center'; x.fillStyle = '#2b2140'; x.font = '700 30px Cairo, Tahoma, sans-serif';
+  x.fillText('العب على mabaheth.onrender.com', W / 2, fy + 30);
+  return c.toDataURL('image/png');
+}
+function snCardOpen() {
+  if (!S || !S.sn || !S.sn.win) return;
+  var url; try { url = snCardCanvas() } catch (e) { toast('مش عارف أعمل الصورة على الجهاز ده'); return }
+  var d = document.createElement('div'); d.id = 'sncm'; d.className = 'modal'; d.onclick = function (e) { if (e.target === d) d.remove() };
+  d.innerHTML = '<div class="box sncbox"><h2>كارت النتيجة</h2><img class="sncimg" src="' + url + '" alt="نتيجة السلم والتعبان"><div class="row"><a class="btn y" id="sncdl" download="lamma-snake.png" href="' + url + '">احفظ الصورة</a><button class="btn t" onclick="snCardShare()">شارك</button><button class="btn" onclick="document.getElementById(\'sncm\').remove()">قفل</button></div><p class="mut">تقدر تحفظها وتبعتها لأصحابك على واتساب أو ستوري.</p></div>';
+  document.body.appendChild(d)
+}
+function snCardShare() {
+  var url; try { url = snCardCanvas() } catch (e) { return }
+  try {
+    fetch(url).then(function (r) { return r.blob() }).then(function (b) {
+      var f = new File([b], 'lamma-snake.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f], title: 'نتيجة لمّة' });
+      else { var a = document.createElement('a'); a.href = url; a.download = 'lamma-snake.png'; a.click(); toast('الصورة اتحفظت على جهازك') }
+    })
+  } catch (e) { toast('الصورة اتحفظت على جهازك') }
+}
+function stOpen() {
+  var p = profLoad(), s = p.st, lv = lvOf(p.xp), g = s.g || {};
+  var rate = s.m ? Math.round(s.w * 100 / s.m) : 0;
+  var rows = [['who', 'اعرف مين معايا'], ['spy', 'الجاسوس'], ['duel', 'المبارزة'], ['snake', 'السلم والتعبان']].map(function (r) {
+    var v = g[r[0]] || [0, 0];
+    return '<div class="strow"><b>' + r[1] + '</b><span>' + v[0] + ' ماتش • ' + v[1] + ' فوز</span></div>'
+  }).join('');
+  var d = document.createElement('div'); d.id = 'stm'; d.className = 'modal'; d.onclick = function (e) { if (e.target === d) d.remove() };
+  d.innerHTML = '<div class="box"><h2>إحصائياتي</h2><div class="stgrid">' +
+    '<div class="stk"><b>' + lv.l + '</b><small>المستوى</small></div>' +
+    '<div class="stk"><b>' + (s.m | 0) + '</b><small>ماتشات</small></div>' +
+    '<div class="stk"><b>' + (s.w | 0) + '</b><small>فوز</small></div>' +
+    '<div class="stk"><b>' + rate + '%</b><small>نسبة الفوز</small></div>' +
+    '<div class="stk"><b>' + (s.bs | 0) + '</b><small>أطول سلسلة فوز</small></div>' +
+    '<div class="stk"><b>' + (s.p | 0) + '</b><small>نقاط</small></div>' +
+    '</div><h3>لكل لعبة</h3>' + rows +
+    '<p class="mut">عندك ' + (p.ac.length | 0) + ' إنجاز و' + (p.c | 0) + ' عملة.</p>' +
+    '<div class="row"><button class="btn" onclick="document.getElementById(\'stm\').remove()">قفل</button></div></div>';
+  document.body.appendChild(d)
 }
 function snShare(){var sn=S&&S.sn;if(!sn||!sn.win)return;var me=S.you,my=(sn.pos[me]|0),win=sn.win===me;var t=(win?'كسبت':'لعبت')+' السلم والتعبان على لمّة! وصلت '+my+' من ١٠٠';try{navigator.clipboard.writeText(t);toast('اتنقلت النتيجة — الصقها في الشات أو ستوري')}catch(e){toast(t,6000)}}
 function snClose() { var m = document.getElementById('snm'); if (m) m.remove() }
@@ -252,7 +320,7 @@ function body() {
   else if (S.pend) {
     act = S.pend.mine ? `<div class="act"><p>⏳ مستني الباقي يجاوبوا على: <b>${esc(S.pend.text)}</b></p></div>` : S.pend.voted ? `<div class="act"><p class="mut">صوتك اتسجل</p></div>` : `<div class="act"><p>❓ ${esc(pl(S.pend.by).name)} بيسأل: <b>${esc(S.pend.text)}</b> (بالنسبة لكارته)</p><div class="row"><button class="btn t" onclick="send({t:'vote',y:1})">✅ أيوه</button><button class="btn r" onclick="send({t:'vote',y:0})">❌ لأ</button></div></div>`;
   } else if (S.turn === S.you) {
-    act = `<div class="act mine"><div class="row cr"><b>🎤 دورك (${S.tLeft}ث)</b>${S.q.map(q => `<button class="chip q" onclick="send({t:'ask',qi:${q.i}})">${esc(q.t)}</button>`).join('')}</div>
+    act = `<div class="act mine"><div class="row cr"><b>🎤 دورك (${S.tLeft}ث)</b>${mine && mine.cand != null ? `<span class="chip">فاضل ${mine.cand} احتمال</span>` : ''}${S.q.map(q => `<button class="chip q" onclick="send({t:'ask',qi:${q.i}})">${esc(q.t)}</button>`).join('')}</div>
     <div class="row"><input id="fq" class="inp" maxlength="80" placeholder="اسأل سؤال أيوه/لأ (الناس تصوّت)"><button class="btn t sm" onclick="askf()">اسأل</button></div>
     <div class="row"><input id="gs" class="inp" maxlength="40" placeholder="عارف إنت مين؟ اكتب الاسم"><button class="btn y sm" onclick="gsend()">خمّن!</button><button class="btn p sm" onclick="send({t:'hint'})">💡 تلميح</button></div>
     ${mine && mine.hints.length ? `<div class="hints">${mine.hints.map(h => '💡 ' + esc(h)).join(' • ')}</div>` : ''}</div>`;
@@ -265,7 +333,7 @@ function itemCard(it, cls, click) { return `<div class="pc ${cls || ''}" ${click
 function spyBody() {
   const sp = S.sp, host = S.host === S.you; if (!sp) return '<p class="mut">...</p>';
   const cat = cfg.cats.find(c => c.id === S.cat) || {}, nameOf = id => esc(pl(id).name);
-  const secret = sp.spy ? `<div class="spyb"><div class="big">🕵️</div><b>إنت الجاسوس!</b><small>مش عارف الكلمة السرية. اسمع كلام الباقيين وداري على نفسك${sp.mates.length ? '<br>الجاسوس التاني: ' + sp.mates.map(nameOf).join('، ') : ''}</small></div>` : (sp.secret ? `<div class="secb">${itemCard(sp.secret, 'me')}<small>الكلمة السرية (${esc(cat.name || '')}). فيه ${sp.k === 1 ? 'جاسوس واحد' : sp.k + ' جواسيس'} وسطكم، لمّح من غير ما تقولها</small></div>` : '<p class="mut">👀 متفرج</p>');
+  const secret = sp.spy ? `<div class="spyb"><svg viewBox="0 0 64 64" aria-hidden="true" style="width:52px;height:52px;display:block;margin:0 auto"><circle cx="32" cy="34" r="17" fill="#FFC93C" stroke="#0d0a1c" stroke-width="3"/><path d="M10 22h44l-6-11H16z" fill="#2b2140" stroke="#FFC93C" stroke-width="3" stroke-linejoin="round"/><rect x="14" y="21" width="36" height="7" rx="3.5" fill="#FFC93C" stroke="#0d0a1c" stroke-width="3"/><circle cx="25" cy="36" r="4.4" fill="#0d0a1c"/><circle cx="39" cy="36" r="4.4" fill="#0d0a1c"/><path d="M24 46q8 6 16 0" fill="none" stroke="#0d0a1c" stroke-width="3" stroke-linecap="round"/></svg><b>إنت الجاسوس!</b><small>مش عارف الكلمة السرية. اسمع كلام الباقيين وداري على نفسك${sp.mates.length ? '<br>الجاسوس التاني: ' + sp.mates.map(nameOf).join('، ') : ''}${sp.len ? '<br>تلميح: الكلمة السرية ' + String(sp.len).replace(/[0-9]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'[d] }) + ' حروف' + (sp.catn ? ' • المجال: ' + esc(sp.catn) : '') : ''}</small></div>` : (sp.secret ? `<div class="secb">${itemCard(sp.secret, 'me')}<small>الكلمة السرية (${esc(cat.name || '')}). فيه ${sp.k === 1 ? 'جاسوس واحد' : sp.k + ' جواسيس'} وسطكم، لمّح من غير ما تقولها</small></div>` : '<p class="mut">👀 متفرج</p>');
   const clueOf = id => { const c = sp.clues.find(x => x.id === id); return c ? esc(c.text) : '' };
   const ph = S.phase;
   if (ph === 'sclue') {
