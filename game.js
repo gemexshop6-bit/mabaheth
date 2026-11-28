@@ -155,6 +155,7 @@ function snBody() {
   var log = (sn.log || []).slice(-4).map(function (t) { return '<div class="snl">' + esc(t) + '</div>' }).join('');
   return '<div class="snwrap"><div class="sntop"><div class="snps">' + who + '</div>' + dice + '</div>' + snBoard() + '<div class="snact">' + act + '</div><div class="snlog">' + log + '</div></div>'
 }
+function arN(n) { return String(n).replace(/[0-9]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'[d] }) }
 function snCardCanvas() {
   var sn = S.sn, me = S.you, win = sn.win === me, W = 720;
   var order0 = sn.order.length, H = 400 + order0 * 108 + 150;
@@ -176,9 +177,9 @@ function snCardCanvas() {
     rr(60, y0 + k * 108, w, h, 24, k === 0 ? '#FFC93C' : '#FFFFFF');
     x.fillStyle = '#2b2140'; x.textAlign = 'right';
     x.font = '900 40px Cairo, Tahoma, sans-serif';
-    x.fillText((k + 1) + '. ' + nm, W - 100, y0 + k * 108 + 60);
+    x.fillText(arN(k + 1) + '. ' + nm, W - 100, y0 + k * 108 + 60);
     x.textAlign = 'left'; x.font = '900 40px Cairo, Tahoma, sans-serif';
-    x.fillText(String(pos), 100, y0 + k * 108 + 60);
+    x.fillText(arN(pos), 100, y0 + k * 108 + 60);
     x.textAlign = 'center';
   });
   var fy = y0 + order.length * 108 + 60;
@@ -208,18 +209,18 @@ function stOpen() {
   var rate = s.m ? Math.round(s.w * 100 / s.m) : 0;
   var rows = [['who', 'اعرف مين معايا'], ['spy', 'الجاسوس'], ['duel', 'المبارزة'], ['snake', 'السلم والتعبان']].map(function (r) {
     var v = g[r[0]] || [0, 0];
-    return '<div class="strow"><b>' + r[1] + '</b><span>' + v[0] + ' ماتش • ' + v[1] + ' فوز</span></div>'
+    return '<div class="strow"><b>' + r[1] + '</b><span>' + arN(v[0]) + ' ماتش • ' + arN(v[1]) + ' فوز</span></div>'
   }).join('');
   var d = document.createElement('div'); d.id = 'stm'; d.className = 'modal'; d.onclick = function (e) { if (e.target === d) d.remove() };
   d.innerHTML = '<div class="box"><h2>إحصائياتي</h2><div class="stgrid">' +
-    '<div class="stk"><b>' + lv.l + '</b><small>المستوى</small></div>' +
-    '<div class="stk"><b>' + (s.m | 0) + '</b><small>ماتشات</small></div>' +
-    '<div class="stk"><b>' + (s.w | 0) + '</b><small>فوز</small></div>' +
-    '<div class="stk"><b>' + rate + '%</b><small>نسبة الفوز</small></div>' +
-    '<div class="stk"><b>' + (s.bs | 0) + '</b><small>أطول سلسلة فوز</small></div>' +
-    '<div class="stk"><b>' + (s.p | 0) + '</b><small>نقاط</small></div>' +
+    '<div class="stk"><b>' + arN(lv.l) + '</b><small>المستوى</small></div>' +
+    '<div class="stk"><b>' + arN(s.m | 0) + '</b><small>ماتشات</small></div>' +
+    '<div class="stk"><b>' + arN(s.w | 0) + '</b><small>فوز</small></div>' +
+    '<div class="stk"><b>' + arN(rate) + '%</b><small>نسبة الفوز</small></div>' +
+    '<div class="stk"><b>' + arN(s.bs | 0) + '</b><small>أطول سلسلة فوز</small></div>' +
+    '<div class="stk"><b>' + arN(s.p | 0) + '</b><small>نقاط</small></div>' +
     '</div><h3>لكل لعبة</h3>' + rows +
-    '<p class="mut">عندك ' + (p.ac.length | 0) + ' إنجاز و' + (p.c | 0) + ' عملة.</p>' +
+    '<p class="mut">إنجازاتك: ' + arN(p.ac.length | 0) + ' • عملاتك: ' + arN(p.c | 0) + '</p>' +
     '<div class="row"><button class="btn" onclick="document.getElementById(\'stm\').remove()">قفل</button></div></div>';
   document.body.appendChild(d)
 }
