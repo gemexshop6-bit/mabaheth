@@ -10,6 +10,12 @@ const MAXSEATS = 8, PTS = [100, 70, 50, 30, 20, 10], HINT = 10, TURN = 30000;
 const srv = http.createServer((q, r) => {
   const u = q.url.split('?')[0];
   if (u === '/health') { r.end('ok'); return }
+  if (u === '/ice') {
+    const f = [{ urls: 'stun:stun.l.google.com:19302' }, { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' }];
+    const tu = process.env.TURN_USER, tc = process.env.TURN_CRED;
+    const L = tu && tc ? [{ urls: 'stun:stun.relay.metered.ca:80' }, { urls: ['turn:global.relay.metered.ca:80', 'turn:global.relay.metered.ca:80?transport=tcp', 'turn:global.relay.metered.ca:443', 'turns:global.relay.metered.ca:443?transport=tcp'], username: tu, credential: tc }, { urls: 'stun:stun.l.google.com:19302' }] : f;
+    r.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); r.end(JSON.stringify({ iceServers: L, own: !!(tu && tc) })); return
+  }
   if (u === '/rooms') {
     const l = Object.values(rooms).filter(x => x.phase === 'lobby' && Object.keys(x.players).length < MAXSEATS && Object.values(x.players).some(p => p.ws && p.id === x.host)).map(x => ({ code: x.code, host: x.players[x.host].name, n: Object.keys(x.players).length }));
     r.writeHead(200, { 'content-type': 'application/json' }); r.end(JSON.stringify(l)); return;
