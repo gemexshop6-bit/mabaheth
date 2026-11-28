@@ -103,6 +103,7 @@ function lobby() {
 /* ================= السلم والتعبان (واجهة) ================= */
 var SNL = { 1: 38, 4: 14, 9: 31, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 80: 100 };
 var SNS = { 16: 6, 47: 26, 49: 11, 56: 53, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 98: 78 };
+var SNLAD='<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="11" y="4" width="4" height="32" rx="2" fill="#fff" stroke="#2b2140" stroke-width="2.6"/><rect x="25" y="4" width="4" height="32" rx="2" fill="#fff" stroke="#2b2140" stroke-width="2.6"/><path d="M13 12h14M13 20h14M13 28h14" stroke="#2b2140" stroke-width="2.6" stroke-linecap="round"/></svg>', SNDIE='<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="6" y="6" width="28" height="28" rx="8" fill="#FFD75E" stroke="#2b2140" stroke-width="2.6"/><circle cx="15" cy="15" r="2.6" fill="#2b2140"/><circle cx="25" cy="15" r="2.6" fill="#2b2140"/><circle cx="20" cy="20" r="2.6" fill="#2b2140"/><circle cx="15" cy="25" r="2.6" fill="#2b2140"/><circle cx="25" cy="25" r="2.6" fill="#2b2140"/></svg>';
 var SNC = ['#FFC93C', '#3BA7E8', '#43C36B', '#A26BFF', '#FF8A3D', '#FF4D6D', '#9AA7B5', '#B07A4A'];
 var SNBOOT = null, SNWIN = 0;
 function snMark(id) { var i = (S && S.sn ? S.sn.order : []).indexOf(id), c = SNC[i < 0 ? 0 : i % 8]; return '<span class="snm" style="background:' + c + '"></span>' }
@@ -110,7 +111,8 @@ function snLobby() {
   var host = S.host === S.you, me = pl(S.you), hum = S.players.filter(function (p) { return !p.bot && p.on }), rd = hum.filter(function (p) { return p.ready }).length;
   var d = (S.sn && S.sn.diff) || S.sdiff || 2;
   var dif = [1, 2, 3].map(function (v) { return '<button class="chip ' + (d === v ? 'sel' : '') + '" ' + (host ? 'onclick="send({t:\'sndiff\',v:' + v + '})"' : 'disabled') + '>' + ['😴 سهل', '🙂 متوسط', '😈 صعب'][v - 1] + '</button>' }).join('');
-  return '<div class="lob"><div class="card"><h3>السلم والتعبان • كود الغرفة <span class="code">' + S.code + '</span></h3>' + plist() +
+  return '<div class="lob"><div class="card"><h3>السلم والتعبان • كود الغرفة <span class="code">' + S.code + '</span></h3>'
+    + '<div class="snlobb"><div class="snlb tx"><b>الطريق لـ١٠٠</b><small>سلالم تطلعك فوق، وتعبانات ترجّعك تحت — اللي يوصل الأول يكسب</small></div><div class="sd4">' + SNLAD + SNDIE + '</div></div>' + plist() +
     '<div class="row wrap"><button class="chip" onclick="shareLink()">🔗 لينك الدعوة</button><button class="chip" onclick="frOpen(\'f\')">👥 ادعو صديق</button>' + (host ? '<button class="chip" onclick="send({t:\'addbot\'})">🤖 ضيف بوت</button><button class="chip" onclick="send({t:\'rmbot\'})">➖ شيل بوت</button>' : '') + '</div>' +
     '<p class="mut">اللعبة دي لاتنين: إنت وصاحبك (بالكود فوق) أو إنت وبوت. اللي يوصل ١٠٠ الأول يكسب.</p>' +
     (host ? '<h3>🤖 صعوبة البوت</h3><div class="row wrap">' + dif + '</div>' : '') +
@@ -185,7 +187,9 @@ function snBoot() {
   send({ t: 'ready' });
   setTimeout(function () { send({ t: 'start' }) }, 260)
 }
-var _rd3 = render; render = function () { snBoot(); snWin(); return _rd3.apply(this, arguments) };
+var SNSEQ = -1;
+function snDiceAnim() { if (!S || !S.sn) return; if (S.sn.seq === SNSEQ) return; SNSEQ = S.sn.seq; var e = document.getElementById('snd'); if (!e) return; e.classList.remove('roll'); void e.offsetWidth; e.classList.add('roll') }
+var _rd3 = render; render = function () { snBoot(); snWin(); var r = _rd3.apply(this, arguments); snDiceAnim(); return r };
 function snWin() {
   if (!S || !S.sn || !S.sn.win) { if (!S || !S.sn) SNWIN = 0; return }
   if (SNWIN === S.sn.win + ':' + S.code) return;
