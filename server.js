@@ -286,7 +286,8 @@ function state(room, p) {
   if (room.phase !== 'lobby' && room.game !== 'snake') {
     o.seats = room.seats.map(sd => {
       const it = itemOf(room, sd), me = sd.id === p.id, show = !me || sd.done || res;
-      return { id: sd.id, done: sd.done, rank: sd.rank, miss: sd.miss, hints: me ? sd.hints : undefined, card: show ? { n: it.n, e: it.e, i: it.i } : null, gain: sd.gain }
+      const candN = me && !room.players[sd.id].bot ? catItems(room, sd) : undefined;
+      return { id: sd.id, done: sd.done, rank: sd.rank, miss: sd.miss, hints: me ? sd.hints : undefined, card: show ? { n: it.n, e: it.e, i: it.i } : null, gain: sd.gain, cand: candN }
     });
     o.turn = room.seats[room.turn] && room.seats[room.turn].id;
     o.left = Math.max(0, Math.round((room.endAt - T()) / 1000)); o.tLeft = Math.max(0, Math.round((room.turnEnd - T()) / 1000));
@@ -357,6 +358,11 @@ function checkVote(room) {
     startRound(room); return true
   }
   return false;
+}
+function catItems(room, sd) {
+  const cat = CATS[room.cat], qs = qsOf(cat), asked = sd.asked || {};
+  const keys = Object.keys(asked); if (!keys.length) return cat.items.length;
+  return cat.items.filter(it => keys.every(k => yes(it, qs[k | 0]) === asked[k])).length
 }
 function ask(room, sd, qi) {
   const q = qsOf(CATS[room.cat])[qi]; if (!q) return; const it = itemOf(room, sd), a = yes(it, q), p = room.players[sd.id];
@@ -633,7 +639,7 @@ function spyDrop(room, id) {
 function spyView(room, p) {
   const sp = room.sp, me = p.id, isSpy = sp.spies.includes(me), res = room.phase === 'sres', cat = CATS[room.cat], sec = cat.items[sp.secret];
   const item = i => ({ n: cat.items[i].n, i: cat.items[i].i });
-  const o = { n: sp.n, k: sp.spies.length, order: sp.order, turn: sp.order[sp.ti] || null, clues: sp.clues, left: Math.max(0, Math.round((sp.tEnd - T()) / 1000)), spy: isSpy, mates: isSpy ? sp.spies.filter(x => x !== me) : [], secret: res || (!isSpy && sp.order.includes(me)) ? item(sp.secret) : null, voted: Object.keys(sp.votes), mine: sp.votes[me] || null, guesser: room.phase === 'sguess' ? sp.guesser : null, opts: (room.phase === 'sguess' && me === sp.guesser) ? sp.opts.map(item) : null, tdur: room.phase === 'sclue' ? room.clueT : room.phase === 'svote' ? room.voteT : 25 };
+  const o = { n: sp.n, k: sp.spies.length, order: sp.order, turn: sp.order[sp.ti] || null, clues: sp.clues, left: Math.max(0, Math.round((sp.tEnd - T()) / 1000)), spy: isSpy, mates: isSpy ? sp.spies.filter(x => x !== me) : [], len: isSpy ? String(sec.n).replace(/\s/g, '').length : 0, catn: isSpy ? cat.name : '', secret: res || (!isSpy && sp.order.includes(me)) ? item(sp.secret) : null, voted: Object.keys(sp.votes), mine: sp.votes[me] || null, guesser: room.phase === 'sguess' ? sp.guesser : null, opts: (room.phase === 'sguess' && me === sp.guesser) ? sp.opts.map(item) : null, tdur: room.phase === 'sclue' ? room.clueT : room.phase === 'svote' ? room.voteT : 25 };
   if (res) o.res = { ...sp.res, spies: sp.spies, votes: sp.votes, tally: sp.tally || {}, opts: sp.opts ? sp.opts.map(item) : null, secretIdx: sp.opts ? sp.opts.indexOf(sp.secret) : -1 };
   return o;
 }
