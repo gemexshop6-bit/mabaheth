@@ -91,7 +91,7 @@ function lobby() {
   const host = S.host === S.you, me = pl(S.you), spy = S.game === 'spy', duel = S.game === 'duel', n = S.players.length, hum = S.players.filter(p => !p.bot && p.on), rd = hum.filter(p => p.ready).length;
   const opt = (arr, cur, key, fmtf) => `<div class="row wrap">${arr.map(v => `<button class="chip ${cur === v ? 'sel' : ''}" ${host ? `onclick="send({t:'set',${key}:${v}})"` : 'disabled'}>${fmtf(v)}</button>`).join('')}</div>`;
   return `<div class="lob"><div class="card"><h3>👥 اللاعبين (${n}/8) • كود الغرفة <span class="code">${S.code}</span></h3>${plist()}
-    <div class="row wrap"><button class="chip" onclick="shareLink()">🔗 لينك الدعوة</button>${host ? `<button class="chip" onclick="send({t:'addbot'})">🤖 ضيف بوت</button><button class="chip" onclick="send({t:'rmbot'})">➖ شيل بوت</button>` : ''}</div>
+    <div class="row wrap"><button class="chip" onclick="shareLink()">🔗 لينك الدعوة</button><button class="chip" onclick="frOpen('f')">👥 ادعو صديق</button>${host ? `<button class="chip" onclick="send({t:'addbot'})">🤖 ضيف بوت</button><button class="chip" onclick="send({t:'rmbot'})">➖ شيل بوت</button>` : ''}</div>
     <h3>🏆 نتايج الجولات</h3>${rhist()}</div>
     <div class="card"><h3>🎮 اللعبة ${host ? '' : '(الهوست بيختار)'}</h3><div class="cats">${GAMES.map(g => `<button class="cat ${S.game === g[0] ? 'sel' : ''}" ${host ? `onclick="send({t:'set',game:'${g[0]}'})"` : 'disabled'}><span>${g[1]}</span>${g[2]}</button>`).join('')}</div>
     ${duel ? `<h3>🎯 مجال الأسئلة</h3><div class="cats">${cfg.dcats.map(c => `<button class="cat ${c.id === S.dcat ? 'sel' : ''}" ${host ? `onclick="send({t:'set',dcat:'${c.id}'})"` : 'disabled'}><span>${c.emoji}</span>${c.name}<small>${c.n}</small></button>`).join('')}</div><h3>⏱ وقت كل نص (النص الأول والتاني)</h3>${opt([60, 120, 180, 300], S.dT, 'dT', v => v / 60 + ' دقيقة')}` : `<h3>🎯 المجال</h3><div class="cats">${cfg.cats.map(c => `<button class="cat ${c.id === S.cat ? 'sel' : ''}" ${host ? `onclick="send({t:'set',cat:'${c.id}'})"` : 'disabled'}><span>${c.emoji}</span>${c.name}<small>${c.n}</small></button>`).join('')}</div>`}
@@ -519,7 +519,7 @@ function profState() {
   PPH = ph;
 }
 var _rd = render; render = function () { profState(); return _rd.apply(this, arguments) };
-function profChip() { var e = document.querySelector('.home .panel'); if (!e || document.getElementById('pchip')) return; var p = profLoad(), L = lvOf(p.xp), d = document.createElement('div'); d.id = 'pchip'; d.className = 'pchip'; d.onclick = profOpen; d.innerHTML = '<span class="pav">' + avOf(p) + '</span><div class="pin"><b>' + esc(myname || '') + bdH(p.bd) + ' لفل ' + L.l + '</b><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div></div><span class="pco">🪙 ' + p.c + '</span><button class="lbb" onclick="event.stopPropagation();lbOpen()">🏆</button>'; e.insertBefore(d, e.firstChild) }
+function profChip() { var e = document.querySelector('.home .panel'); if (!e || document.getElementById('pchip')) return; var p = profLoad(), L = lvOf(p.xp), d = document.createElement('div'); d.id = 'pchip'; d.className = 'pchip'; d.onclick = profOpen; d.innerHTML = '<span class="pav">' + avOf(p) + '</span><div class="pin"><b>' + esc(myname || '') + bdH(p.bd) + ' لفل ' + L.l + '</b><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div></div><span class="pco">🪙 ' + p.c + '</span><button class="lbb fbb" onclick="event.stopPropagation();frOpen(\'f\')">👥<b class="fbd" id="fbd" style="display:none"></b></button><button class="lbb" onclick="event.stopPropagation();lbOpen()">🏆</button>'; e.insertBefore(d, e.firstChild) }
 var _hm = home; home = function () { _hm.apply(this, arguments); profChip() };
 function profClose() { var m = document.getElementById('profm'); if (m) m.remove(); if (!S) home() }
 function profOpen() {
@@ -640,3 +640,60 @@ function instGo() { if (!dip) return; dip.prompt(); dip.userChoice.finally(() =>
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); dip = e; setTimeout(instBar, 800) });
 addEventListener('appinstalled', () => instX());
 setInterval(() => { const e = document.getElementById('inst'); if (e && S) e.remove(); else if (!e && !S && (dip || isIOS)) instBar() }, 1500);
+
+/* ===== friends ===== */
+function nmH(r) { return '<span class="' + (r.bd && r.bd.indexOf('f') >= 0 ? 'fnm' : '') + '">' + esc(r.n) + '</span>' + bdH(r.bd) }
+var FR = { fr: [], rq: [], inv: [] }, FM = { tab: 'f', q: '', res: [], sent: {} }, FQT = 0, FSEEN = {}, FRQN = -1;
+function fapi(a, b) { var p = profLoad(); if (!p.id) return Promise.resolve({ e: 'noid' }); return apiP('/api/f/' + a, Object.assign({ id: p.id }, b || {})) }
+function fbUpd() { var e = document.getElementById('fbd'); if (e) { e.textContent = FR.rq.length; e.style.display = FR.rq.length ? '' : 'none' } }
+function fpoll() {
+  if (document.hidden) return; var p = profLoad(); if (!p.id) return;
+  fapi('poll', { rm: (S && S.code) || '' }).then(function (j) {
+    if (!j || !j.fr) return; FR.fr = j.fr; FR.rq = j.rq;
+    if (FRQN >= 0 && j.rq.length > FRQN) toast('طلب صداقة جديد من ' + j.rq[j.rq.length - 1].n);
+    FRQN = j.rq.length; fbUpd(); if (document.getElementById('frm') && FM.tab !== 's') frRender();
+    (j.inv || []).forEach(function (v) { var k = v.from.h + v.rm; if (FSEEN[k] && Date.now() - FSEEN[k] < 30000) return; FSEEN[k] = Date.now(); invShow(v) })
+  }).catch(function () { })
+}
+function invShow(v) {
+  var w = document.getElementById('invw'); if (!w) { w = document.createElement('div'); w.id = 'invw'; document.body.appendChild(w) }
+  var d = document.createElement('div'); d.className = 'invc'; d.innerHTML = '<span class="pav">' + avOf(v.from) + '</span><div class="pin"><b>' + nmH(v.from) + '</b><small>دعاك تلعب معاه في غرفة ' + v.rm + '</small></div><button class="btn y" data-a="go">ادخل الغرفة</button><button class="invx" data-a="x" aria-label="إغلاق">✖</button>';
+  d.onclick = function (e) { var a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'go') joinCode(v.rm); d.remove() };
+  w.appendChild(d); try { navigator.vibrate && navigator.vibrate(80) } catch (e) { } setTimeout(function () { d.remove() }, 40000)
+}
+function joinCode(c) {
+  var f = function () { var n = myname || nm(); try { localStorage.removeItem('mbSess') } catch (e) { } var g = function () { send({ t: 'join', code: c, name: n, ...profInfo() }) }; if (ws && ws.readyState === 1) g(); else conn(g) };
+  if (S) { if (S.code === c) return toast('إنت في نفس الغرفة'); try { send({ t: 'leave' }) } catch (e) { } try { vstop() } catch (e) { } S = null; home() }
+  f(); var m = document.getElementById('frm'); if (m) m.remove()
+}
+function frClose() { var m = document.getElementById('frm'); if (m) m.remove() }
+function frOpen(t) {
+  if (!profLoad().id) { ensureId(myname); return toast('استنى ثانية لحد ما حسابك يتجهز وجرّب تاني') }
+  FM.tab = t || 'f'; var m = document.getElementById('frm'); if (!m) { m = document.createElement('div'); m.id = 'frm'; m.className = 'modal'; m.onclick = function (e) { if (e.target === m) frClose() }; document.body.appendChild(m) }
+  frRender(); fpoll()
+}
+function frRow(r, acts) { var f = r.bd && r.bd.indexOf('f') >= 0; return '<div class="frr"><span class="pav">' + avOf(r) + '</span><div class="pin"><b>' + nmH(r) + '</b><small>لفل ' + r.lv + (r.st === 'rm' ? ' • <i class="stg">في غرفة</i>' : r.st === 'on' ? ' • <i class="stg">متصل</i>' : r.st === 'off' ? ' • مش متصل' : '') + '</small></div><div class="fac">' + acts + '</div></div>' }
+function frRender() {
+  var m = document.getElementById('frm'); if (!m) return; var t = FM.tab, inr = !!(S && S.code), h = '';
+  h += '<div class="row"><button class="btn ' + (t === 'f' ? 'y' : '') + '" onclick="FM.tab=\'f\';frRender()">أصدقائي (' + FR.fr.length + ')</button><button class="btn ' + (t === 'r' ? 'y' : '') + '" onclick="FM.tab=\'r\';frRender()">الطلبات' + (FR.rq.length ? ' (' + FR.rq.length + ')' : '') + '</button><button class="btn ' + (t === 's' ? 'y' : '') + '" onclick="FM.tab=\'s\';frRender()">دوّر على لاعب</button></div>';
+  if (t === 'f') h += '<div class="frl">' + (FR.fr.length ? FR.fr.map(function (r) { var a = ''; if (r.st === 'rm') a += '<button class="btn y sm" onclick="joinCode(\'' + r.rm + '\')">ادخل عليه</button>'; if (inr && r.st !== 'off') a += '<button class="btn t sm" onclick="frInv(\'' + r.h + '\',this)">ادعو للغرفة</button>'; a += '<button class="xsm" title="شيل" onclick="frDel(\'' + r.h + '\')">✖</button>'; return frRow(r, a) }).join('') : '<p class="mut">لسه معندكش أصدقاء. دوّر على صاحبك بالاسم وضيفه.</p>') + '</div>';
+  if (t === 'r') h += '<div class="frl">' + (FR.rq.length ? FR.rq.map(function (r) { return frRow(r, '<button class="btn t sm" onclick="frAns(\'' + r.h + '\',1)">قبول</button><button class="btn sm" onclick="frAns(\'' + r.h + '\',0)">رفض</button>') }).join('') : '<p class="mut">مفيش طلبات جديدة.</p>') + '</div>';
+  if (t === 's') h += '<input id="frq" class="inp" placeholder="اكتب اسم اللاعب (أو الـID)" value="' + esc(FM.q) + '" oninput="frSearch(this.value)" autocomplete="off"><div class="frl" id="frres">' + frRes() + '</div>';
+  m.innerHTML = '<div class="box prof"><h2>👥 الأصدقاء</h2>' + h + '<div class="row"><button class="btn" onclick="frClose()">تمام</button></div></div>';
+  if (t === 's') { var q = document.getElementById('frq'); if (q && !FM._nf) { q.focus() } }
+}
+function frRes() {
+  if (FM.q.trim().length < 2) return '<p class="mut">اكتب حرفين على الأقل.</p>'; if (FM.busy) return '<p class="mut">بدوّر...</p>';
+  if (!FM.res.length) return '<p class="mut">مفيش نتايج.</p>';
+  var fh = {}; FR.fr.forEach(function (x) { fh[x.h] = 1 });
+  return FM.res.map(function (r) { var a = fh[r.h] ? '<small class="mut">صديقك</small>' : FM.sent[r.h] ? '<small class="mut">اتبعت الطلب</small>' : '<button class="btn y sm" onclick="frAdd(\'' + r.h + '\')">إضافة صديق</button>'; return frRow(r, a) }).join('')
+}
+function frSearch(v) {
+  FM.q = v; clearTimeout(FQT); var q = v.trim(); if (q.length < 2) { FM.res = []; FM.busy = 0; var e = document.getElementById('frres'); if (e) e.innerHTML = frRes(); return }
+  FQT = setTimeout(function () { FM.busy = 1; var e = document.getElementById('frres'); if (e) e.innerHTML = frRes(); fapi('search', { q: q }).then(function (j) { if (FM.q.trim() !== q) return; FM.busy = 0; FM.res = j.rows || []; var e2 = document.getElementById('frres'); if (e2) e2.innerHTML = frRes() }).catch(function () { FM.busy = 0 }) }, 450)
+}
+function frAdd(h) { fapi('add', { h: h }).then(function (j) { if (j.st === 'friends') { toast('بقيتوا أصحاب'); fpoll() } else if (j.st === 'sent') { FM.sent[h] = 1; toast('اتبعت طلب الصداقة') } else toast('معرفتش أبعت الطلب'); var e = document.getElementById('frres'); if (e) e.innerHTML = frRes() }) }
+function frAns(h, ok) { fapi('ans', { h: h, ok: ok ? 1 : 0 }).then(function () { toast(ok ? 'بقيتوا أصحاب' : 'اترفض الطلب'); fpoll() }) }
+function frDel(h) { if (!confirm('تشيله من الأصدقاء؟')) return; fapi('del', { h: h }).then(function () { FR.fr = FR.fr.filter(function (x) { return x.h !== h }); frRender() }) }
+function frInv(h, b) { fapi('inv', { h: h, rm: S && S.code }).then(function (j) { if (j.st === 'sent') { toast('اتبعتله الدعوة'); if (b) { b.textContent = 'اتبعتت'; b.disabled = true } } else if (j.st === 'off') toast('صاحبك مش متصل دلوقتي'); else toast('معرفتش أبعت الدعوة') }) }
+setTimeout(fpoll, 2500); setInterval(fpoll, 10000);
