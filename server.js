@@ -48,7 +48,7 @@ function state(room, p) {
   const o = {
     t: 'state', code: room.code, phase: room.phase, you: p.id, host: room.host, cat: room.cat, dur: room.dur, round: room.round,
     game: room.game, rh: room.rh.slice(-20), spies: room.spies, clueT: room.clueT, voteT: room.voteT,
-    players: Object.values(room.players).map(x => ({ id: x.id, name: x.name, bot: !!x.bot, on: !!x.ws || !!x.bot, score: x.score, ready: !!x.ready, mic: x.mic ? (x.mm ? 2 : 1) : 0 })),
+    players: Object.values(room.players).map(x => ({ id: x.id, name: x.name, bot: !!x.bot, on: !!x.ws || !!x.bot, score: x.score, av: x.av|0, lv: x.lv|0, ready: !!x.ready, mic: x.mic ? (x.mm ? 2 : 1) : 0 })),
     ln: room.logn || 0, chat: room.chat.slice(-60), log: room.log.slice(-40), q: cat.q.map((x, i) => ({ i, t: x.t }))
   };
   if (room.game === 'spy' && room.sp && room.phase[0] === 's') o.sp = spyView(room, p);
@@ -483,6 +483,7 @@ function leaveRoom(room, p, ws) {
   bcast(room);
 }
 function msg(ws, m) {
+  if (m.t === 'prof') { const r = ws.room, q = r && r.players[ws.pid]; if (q) { q.av = Math.max(0, Math.min(16, m.av | 0)); q.lv = Math.max(1, Math.min(999, m.lv | 0)); bcast(r) } return }
   if (m.t === 'create' || m.t === 'join') {
     let room, p; const name = clean(m.name, 20) || 'لاعب';
     if (m.t === 'create') { room = newRoom(); rooms[room.code] = room }
@@ -495,6 +496,7 @@ function msg(ws, m) {
       }
     }
     if (!p) { const id = rid(); p = room.players[id] = { id, name, score: 0 }; if (!room.host) room.host = id; sys(room, name + ' دخل الغرفة') }
+    p.av = Math.max(0, Math.min(16, m.av | 0)); p.lv = Math.max(1, Math.min(999, m.lv | 0));
     p.ws = ws; ws.room = room; ws.pid = p.id;
     send(ws, { t: 'hello', cats: DATA.map(c => ({ id: c.id, name: c.name, emoji: c.emoji, n: c.items.length })), dcats: DB.cats, token: p.id, code: room.code }); bcast(room); return;
   }
