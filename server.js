@@ -1,4 +1,4 @@
-const http = require('http'), fs = require('fs'), path = require('path');
+const crypto = require('crypto'), http = require('http'), fs = require('fs'), path = require('path');
 const { WebSocketServer } = require('ws');
 const PORT = process.env.PORT || 3000, SP = +process.env.WSPEED || 1;
 const read = f => fs.readFileSync(path.join(__dirname, f));
@@ -46,26 +46,92 @@ async function photo(q, r, u) {
   try { const [v] = await rc([['GET', 'ph:' + m[1]]]); if (!v) { r.writeHead(404, { 'cache-control': 'no-store' }); return r.end() } const buf = Buffer.from(v, 'base64'); if (PHC.size > 300) PHC.clear(); PHC.set(m[1], buf); send(buf) } catch (e) { r.writeHead(500); r.end() }
 }
 function jr(r, c, o) { r.writeHead(c, { 'content-type': 'application/json', 'cache-control': 'no-store' }); r.end(JSON.stringify(o)) }
+
+const nk = s => String(s || '').toLowerCase().replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').trim();
+const nwords = n => [...new Set(nk(n).split(/\s+/).filter(Boolean).map(w => w.slice(0, 20)))].slice(0, 3);
+const FKY = crypto.createHash('sha256').update('lamma-h' + (UTK || '')).digest().subarray(0, 16);
+const henc = id => { const c = crypto.createCipheriv('aes-128-ecb', FKY, null); c.setAutoPadding(false); return Buffer.concat([c.update(Buffer.from(id.padEnd(16, ' '))), c.final()]).toString('hex') };
+const hdec = h => { if (!/^[0-9a-f]{32}$/.test(String(h))) return ''; try { const c = crypto.createDecipheriv('aes-128-ecb', FKY, null); c.setAutoPadding(false); const id = Buffer.concat([c.update(Buffer.from(h, 'hex')), c.final()]).toString().trim(); return /^\d{6}$/.test(id) ? id : '' } catch (e) { return '' } };
+const FC = new Map(), PRS = new Map(), INV = new Map(), SC = new Map();
+setInterval(() => { const n = Date.now(); for (const [k, v] of PRS) if (n - v.t > 120000) PRS.delete(k); for (const [k, v] of INV) { const a = v.filter(x => n - x.ts < 120000); if (a.length) INV.set(k, a); else INV.delete(k) } }, 300000).unref();
+async function infosOf(ids) {
+  const out = {}, miss = [], now = Date.now();
+  for (const id of ids) { const c = INF.get(id); if (c && now - c.t < 300000) out[id] = c.v; else miss.push(id) }
+  if (miss.length) { const [vs] = await rc([['HMGET', 'info', ...miss]]); miss.forEach((id, i) => { let o = null; try { o = vs[i] ? JSON.parse(vs[i]) : null } catch (e) { } if (INF.size > 800) INF.clear(); INF.set(id, { t: now, v: o }); out[id] = o }) }
+  return out
+}
+async function getF(id) {
+  const c = FC.get(id); if (c && Date.now() - c.t < 60000) return c;
+  const [fr, rq] = await rc([['SMEMBERS', 'fr:' + id], ['SMEMBERS', 'rq:' + id]]);
+  const v = { t: Date.now(), fr: new Set(fr || []), rq: new Set(rq || []) }; if (FC.size > 1000) FC.clear(); FC.set(id, v); return v
+}
+const pub = (id, o) => ({ h: henc(id), n: o.n || 'لاعب', av: o.av | 0, lv: o.lv || 1, pk: o.ap ? o.pk || '' : '', bd: o.bd || '' });
+const stOf = id => { const p = PRS.get(id); if (!p || Date.now() - p.t > 30000) return ['off', '']; return p.rm && rooms[p.rm] ? ['rm', p.rm] : ['on', ''] };
+async function fapi(u, b, r) {
+  const act = u.slice(7), id = String(b.id || '');
+  if (act === 'search') {
+    const q = nk(String(b.q || '').slice(0, 24)); if (q.length < 2) return jr(r, 200, { rows: [] });
+    const c = SC.get(q); if (c && Date.now() - c.t < 60000) return jr(r, 200, { rows: c.rows.filter(x => x.i !== id).map(x => x.o) });
+    let ids = [];
+    if (/^\d{6}$/.test(q)) ids = [q]; else { const [ms] = await rc([['ZRANGEBYLEX', 'nm', '[' + q, '[' + q + '\u{10FFFF}', 'LIMIT', '0', '24']]); ids = [...new Set((ms || []).map(m => m.split('|')[1]))].slice(0, 12) }
+    const inf = await infosOf(ids), rows = ids.filter(i => inf[i]).map(i => ({ i, o: pub(i, inf[i]) }));
+    if (SC.size > 300) SC.clear(); SC.set(q, { t: Date.now(), rows }); return jr(r, 200, { rows: rows.filter(x => x.i !== id).map(x => x.o) })
+  }
+  if (!/^\d{6}$/.test(id)) return jr(r, 400, { e: 'bad' });
+  const me = (await infosOf([id]))[id]; if (!me) return jr(r, 404, { e: 'none' });
+  if (act === 'poll') {
+    const rm = String(b.rm || ''); PRS.set(id, { t: Date.now(), rm: rooms[rm] ? rm : '' });
+    const F = await getF(id), fl = [...F.fr].slice(0, 100), rl = [...F.rq].slice(0, 30), inf = await infosOf([...fl, ...rl]);
+    const fr = fl.filter(i => inf[i]).map(i => { const [st, code] = stOf(i); return { ...pub(i, inf[i]), st, rm: code } }).sort((a, b) => (b.st === 'rm') - (a.st === 'rm') || (b.st === 'on') - (a.st === 'on'));
+    const rq = rl.filter(i => inf[i]).map(i => pub(i, inf[i])), now = Date.now(), iv = (INV.get(id) || []).filter(x => now - x.ts < 120000 && rooms[x.rm]); INV.delete(id);
+    const ii = await infosOf([...new Set(iv.map(x => x.from))]);
+    return jr(r, 200, { fr, rq, inv: iv.filter(x => ii[x.from]).map(x => ({ from: pub(x.from, ii[x.from]), rm: x.rm, ts: x.ts })) })
+  }
+  const t = hdec(b.h); if (!t || t === id) return jr(r, 400, { e: 'bad' });
+  const ti = (await infosOf([t]))[t]; if (!ti) return jr(r, 404, { e: 'none' });
+  const F = await getF(id);
+  if (act === 'add') {
+    if (F.fr.has(t)) return jr(r, 200, { st: 'friends' });
+    if (F.rq.has(t)) { await rc([['SREM', 'rq:' + id, t], ['SADD', 'fr:' + id, t], ['SADD', 'fr:' + t, id]]); FC.delete(id); FC.delete(t); return jr(r, 200, { st: 'friends' }) }
+    if (F.fr.size >= 100) return jr(r, 400, { e: 'full' });
+    await rc([['SADD', 'rq:' + t, id]]); FC.delete(t); return jr(r, 200, { st: 'sent' })
+  }
+  if (act === 'ans') {
+    if (!F.rq.has(t)) return jr(r, 200, { st: 'none' });
+    if (b.ok) await rc([['SREM', 'rq:' + id, t], ['SADD', 'fr:' + id, t], ['SADD', 'fr:' + t, id]]); else await rc([['SREM', 'rq:' + id, t]]);
+    FC.delete(id); FC.delete(t); return jr(r, 200, { st: b.ok ? 'friends' : 'no' })
+  }
+  if (act === 'del') { await rc([['SREM', 'fr:' + id, t], ['SREM', 'fr:' + t, id]]); FC.delete(id); FC.delete(t); return jr(r, 200, { ok: 1 }) }
+  if (act === 'inv') {
+    const rm = String(b.rm || ''); if (!F.fr.has(t)) return jr(r, 403, { e: 'not friends' }); if (!rooms[rm]) return jr(r, 400, { e: 'noroom' });
+    const p = PRS.get(t); if (!p || Date.now() - p.t > 30000) return jr(r, 200, { st: 'off' });
+    const a = (INV.get(t) || []).filter(x => !(x.from === id && x.rm === rm)); a.push({ from: id, rm, ts: Date.now() }); INV.set(t, a.slice(-5)); return jr(r, 200, { st: 'sent' })
+  }
+  jr(r, 404, { e: 'no' })
+}
 function api(q, r, u) {
   if (!UR || !UTK) return jr(r, 503, { e: 'db off' });
-  backupDay();
+  const isF = u.startsWith('/api/f/'); if (!isF) backupDay();
   const ip = (q.headers['x-forwarded-for'] || q.socket.remoteAddress || '').split(',')[0].trim(), now = Date.now(), b = RL[ip] = RL[ip] && now - RL[ip].t < 60000 ? RL[ip] : { t: now, n: 0 };
-  if (++b.n > 40) return jr(r, 429, { e: 'slow down' });
+  if (isF) { const fb = RL['f' + ip] = RL['f' + ip] && now - RL['f' + ip].t < 60000 ? RL['f' + ip] : { t: now, n: 0 }; if (++fb.n > 150) return jr(r, 429, { e: 'slow down' }) } else if (++b.n > 40) return jr(r, 429, { e: 'slow down' });
   const run = async body => {
     const nm = s => String(s || '').replace(/[<>&"]/g, '').slice(0, 20) || 'لاعب';
+    if (isF) return fapi(u, body, r);
     if (u === '/api/p/new') {
       const p = okProf(body.prof); if (!p) return jr(r, 400, { e: 'bad' }); delete p.bd; delete p.pk; delete p.ap;
-      for (let i = 0; i < 6; i++) { const id = String(100000 + Math.floor(Math.random() * 900000)); const [s] = await rc([['SET', 'p:' + id, JSON.stringify(p), 'NX']]); if (s === 'OK') { await rc([['HSET', 'info', id, JSON.stringify({ n: nm(body.name), av: Math.max(0, Math.min(19, p.av | 0)), lv: 1 })]]); return jr(r, 200, { id }) } }
+      for (let i = 0; i < 6; i++) { const id = String(100000 + Math.floor(Math.random() * 900000)); const [s] = await rc([['SET', 'p:' + id, JSON.stringify(p), 'NX']]); if (s === 'OK') { const n0 = nm(body.name), w0 = nwords(n0); await rc([['HSET', 'info', id, JSON.stringify({ n: n0, av: Math.max(0, Math.min(19, p.av | 0)), lv: 1, w: w0 })], ...w0.map(w => ['ZADD', 'nm', '0', w + '|' + id])]); return jr(r, 200, { id }) } }
       return jr(r, 500, { e: 'full' })
     }
     if (u === '/api/p/save') {
       const id = String(body.id || ''), p = okProf(body.prof); if (!/^\d{6}$/.test(id) || !p) return jr(r, 400, { e: 'bad' });
       const w = WKN(), xp = Math.max(0, +p.xp | 0), wp = p.wk && p.wk.w === w ? Math.max(0, +p.wk.p | 0) : 0, lv = Math.max(1, Math.min(999, +body.lv | 0));
-      const pk = typeof p.pk === 'string' && /^[a-z0-9]{8}$/.test(p.pk) ? p.pk : '', cs = [['HGET', 'bd', id]]; if (pk) cs.push(['HGET', 'pko', pk]);
-      const rr = await rc(cs), bd = rr[0] || '', own = !!pk && rr[1] === id;
+      const pk = typeof p.pk === 'string' && /^[a-z0-9]{8}$/.test(p.pk) ? p.pk : '', cs = [['HGET', 'bd', id], ['HGET', 'info', id]]; if (pk) cs.push(['HGET', 'pko', pk]);
+      const rr = await rc(cs), bd = rr[0] || '', own = !!pk && rr[2] === id; let oi = {}; try { oi = JSON.parse(rr[1] || '{}') } catch (e) { }
       if (own) p.ap = p.ap ? 1 : 0; else { delete p.pk; p.ap = 0 } if (bd) p.bd = bd; else delete p.bd; p.av = Math.max(0, Math.min(19, p.av | 0));
       const [s] = await rc([['SET', 'p:' + id, JSON.stringify(p), 'XX']]); if (s !== 'OK') return jr(r, 404, { e: 'none' });
-      const c = [['HSET', 'info', id, JSON.stringify({ n: nm(body.name), av: p.av, lv, pk: own ? p.pk : '', ap: own && p.ap ? 1 : 0, bd })], ['ZADD', 'lb:all', String(xp), id]];
+      const n1 = nm(body.name), w1 = nwords(n1), ow = Array.isArray(oi.w) ? oi.w : [];
+      const c = [['HSET', 'info', id, JSON.stringify({ n: n1, av: p.av, lv, pk: own ? p.pk : '', ap: own && p.ap ? 1 : 0, bd, w: w1 })], ['ZADD', 'lb:all', String(xp), id]];
+      if (ow.join() !== w1.join()) { ow.forEach(w => c.push(['ZREM', 'nm', w + '|' + id])); w1.forEach(w => c.push(['ZADD', 'nm', '0', w + '|' + id])) }
       if (wp > 0) { c.push(['ZADD', 'lb:w:' + w, String(wp), id], ['EXPIRE', 'lb:w:' + w, '1300000']) }
       await rc(c); INF.delete(id); return jr(r, 200, { ok: 1 })
     }
