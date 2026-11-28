@@ -252,10 +252,12 @@ function state(room, p) {
     players: Object.values(room.players).map(x => ({ id: x.id, name: x.name, bot: !!x.bot, on: !!x.ws || !!x.bot, score: x.score, av: x.av|0, lv: x.lv|0, pk: x.ap && x.pk ? x.pk : '', bd: x.bd || '', ready: !!x.ready, mic: x.mic ? (x.mm ? 2 : 1) : 0 })),
     ln: room.logn || 0, chat: room.chat.slice(-60), log: room.log.slice(-40), q: cat.q.map((x, i) => ({ i, t: x.t }))
   };
+  o.sdiff = Math.max(1, Math.min(3, +room.sdiff || 2));
+  if (room.game === 'snake' && room.sn) o.sn = { pos: room.sn.pos, order: room.sn.order, turn: room.sn.order[room.sn.turn] || null, dice: room.sn.dice, seq: room.sn.seq, win: room.sn.win, diff: room.sn.diff, log: room.sn.log.slice(-6) };
   if (room.game === 'spy' && room.sp && room.phase[0] === 's') o.sp = spyView(room, p);
   if (room.game === 'duel' && room.du && room.phase[0] === 'd') { o.du = duelView(room, p); o.dcat = room.dcat }
   o.dcat = room.dcat; o.dT = room.dT;
-  if (room.phase !== 'lobby') {
+  if (room.phase !== 'lobby' && room.game !== 'snake') {
     o.seats = room.seats.map(sd => {
       const it = itemOf(room, sd), me = sd.id === p.id, show = !me || sd.done || res;
       return { id: sd.id, done: sd.done, rank: sd.rank, miss: sd.miss, hints: me ? sd.hints : undefined, card: show ? { n: it.n, e: it.e, i: it.i } : null, gain: sd.gain }
@@ -380,6 +382,51 @@ setInterval(() => {
     } catch (e) { console.error(e) }
   }
 }, 400);
+
+/* ================= السلم والتعبان ================= */
+const SNL = { 1: 38, 4: 14, 9: 31, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 80: 100 };
+const SNS = { 16: 6, 47: 26, 49: 11, 56: 53, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 98: 78 };
+function snLog(room, t) { if (!room.sn) return; room.sn.log.push(t); if (room.sn.log.length > 10) room.sn.log.shift() }
+function snStart(room) {
+  room.phase = 'snake'; room.seats = []; room.pend = null; room.bs = {};
+  const ps = Object.values(room.players);
+  room.sn = { pos: {}, order: ps.map(p => p.id), turn: 0, dice: 0, seq: 0, win: null, log: [], diff: Math.max(1, Math.min(3, +room.sdiff || 2)) };
+  ps.forEach(p => { room.sn.pos[p.id] = 0; p.ready = false; p.score = 0 });
+  snLog(room, '🐍 السلم والتعبان — يلا نبدأ!');
+  bcast(room); snBot(room);
+}
+function snDice(room, pid) {
+  const p = room.players[pid], d = (room.sn && room.sn.diff) || 2;
+  if (!p || !p.bot) return 1 + Math.floor(Math.random() * 6);
+  const r = Math.random();
+  if (d === 1) return 1 + Math.floor(Math.random() * 4);
+  if (d === 3) return r < 0.2 ? 6 : 2 + Math.floor(Math.random() * 5);
+  return 1 + Math.floor(Math.random() * 6);
+}
+function snNext(room) {
+  const sn = room.sn, n = sn.order.length;
+  for (let i = 1; i <= n; i++) { const t = (sn.turn + i) % n; if (room.players[sn.order[t]]) { sn.turn = t; return } }
+}
+function snRoll(room, pid) {
+  const sn = room.sn; if (!sn || sn.win || room.phase !== 'snake') return;
+  if (sn.order[sn.turn] !== pid) return;
+  const p = room.players[pid]; if (!p) { snNext(room); bcast(room); snBot(room); return }
+  const d = snDice(room, pid); let to = (sn.pos[pid] | 0) + d, msg = '';
+  if (to > 100) { to = 200 - to; msg = 'عدّى الـ١٠٠ فرجع لـ' + to }
+  let land = to;
+  if (SNL[to]) { land = SNL[to]; msg = '🪜 سلم! من ' + to + ' لـ' + land }
+  else if (SNS[to]) { land = SNS[to]; msg = '🐍 تعبان! من ' + to + ' لـ' + land }
+  sn.pos[pid] = land; sn.dice = d; sn.seq++; p.score = land;
+  snLog(room, '🎲 ' + p.name + ': ' + d + (msg ? ' — ' + msg : ' → ' + land));
+  if (land >= 100) { sn.win = pid; snLog(room, '🏆 ' + p.name + ' وصل ١٠٠ وكسب!'); bcast(room); return }
+  snNext(room); bcast(room); snBot(room);
+}
+function snBot(room) {
+  const sn = room.sn; if (!sn || sn.win || room.phase !== 'snake') return;
+  const pid = sn.order[sn.turn], p = room.players[pid];
+  if (!p) { snNext(room); bcast(room); return setTimeout(() => { if (room.sn === sn) snBot(room) }, 500) }
+  if (p.bot) setTimeout(() => { if (room.sn === sn && room.phase === 'snake') snRoll(room, pid) }, 1300);
+}
 // ================= الجاسوس =================
 const shuf = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] } return a };
 function cleanBots(room, min) {
@@ -677,6 +724,7 @@ function leaveRoom(room, p, ws) {
   if (!hum.length) { delete rooms[room.code]; return }
   if (room.host === p.id) { const n = hum.find(x => x.ws) || hum[0]; room.host = n.id }
   sys(room, p.name + ' خرج من الغرفة');
+  if (room.game === 'snake' && room.sn) { const i = room.sn.order.indexOf(p.id); if (i >= 0) { room.sn.order.splice(i, 1); delete room.sn.pos[p.id]; if (i < room.sn.turn) room.sn.turn--; if (room.sn.turn >= room.sn.order.length) room.sn.turn = 0; if (!room.sn.order.length) { room.phase = 'lobby'; room.sn = null } else if (room.sn.order.length === 1 && !room.sn.win && room.phase === 'snake') { const w = room.sn.order[0], wp = room.players[w]; room.sn.win = w; snLog(room, '🚪 الخصم خرج — ' + (wp ? wp.name : '') + ' كسب!') } } bcast(room); return }
   if (room.game === 'spy' && room.sp) { spyDrop(room, p.id); bcast(room); return }
   if (room.game === 'duel' && room.du && room.phase[0] === 'd') { duelDrop(room, p.id); bcast(room); return }
   if (room.phase !== 'lobby' && room.game === 'who') { const i = room.seats.findIndex(s => s.id === p.id); if (i >= 0) { const wasTurn = i === room.turn; room.seats.splice(i, 1); if (i < room.turn) room.turn--; if (wasTurn) room.turn--; if (room.phase === 'play') { if (live(room).length <= 1) finish(room); else if (wasTurn) nextTurn(room) } } }
@@ -713,13 +761,20 @@ function msg(ws, m) {
   if (host && m.t === 'kick') { const q = room.players[m.id]; if (q && q.id !== p.id) { if (q.ws) send(q.ws, { t: 'kicked' }); const w = q.ws || {}; leaveRoom(room, q, w) } return }
   if (host && m.t === 'host') { const q = room.players[m.id]; if (q && !q.bot && q.ws) { room.host = q.id; sys(room, q.name + ' بقى الهوست 👑'); bcast(room) } return }
   if (host && m.t === 'tolobby' && room.phase !== 'lobby') { room.phase = 'lobby'; room.seats = []; room.sp = null; room.du = null; room.pend = null; for (const x of Object.values(room.players)) x.ready = false; bcast(room); return }
-  const startGame = () => { room.game === 'spy' ? startSpy(room) : room.game === 'duel' ? startDuel(room) : startRound(room) };
+  const startGame = () => { room.game === 'spy' ? startSpy(room) : room.game === 'duel' ? startDuel(room) : room.game === 'snake' ? snStart(room) : startRound(room) };
+  if (room.game === 'snake' && room.sn && room.phase === 'snake') {
+    if (m.t === 'roll') { snRoll(room, p.id); return }
+    if (m.t === 'snre') { if (host) snStart(room); return }
+    if (m.t === 'sndiff' && host) { room.sn.diff = Math.max(1, Math.min(3, +m.v | 0)); bcast(room); return }
+    return
+  }
   const chkReady = () => { const hum = Object.values(room.players).filter(x => !x.bot && x.ws); if (hum.length && hum.every(x => x.ready)) startGame(); else bcast(room) };
   if (room.phase === 'lobby') {
     if (m.t === 'ready') { p.ready = !p.ready; chkReady(); return }
     if (!host) return;
     if (m.t === 'set') {
-      if (CATS[m.cat]) room.cat = m.cat; if (m.game === 'who' || m.game === 'spy' || m.game === 'duel') room.game = m.game;
+      if (CATS[m.cat]) room.cat = m.cat; if (m.game === 'who' || m.game === 'spy' || m.game === 'duel' || m.game === 'snake') room.game = m.game;
+      if (m.sdiff) room.sdiff = Math.max(1, Math.min(3, +m.sdiff | 0));
       if (m.dcat && DB.cats.some(c => c.id === m.dcat)) room.dcat = m.dcat; if (m.dT) room.dT = Math.max(20, Math.min(600, +m.dT | 0));
       if (m.dur) room.dur = Math.max(20, Math.min(1800, +m.dur | 0)); if (m.spies) room.spies = m.spies == 2 ? 2 : 1;
       if (m.clueT) room.clueT = Math.max(10, Math.min(90, +m.clueT | 0)); if (m.voteT) room.voteT = Math.max(20, Math.min(240, +m.voteT | 0));
