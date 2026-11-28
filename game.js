@@ -11,7 +11,7 @@ let AC; function tone(f, d, ty, v, at) { try { AC = AC || new (window.AudioConte
 const SFX = { turn: () => { tone(660, .12); tone(880, .15, 'sine', .15, .1) }, win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .2, 'triangle', .18, i * .1)), bad: () => { tone(200, .25, 'sawtooth', .12); tone(150, .3, 'sawtooth', .12, .15) }, yes: () => tone(880, .12, 'square', .08), no: () => tone(240, .15, 'square', .08), pop: () => tone(1200, .06, 'sine', .1), tick: () => tone(1000, .05, 'square', .06) };
 function conn(first) {
   ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host);
-  ws.onopen = () => { if (first) first(); else { let s = null; try { s = JSON.parse(localStorage.mbSess || 'null') } catch (e) { } if (s) send({ t: 'join', code: s.code, token: s.token, name: myname }) } };
+  ws.onopen = () => { if (first) first(); else { let s = null; try { s = JSON.parse(localStorage.mbSess || 'null') } catch (e) { } if (s) send({ t: 'join', code: s.code, token: s.token, name: myname, ...profInfo() }) } };
   ws.onmessage = e => {
     const m = JSON.parse(e.data);
     if (m.t === 'hello') { cfg = m; try { localStorage.mbSess = JSON.stringify({ code: m.code, token: m.token }) } catch (e) { } if (vOn) send({ t: 'vflag', m: vMuted ? 1 : 0 }) }
@@ -59,8 +59,8 @@ function home() {
   <div class="row"><button class="btn p" onclick="helpOpen()">📖 إزاي تلعب</button><button class="btn" onclick="fsToggle()">⛶ ملء الشاشة</button><button class="btn" onclick="theme()">${document.documentElement.dataset.theme==='dark'?'☀️ فاتح':'🌙 غامق'}</button></div></div><div class="dev">تطوير: elnaholy</div></div>`;
   fetch('/rooms').then(r => r.json()).then(l => { const e = $('rl'); if (!e || S) return; e.innerHTML = l.length ? '<b>غرف مفتوحة:</b> ' + l.map(r => `<button class="chip" onclick="$('cd').value='${r.code}';jn()">${r.code} • ${esc(r.host)} (${r.n})</button>`).join('') : '' }).catch(() => { });
 }
-function mk() { const n = nm(); const f = () => send({ t: 'create', name: n }); if (ws && ws.readyState === 1) f(); else conn(f) }
-function jn() { const n = nm(), c = ($('cd').value || '').trim(); if (c.length < 4) return toast('اكتب كود الغرفة (٤ أرقام)'); try { localStorage.removeItem('mbSess') } catch (e) { } const f = () => send({ t: 'join', code: c, name: n }); if (ws && ws.readyState === 1) f(); else conn(f) }
+function mk() { const n = nm(); const f = () => send({ t: 'create', name: n, ...profInfo() }); if (ws && ws.readyState === 1) f(); else conn(f) }
+function jn() { const n = nm(), c = ($('cd').value || '').trim(); if (c.length < 4) return toast('اكتب كود الغرفة (٤ أرقام)'); try { localStorage.removeItem('mbSess') } catch (e) { } const f = () => send({ t: 'join', code: c, name: n, ...profInfo() }); if (ws && ws.readyState === 1) f(); else conn(f) }
 function shareLink() {
   const url = location.origin + '/?r=' + S.code, text = 'تعالى العب معايا في لمّة، غرفة ' + S.code + ' 🎭';
   if (navigator.share) { navigator.share({ title: 'لمّة', text, url }).catch(() => { }); return }
@@ -75,12 +75,12 @@ function card(sd, big) {
   return `<div class="pc ${turn ? 'turn' : ''} ${sd.done ? 'done' : ''} ${sd.id === S.you ? 'me' : ''}">
   <div class="img">${c ? `<img src="${esc(c.i)}" referrerpolicy="no-referrer" onerror="this.style.opacity=.15">` : '<div class="qm">❓</div>'}${sd.done && sd.rank ? `<span class="rk">#${sd.rank}</span>` : ''}${sd.miss ? '<span class="rk bad">يفوّت</span>' : ''}</div>
   <div class="cn">${c ? esc(c.n) : 'إنت مش شايف كارتك!'}</div>
-  <div class="who">${p.bot ? '🤖' : '🙂'} ${esc(p.name)}${sd.id === S.you ? ' (إنت)' : ''} <b>${p.score}</b>${sd.gain && S.phase === 'result' ? ` <i>+${sd.gain}</i>` : ''}</div></div>`;
+  <div class="who">${p.bot ? '🤖' : avOf(p)} ${esc(p.name)}${sd.id === S.you ? ' (إنت)' : ''} <b>${p.score}</b>${sd.gain && S.phase === 'result' ? ` <i>+${sd.gain}</i>` : ''}</div></div>`;
 }
 function board() { return `<div class="sb">${[...S.players].sort((a, b) => b.score - a.score).map((p, i) => `<span class="chip ${p.id === S.you ? 'me' : ''}">${i === 0 && p.score > 0 ? '👑' : ''}${p.bot ? '🤖' : ''}${esc(p.name)} <b>${p.score}</b></span>`).join('')}</div>` }
 function plist() {
   const host = S.host === S.you, ph = S.phase === 'lobby' || S.phase === 'sres' || S.phase === 'dchamp';
-  return `<div class="pls">${S.players.map(p => `<div class="pr ${p.on ? '' : 'off'}"><span class="pn">${S.host === p.id ? '👑' : ''}${p.bot ? '🤖' : '🙂'} ${esc(p.name)}${p.id === S.you ? ' <small>(إنت)</small>' : ''}</span><b class="sc" title="النقط">${p.score}</b><span class="st" title="${p.on ? 'موجود' : 'غايب'}">${p.on ? '🟢' : '⚪'}</span><span class="mc ${p.mic ? '' : 'moff'}" title="${p.mic === 1 ? 'المايك شغال' : p.mic === 2 ? 'المايك مكتوم' : 'المايك مقفول'}">${p.mic === 2 ? '🔇' : '🎙️'}</span>${ph && !p.bot ? `<span class="rd">${p.ready ? '✅' : '⏳'}</span>` : ''}${host && p.id !== S.you ? `<button class="ib" title="خليه هوست" ${p.bot || !p.on ? 'disabled' : ''} onclick="send({t:'host',id:'${p.id}'})">👑</button><button class="ib rd" title="اطرده" onclick="kick('${p.id}')">🚫</button>` : ''}</div>`).join('')}</div>`;
+  return `<div class="pls">${S.players.map(p => `<div class="pr ${p.on ? '' : 'off'}"><span class="pn">${S.host === p.id ? '👑' : ''}${p.bot ? '🤖' : avOf(p)} ${esc(p.name)}${p.id === S.you ? ' <small>(إنت)</small>' : ''}</span><b class="sc" title="النقط">${p.score}</b><span class="st" title="${p.on ? 'موجود' : 'غايب'}">${p.on ? '🟢' : '⚪'}</span><span class="mc ${p.mic ? '' : 'moff'}" title="${p.mic === 1 ? 'المايك شغال' : p.mic === 2 ? 'المايك مكتوم' : 'المايك مقفول'}">${p.mic === 2 ? '🔇' : '🎙️'}</span>${ph && !p.bot ? `<span class="rd">${p.ready ? '✅' : '⏳'}</span>` : ''}${host && p.id !== S.you ? `<button class="ib" title="خليه هوست" ${p.bot || !p.on ? 'disabled' : ''} onclick="send({t:'host',id:'${p.id}'})">👑</button><button class="ib rd" title="اطرده" onclick="kick('${p.id}')">🚫</button>` : ''}</div>`).join('')}</div>`;
 }
 function rhist() {
   if (!S.rh.length) return '<p class="mut">لسه مفيش جولات اتلعبت</p>';
@@ -179,7 +179,7 @@ function spyBody() {
   if (ph === 'svote') {
     const voted = sp.voted;
     return `<div class="spy-g"><div class="spyl">${secret}</div><div class="spyr"><h3>🗳 مين الجاسوس؟ اتناقشوا وصوتوا (${sp.left}ث)</h3>
-    <div class="vts">${sp.order.map(id => `<div class="vt"><div class="vn">${pl(id).bot ? '🤖' : '🙂'} ${nameOf(id)} ${voted.includes(id) ? '<i>✔ صوّت</i>' : ''}</div><div class="vc">"${clueOf(id) || '—'}"</div>${id !== S.you && sp.order.includes(S.you) ? `<button class="chip ${sp.mine === id ? 'sel' : ''}" onclick="send({t:'svote',id:'${id}'})">${sp.mine === id ? '✅ ' : ''}هو الجاسوس</button>` : '<span class="mut">&nbsp;</span>'}</div>`).join('')}</div>
+    <div class="vts">${sp.order.map(id => `<div class="vt"><div class="vn">${pl(id).bot ? '🤖' : avOf(pl(id))} ${nameOf(id)} ${voted.includes(id) ? '<i>✔ صوّت</i>' : ''}</div><div class="vc">"${clueOf(id) || '—'}"</div>${id !== S.you && sp.order.includes(S.you) ? `<button class="chip ${sp.mine === id ? 'sel' : ''}" onclick="send({t:'svote',id:'${id}'})">${sp.mine === id ? '✅ ' : ''}هو الجاسوس</button>` : '<span class="mut">&nbsp;</span>'}</div>`).join('')}</div>
     <p class="mut">لازم أغلبية تتفق على واحد عشان يتكشف. الجاسوس لو اتكشف بيخمّن الكلمة.</p></div></div>`;
   }
   if (ph === 'sguess') {
@@ -309,6 +309,54 @@ async function vmsg(m) {
     } else if (d.c) { if (o.pc.remoteDescription) await o.pc.addIceCandidate(d.c).catch(() => { }); else o.q.push(d.c) }
   } catch (e) { }
 }
+
+/* ===== profile: XP, levels, coins, avatars, stats, achievements (saved on the phone) ===== */
+var AVS = ['🙂', '😎', '🤠', '🥳', '🦁', '🐯', '🦊', '🐼', '🐸', '🦄', '👽', '🤖', '👻', '🐲', '🧞', '👑', '🔥'];
+var AVP = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 40, 7: 40, 8: 60, 9: 80, 10: 100, 11: 100, 12: 120, 13: 150, 14: 200, 15: 300, 16: 400 };
+var ACH = [['first', '🎮', 'أول ماتش', 'خلّص أول ماتش', p => p.st.m >= 1], ['w1', '🏅', 'أول فوز', 'اكسب ماتش', p => p.st.w >= 1], ['w10', '🏆', 'عشرة فوز', 'اكسب ١٠ ماتشات', p => p.st.w >= 10], ['m10', '🔟', 'لاعب ثابت', 'العب ١٠ ماتشات', p => p.st.m >= 10], ['str3', '🔥', 'سلسلة ٣', 'اكسب ٣ ورا بعض', p => p.st.bs >= 3], ['sp', '🕵️', 'عميل', 'اكسب كجاسوس أو كاشف جاسوس', p => (p.st.g.spy || [0, 0])[1] >= 1], ['du', '⚔️', 'مبارز', 'اكسب مبارزة', p => (p.st.g.duel || [0, 0])[1] >= 1], ['lv5', '⭐', 'لفل ٥', 'وصّل لفل ٥', p => lvOf(p.xp).l >= 5], ['pt500', '💯', '٥٠٠ نقطة', 'اجمع ٥٠٠ نقطة في المجموع', p => p.st.p >= 500]];
+function lvOf(x) { var l = 1; while (x >= 30 * (l + 1) * l) l++; var a = 30 * l * (l - 1), b = 30 * (l + 1) * l; return { l: l, a: x - a, n: b - a } }
+var PR = null;
+function profLoad() { if (PR) return PR; var o = null; try { o = JSON.parse(localStorage.mbProf || 'null') } catch (e) { } o = o || {}; o.xp = o.xp | 0; o.c = o.c | 0; o.av = o.av | 0; o.own = o.own || [0, 1, 2, 3, 4, 5]; o.ac = o.ac || []; o.st = o.st || {}; var s = o.st; s.m = s.m | 0; s.w = s.w | 0; s.bs = s.bs | 0; s.cs = s.cs | 0; s.p = s.p | 0; s.g = s.g || {}; return PR = o }
+function profSave() { try { localStorage.mbProf = JSON.stringify(PR) } catch (e) { } }
+function avOf(p) { return AVS[(p && p.av) | 0] || '🙂' }
+function profInfo() { var p = profLoad(); return { av: p.av, lv: lvOf(p.xp).l } }
+var PQ = [], PQB = 0;
+function pToast(h) { PQ.push(h); if (!PQB) pNext() }
+function pNext() { var h = PQ.shift(); if (!h) { PQB = 0; return } PQB = 1; var d = document.createElement('div'); d.className = 'ptoast'; d.innerHTML = h; document.body.appendChild(d); confetti(); setTimeout(function () { d.remove(); pNext() }, 2600) }
+function confetti() { var f = document.createElement('div'); f.className = 'confetti'; var c = ['#ffd23f', '#ff5d8f', '#3ec9c0', '#7c5cff', '#4caf50'], h = ''; for (var i = 0; i < 28; i++) h += '<i style="left:' + Math.random() * 100 + '%;background:' + c[i % 5] + ';animation-delay:' + Math.random() * .4 + 's;animation-duration:' + (1.2 + Math.random()) + 's"></i>'; f.innerHTML = h; document.body.appendChild(f); setTimeout(function () { f.remove() }, 2600) }
+function addXP(n) { var p = profLoad(), a = lvOf(p.xp).l; p.xp += n; var b = lvOf(p.xp).l; if (b > a) { p.c += 25 * (b - a); pToast('⬆️ لفل ' + b + '!<small>+' + 25 * (b - a) + ' 🪙</small>'); try { SFX.win() } catch (e) { } } }
+function checkAch() { var p = profLoad(); ACH.forEach(function (a) { if (p.ac.indexOf(a[0]) < 0 && a[4](p)) { p.ac.push(a[0]); p.c += 20; pToast(a[1] + ' إنجاز: ' + a[2] + '<small>+20 🪙</small>') } }) }
+function matchEnd(game, won, pts) { var p = profLoad(), s = p.st; s.m++; var g = s.g[game] = s.g[game] || [0, 0]; g[0]++; if (won) { s.w++; g[1]++; s.cs++; if (s.cs > s.bs) s.bs = s.cs } else s.cs = 0; s.p += pts; p.c += 5 + (won ? 15 : 0); addXP(pts + 20 + (won ? 30 : 0)); checkAch(); profSave() }
+var PPH = '', PSC = {}, PRM = '';
+function profState() {
+  if (!S || !S.players) return; var p = profLoad(), me = S.players.find(function (x) { return x.id === S.you }); if (!me) return;
+  if (PRM !== S.code) { PRM = S.code; PSC = { s: me.score }; PPH = '' }
+  if (me.score > PSC.s) { addXP(me.score - PSC.s); profSave() } PSC.s = me.score;
+  var ph = S.phase, end = ph === 'result' || ph === 'sres' || ph === 'dchamp';
+  if (end && PPH && PPH !== ph && !/^(result|sres|dchamp)$/.test(PPH)) {
+    var g = 'who', won = false;
+    if (ph === 'sres' && S.sp && S.sp.res) { g = 'spy'; var r = S.sp.res, ms = r.spies.indexOf(S.you) >= 0; won = ms ? r.winner === 'spy' : r.winner !== 'spy' }
+    else if (ph === 'dchamp') { g = 'duel'; won = !!(S.du && S.du.champ === S.you) }
+    else { var sd = (S.seats || []).find(function (x) { return x.id === S.you }); won = !!(sd && sd.rank === 1) }
+    matchEnd(g, won, 0); try { send({ t: 'prof', av: p.av, lv: lvOf(p.xp).l }) } catch (e) { }
+  }
+  PPH = ph;
+}
+var _rd = render; render = function () { profState(); return _rd.apply(this, arguments) };
+function profChip() { var e = document.querySelector('.home .panel'); if (!e || document.getElementById('pchip')) return; var p = profLoad(), L = lvOf(p.xp), d = document.createElement('div'); d.id = 'pchip'; d.className = 'pchip'; d.onclick = profOpen; d.innerHTML = '<span class="pav">' + avOf(p) + '</span><div class="pin"><b>لفل ' + L.l + '</b><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div></div><span class="pco">🪙 ' + p.c + '</span>'; e.insertBefore(d, e.firstChild) }
+var _hm = home; home = function () { _hm.apply(this, arguments); profChip() };
+function profClose() { var m = document.getElementById('profm'); if (m) m.remove(); if (!S) home() }
+function profOpen() {
+  if (document.getElementById('profm')) return; var p = profLoad(), L = lvOf(p.xp), s = p.st, d = document.createElement('div'); d.id = 'profm'; d.className = 'modal'; d.onclick = function (e) { if (e.target === d) profClose() };
+  var gl = { who: 'اعرف مين معايا', spy: 'الجاسوس', duel: 'المبارزة' };
+  var av = AVS.map(function (a, i) { var o = p.own.indexOf(i) >= 0; return '<button class="avb' + (p.av === i ? ' on' : '') + (o ? '' : ' lk') + '" onclick="avPick(' + i + ')">' + a + (o ? '' : '<small>🪙' + AVP[i] + '</small>') + '</button>' }).join('');
+  var ac = ACH.map(function (a) { var o = p.ac.indexOf(a[0]) >= 0; return '<div class="acb' + (o ? ' on' : '') + '" title="' + a[3] + '"><span>' + (o ? a[1] : '🔒') + '</span><small>' + a[2] + '</small></div>' }).join('');
+  var gs = Object.keys(gl).map(function (k) { var g = s.g[k] || [0, 0]; return '<div class="stb"><b>' + g[1] + '/' + g[0] + '</b><small>' + gl[k] + '</small></div>' }).join('');
+  d.innerHTML = '<div class="box prof"><div class="ph"><span class="pav big">' + avOf(p) + '</span><div class="pin"><h2>لفل ' + L.l + '</h2><div class="xb"><i style="width:' + Math.min(100, L.a / L.n * 100) + '%"></i></div><small>' + L.a + ' / ' + L.n + ' XP</small></div><span class="pco">🪙 ' + p.c + '</span></div>'
+    + '<div class="sts"><div class="stb"><b>' + s.m + '</b><small>ماتشات</small></div><div class="stb"><b>' + s.w + '</b><small>فوز</small></div><div class="stb"><b>' + s.bs + '</b><small>أطول سلسلة</small></div><div class="stb"><b>' + s.p + '</b><small>نقط</small></div></div><h3>فوز/لعب لكل لعبة</h3><div class="sts">' + gs + '</div><h3>الأفاتار</h3><div class="avs">' + av + '</div><h3>الإنجازات</h3><div class="acs">' + ac + '</div><div class="row"><button class="btn" onclick="profClose()">تمام</button></div></div>';
+  document.body.appendChild(d);
+}
+function avPick(i) { var p = profLoad(); if (p.own.indexOf(i) < 0) { if (p.c < AVP[i]) return toast('محتاج ' + AVP[i] + ' 🪙 (بتاخدها من الماتشات)'); p.c -= AVP[i]; p.own.push(i); toast('اشتريت الأفاتار ' + AVS[i]) } p.av = i; profSave(); var m = document.getElementById('profm'); if (m) m.remove(); profOpen(); try { send({ t: 'prof', av: p.av, lv: lvOf(p.xp).l }) } catch (e) { } }
 
 home();
 let _ses = null; try { _ses = JSON.parse(localStorage.mbSess || 'null') } catch (e) { }
